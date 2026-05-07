@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>SkoofidonsHRDepartment</AssemblyName>
+    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+    <TargetFramework>netcoreapp6.0</TargetFramework>
+  </PropertyGroup>
+  <PropertyGroup>
+    <LangVersion>11.0</LangVersion>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="MelonLoader"><HintPath>MelonLoader.dll</HintPath></Reference>
+    <Reference Include="0Harmony"><HintPath>0Harmony.dll</HintPath></Reference>
+    <Reference Include="Il2CppInterop.Runtime"><HintPath>Il2CppInterop.Runtime.dll</HintPath></Reference>
+    <Reference Include="Il2Cppmscorlib"><HintPath>Il2Cppmscorlib.dll</HintPath></Reference>
+    <Reference Include="Il2CppFishNet.Runtime"><HintPath>Il2CppFishNet.Runtime.dll</HintPath></Reference>
+
+    <Reference Include="UnityEngine.CoreModule"><HintPath>UnityEngine.CoreModule.dll</HintPath></Reference>
+    <Reference Include="UnityEngine.UI"><HintPath>UnityEngine.UI.dll</HintPath></Reference>
+    <Reference Include="Unity.InputSystem"><HintPath>Unity.InputSystem.dll</HintPath></Reference>
+
+    <Reference Include="Assembly-CSharp"><HintPath>Assembly-CSharp.dll</HintPath></Reference>
+    <Reference Include="Il2CppScheduleOne.Core"><HintPath>Il2CppScheduleOne.Core.dll</HintPath></Reference>
+
+    <Reference Include="ModManager&amp;PhoneApp"><HintPath>ModManager&amp;PhoneApp.dll</HintPath></Reference>
+    <Reference Include="Unity.TextMeshPro"><HintPath>Unity.TextMeshPro.dll</HintPath></Reference>
+  </ItemGroup>
+</Project>
