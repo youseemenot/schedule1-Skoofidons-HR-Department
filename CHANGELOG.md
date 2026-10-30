@@ -1,11 +1,18 @@
 # Changelog
 
-## 1.0.5 — Parent-lookup compatibility fix, unreleased
+## 1.0.5 — 2026-10-30
+
+Changes since the previous public release, 1.0.1:
+
+- Show used/limit/free Handler routes, with updates on binding, route changes and preference saves.
+- Allow the existing Max Stations setting to exceed ten visible Handler assignments; grow rows as needed, with scrolling and indexed removal.
+- Update live station limits for existing employees and fix Handler list positions, heading/Hint overlap and scroll bounds. Preserve existing assignments after lowering a limit.
+- Include the development changes from 1.0.2–1.0.4 below, plus the parent-lookup fix:
 
 - Replace generated `Component.GetComponentInParent<T>(bool)` calls with the native overload taking an explicit IL2CPP type and a checked cast. Preserve lookup through inactive parents. The generic wrapper throws VerificationException in the installed interop build, interrupting scene UI initialization and Handler station layout updates.
 - Add a compile-only JIT regression check for called parent-lookup wrappers. Reproduces the supplied log's exception on 1.0.4 without running Unity; 1.0.5 passes all 22 checks. Rendering and assignment behavior are unchanged by this fix.
 
-Validation, 2026-10-30: the user tested 1.0.5 in singleplayer and confirmed assignment of more than ten stations, working scrolling/removal and no log errors. See the recorded test result. This version has not yet been published to GitHub.
+Validation, 2026-10-30: the user tested 1.0.5 in singleplayer and confirmed assignment of more than ten stations, working scrolling/removal and no log errors. Release assets retain the exact tested DLL, SHA256 `6D293EE64D743B688F4CD0DB3C9BED52CD6A4A9F7FFA2D84C10B010949CC1101`. Co-op remains outside the tested scope.
 
 ## 1.0.4 — Expanded Handler station-list test candidate, unreleased
 
