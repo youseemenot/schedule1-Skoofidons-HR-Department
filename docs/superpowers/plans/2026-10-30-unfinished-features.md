@@ -42,6 +42,8 @@
 
 ## Task 1. Настоящий счётчик маршрутов и правильная привязка UI
 
+Этап разрешён пользователем и реализован в кандидате 1.0.2 на ветке codex/handler-route-counter. Сборка и 13 автоматических проверок пройдены; игровые пункты ниже остаются для приёмки. Формат уточнён до `Routes (2/5; free 3)`, чтобы явно показывать остаток. [Ход выполнения и ревью](../../testing/2026-10-30-route-counter-execution.md), [игровой чек-лист](../../testing/2026-10-30-handler-route-counter.md).
+
 **Files:** новый `RouteCounterController.cs`; изменить `PackagerUIFix.cs`, `ModManagerIntegration.cs`; дополнить `docs/SINGLEPLAYER_TESTING.md`.
 
 **Interfaces:** `RouteCounterController.Refresh(RouteListFieldUI ui)`; источники `ui.Fields[0].Routes.Count/MaxRoutes`; Harmony Postfix на конкретные `RouteListFieldUI.Bind` и `Refresh` вместо глобального поиска подписей. Доступ к компоненту также через `PackagerConfigPanel.RoutesUI`.

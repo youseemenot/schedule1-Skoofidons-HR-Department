@@ -1,6 +1,4 @@
-using System;
-using System.Linq;
-using System.Collections.Generic;
+using Il2CppScheduleOne.UI.Management;
 using Il2CppTMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -9,38 +7,20 @@ namespace SkoofidonsHRDepartment
 {
     public static class PackagerUIFix
     {
-        private static readonly List<TextMeshProUGUI> RouteLabels = new List<TextMeshProUGUI>();
-
         public static void InitializeRouteOverride()
         {
-            RouteLabels.Clear();
             var allTexts = Resources.FindObjectsOfTypeAll<TextMeshProUGUI>();
 
             foreach (var textComponent in allTexts)
             {
                 if (textComponent.text == null || textComponent.transform.parent == null) continue;
 
-                // 1. Фикс для маршрутов (Handler)
-                if (textComponent.text.Contains("Routes"))
-                {
-                    if (textComponent.transform.parent.Find("Contents") != null ||
-                        textComponent.transform.parent.Find("SkoofScrollArea") != null)
-                    {
-                        RouteLabels.Add(textComponent);
-                        // Добавляем счетчик из конфига
-                        string routeTitle = $"Routes (Max: {Config.PackagerMaxRoutes.Value})";
-                        // Передаем сам textComponent, чтобы точно изменить нужный текст, а не иконку
-                        FixListUI(textComponent, textComponent.transform.parent, routeTitle, 160f);
-                    }
-                }
-
                 // 2. Фикс для назначенных станций (Assigned)
                 if (textComponent.text.StartsWith("Assigned"))
                 {
                     if (textComponent.transform.parent.Find("Contents") != null)
                     {
-                        bool isHandler = textComponent.transform.parent.parent.GetComponentsInChildren<TextMeshProUGUI>()
-                            .Any(t => t.text != null && t.text.Contains("Routes"));
+                        bool isHandler = textComponent.GetComponentInParent<PackagerConfigPanel>() != null;
 
                         // Если Handler - 130px, если другие (Botanist/Chemist/Cleaner) - 330px
                         float scrollHeight = isHandler ? 130f : 330f;
@@ -51,11 +31,16 @@ namespace SkoofidonsHRDepartment
             }
         }
 
-        public static void UpdateRouteCount()
+        public static void EnsureRouteScrollArea(RouteListFieldUI ui)
         {
-            foreach (var label in RouteLabels)
-                if (label != null) label.text = $"Routes (Max: {Config.PackagerMaxRoutes.Value})";
+            if (ui == null || ui.FieldLabel == null) return;
+            var parent = ui.transform;
+            if (parent.Find("Contents") == null && parent.Find("SkoofScrollArea") == null)
+                parent = ui.FieldLabel.transform.parent;
+            FixListUI(ui.FieldLabel, parent, null, 160f);
         }
+
+        public static void UpdateRouteCount() => RouteCounterController.RefreshAll();
 
         private static void FixListUI(TextMeshProUGUI label, Transform parent, string newTitle, float scrollHeight)
         {
@@ -101,6 +86,6 @@ namespace SkoofidonsHRDepartment
             scrollRect.scrollSensitivity = 15f; // Чувствительность колесика мыши
         }
 
-        public static void ClearReferences() => RouteLabels.Clear();
+        public static void ClearReferences() => RouteCounterController.Clear();
     }
 }
