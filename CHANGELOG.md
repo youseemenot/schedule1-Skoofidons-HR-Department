@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.0-beta.4 — Expanded Botanist native work speed, unpublished
+
+- Apply Botanist Work speed through the native Employee.WorkSpeedController, like Handler/Chemist. Cover pot/fungal GrowContainer actions, drying-rack loading and spawn-station work with one existing preference.
+- Remove the five-action duration hook, its registration lifecycle, obsolete policy and policy tests. Avoid applying the factor twice; preserve native work effects, quantities and resources.
+- Preserve fixed pauses as requested, including dryer unload's single 0.5s animation wait and both supply-pickup waits. Retain existing Handler/Chemist/Cleaner behavior and machine clocks.
+- Add 14 reproducible native coverage checks and update actual-DLL regression checks. Prepare an isolated inactive machine-timer module outline with no active settings or patches. Runtime acceptance pending; no publication or co-op work.
+
 ## 1.1.0-beta.3 — Two speed settings per profession, unpublished
 
 - Use the same Move speed and Work speed labels for all four professions. Both default to 1; increasing work speed shortens action waits.

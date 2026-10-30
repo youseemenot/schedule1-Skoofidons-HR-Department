@@ -31,7 +31,6 @@ namespace SkoofidonsHRDepartment
 
         private static void OnSettingsChanged()
         {
-            BotanistTimingController.RefreshRegistration();
             CleanerActionSpeedController.RefreshRegistration();
             // Настройки в MelonPreferences уже обновились автоматически.
             // Нам нужно лишь раскидать их по работникам и перерисовать UI.

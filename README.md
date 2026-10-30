@@ -2,7 +2,7 @@
 
 A MelonLoader mod for **Schedule I** that configures employee stats and assignment limits through Mod Manager & Phone App.
 
-**Local test candidate: 1.1.0-beta.3.** Every profession has the same two performance settings: movement speed and work speed. One botanist work rate covers soil, water, additives, planting and harvest, without a separate switch. Every multiplier uses 1 = normal and 7 = seven times faster. Includes adaptive clipboard layout; runtime acceptance is pending. The public release remains 1.0.5. See [the current checklist](docs/testing/2026-10-30-two-speed-candidate.md).
+**Local test candidate: 1.1.0-beta.4.** Every profession has the same movement and work speed settings. Botanist now uses native work speed for pot/fungal actions, drying-rack loading and spawn-station work. Fixed pauses remain native. Every multiplier uses 1 = normal and 7 = seven times faster work stages. Includes adaptive clipboard layout; runtime acceptance is pending. The public release remains 1.0.5. See [the current checklist](docs/testing/2026-10-30-botanist-work-candidate.md).
 
 **Current version: [1.0.5](https://github.com/youseemenot/schedule1-Skoofidons-HR-Department/releases/tag/v1.0.5), tested in singleplayer.** On 2026-10-30 the user confirmed that more than ten Handler stations can be assigned, scrolling and removal work, and the logs contain no errors. This release includes the used/limit/free route counter, expanded station rows and the parent-lookup compatibility fix. See [the test result](docs/testing/2026-10-30-1.0.5-singleplayer-result.md). Individual stress, multi-selection and save/reload scenarios remain unrecorded.
 
@@ -32,17 +32,17 @@ All performance values default to **1**. Movement uses original speed × multipl
 | Work speed x — Handler | 1 | Packaging and brick presses |
 | Work speed x — Chemist | 1 | Manual loading, preparation, stirring and harvesting stages |
 | Work speed x — Cleaner | 1 | Pickup, bagging, grabber emptying and bag disposal waits |
-| Work speed x — Botanist | 1 | One factor for soil, water, additives, planting and harvest; preserve quantity and native work-speed effects |
+| Work speed x — Botanist | 1 | Pot and fungal actions, drying-rack loading and spawn-station work; preserve quantities and native work effects |
 
 Save preferences to apply. Botanist changes affect the next action; Cleaner changes affect future yielded waits. Already scheduled waits retain their duration. Passive machine recipe timers are unchanged. Invalid/nonpositive multipliers retain or restore normal behavior. Repeated saves do not compound movement/work rates; native work buffs remain in effect.
 
-The keys are `WalkSpeedMultiplier` and `WorkSpeedMultiplier` in each profession's category. Botanist's new work key starts at 1; the five earlier action values and enable flag are no longer registered or used. Other beta.2 movement/work values retain their keys. Old absolute speeds or seconds are not reinterpreted as multipliers. Keep a preferences backup for rollback. Contextual timing hooks are restricted to the audited game binary and reject conflicts. Keep the separate SkoofidonsHRBotanistProbe DLL outside Mods. Returning work speed to 1 restores normal waits for future actions without a separate switch.
+The keys are `WalkSpeedMultiplier` and `WorkSpeedMultiplier` in each profession's category; all beta.3 values retain their keys. The five earlier botanist action values and enable flag are no longer used, and old absolute speeds/seconds are not reinterpreted as factors. Keep a preferences backup for rollback. Botanist shares the native work-stack integration with Handler/Chemist, with no extra duration hook; only Cleaner needs the audited contextual hooks. Keep the research BotanistProbe DLL outside Mods. Returning work speed to 1 removes the mod's work entry for future actions.
 
 ## Installation
 1. Close the game and move every previous HR DLL, including `.dll.disabled` backups, **outside `Mods`**. Do not keep both `SkoofidonsHRDepartment.dll` and `SkoofidonsHRDepartment.dll.disabled` there: Phone App uses those names to enable/disable the mod, and an existing destination blocks the rename.
 2. Copy only `SkoofidonsHRDepartment.dll` to `Mods`. Do not distribute or install game/loader reference DLLs from a build directory.
 3. Launch the game. After an update, MelonLoader may first regenerate its IL2CPP assemblies.
-4. Confirm the installed HR version (**1.0.5** stable or **1.1.0-beta.3** local candidate) and **Schedule I 0.4.7f12** in the new `MelonLoader/Latest.log`. For station limits, open **Handler Settings → Max stations** in Phone App, save and reopen the clipboard. See [the station-list checklist](docs/testing/2026-10-30-handler-station-rows.md) and [the route-counter checklist](docs/testing/2026-10-30-handler-route-counter.md).
+4. Confirm the installed HR version (**1.0.5** stable or **1.1.0-beta.4** local candidate) and **Schedule I 0.4.7f12** in the new `MelonLoader/Latest.log`. For station limits, open **Handler Settings → Max stations** in Phone App, save and reopen the clipboard. See [the station-list checklist](docs/testing/2026-10-30-handler-station-rows.md) and [the route-counter checklist](docs/testing/2026-10-30-handler-route-counter.md).
 
 ## Build from source
 
@@ -67,14 +67,14 @@ dotnet run --project tests/SmokeChecks -c Release -- `
   'S:\SteamLibrary\steamapps\common\Schedule I\MelonLoader\Il2CppAssemblies'
 ```
 
-The stable managed suite has 22 checks. Add `--combined --unified` for 31 checks on this candidate's actual DLL, including preference schema and timing/lifecycle/layout boundaries. Pure suites cover botanist timing (41), employee rates (12), Cleaner waits (8) and layout budgets (43): 135 checks in total. These do not execute Unity or native employee callbacks, rendering, cloning or resource handling. The JIT check catches invalid generated helper IL that member-existence checks miss. Use `--baseline` for the legacy clipboard implementation.
+The stable managed suite has 22 checks. Add `--combined --unified` for 32 checks on this candidate's actual DLL, including the native Botanist work route, no double duration hook, preferences and lifecycle. Pure suites cover employee rates (12), Cleaner waits (8) and layout budgets (43). Run `scripts/Verify-BotanistWorkCoverage.ps1 -GameDirectory <path>` for 14 additional checks of the audited native action pipeline and preserved fixed waits: 109 checks total. The obsolete per-action timing policy and its 41 tests were removed together. These checks do not execute Unity/native callbacks, rendering or resource handling. Use `--baseline` for the legacy clipboard implementation.
 
 ## Known limitations
 
-* The [employee process audit](docs/research/2026-10-30-employee-process-coverage.md) distinguishes Work speed coverage from fixed setup/recovery, animation, navigation and machine timers. Handler/Chemist accelerate station work and pre-transfer item waits, while fixed post-transfer, door and press pauses remain. Botanist's factor covers the five pot actions; drying racks, spawn station, fungal actions and supply pickup remain outside it. Cleaner scales the five action coroutines' waits, while turns/animation/physics remain independent. A multiplier of 7 does not promise a sevenfold reduction of the whole duty cycle.
+* The [employee process audit](docs/research/2026-10-30-employee-process-coverage.md) distinguishes Work speed from fixed setup/recovery, navigation and machine clocks. Per user instruction, fixed post-transfer, door, press and botanist supply/unload waits remain native. Dryer unload retains its single 0.5s animation wait; drying itself is a machine/world process. Cleaner retains its existing five action hooks. A factor of 7 does not promise a sevenfold reduction of the whole duty cycle.
 
 * Co-op configuration synchronization is not implemented. This release was tested in singleplayer.
-* Candidate timing overrides change each eligible action's contextual wait; game constants and shared GetActionDuration bodies remain untouched. Fungal/unknown actions and other NPC types retain their durations. Actual gameplay timing/resource/cancellation behavior awaits the joint test.
+* Employee work factors preserve native quantities and resource operations; game constants/shared GetActionDuration bodies remain untouched. Actual timing, animation, resource/cancellation behavior awaits the joint test. Machine recipe clocks are unchanged; their [separate inactive scaffold](future/MachineTimers/README.md) registers no settings or runtime behavior.
 * Candidate clipboard layout uses typed components for all four professions and actual panel geometry. Handler shares space between two lists; very short panels use one outer scroll area. Resizing, wheel routing, multi-selection and other UI scales/languages still need gameplay validation. The word `free` remains English.
 * Extra station rows are added for one selected Handler, not for other professions or multi-selection. Assignment of more than ten stations, scrolling and removal were user-tested. Stress, multi-selection and save/reload scenarios remain separately unrecorded; extreme assignment counts have not been profiled.
 * Fixer preserves the 1.0.0 formula: it uses `LifetimeEmployeesRecruited`, applies the lower rate to loop indices 0–5, then the higher rate, and caps the total. The existing `5+` label does not precisely describe that boundary. Economy behavior has deliberately not been redesigned in this compatibility build.

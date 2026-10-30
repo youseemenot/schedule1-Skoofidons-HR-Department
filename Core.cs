@@ -4,9 +4,9 @@ using Il2CppScheduleOne.DevUtilities;
 using Il2CppScheduleOne.Persistence;
 using UnityEngine.Events;
 
-[assembly: MelonInfo(typeof(SkoofidonsHRDepartment.Core), "Skoofidon's HR Department", "1.1.0-beta.3", "Skoofidon")]
+[assembly: MelonInfo(typeof(SkoofidonsHRDepartment.Core), "Skoofidon's HR Department", "1.1.0-beta.4", "Skoofidon")]
 [assembly: System.Reflection.AssemblyVersion("1.1.0.0")]
-[assembly: System.Reflection.AssemblyFileVersion("1.1.0.2")]
+[assembly: System.Reflection.AssemblyFileVersion("1.1.0.3")]
 [assembly: MelonGame("TVGS", "Schedule I")]
 [assembly: MelonColor(255, 0, 200, 0)]
 
@@ -24,10 +24,9 @@ namespace SkoofidonsHRDepartment
         {
             Instance = this;
             Config.Initialize();
-            BotanistTimingController.Initialize();
             CleanerActionSpeedController.Initialize();
             ModManagerIntegration.Initialize();
-            LoggerInstance.Msg("HR Department 1.1.0-beta.3 movement and work speed controls test build (Schedule I 0.4.7f12).");
+            LoggerInstance.Msg("HR Department 1.1.0-beta.4 native Botanist work speed test build (Schedule I 0.4.7f12).");
         }
 
         public override void OnDeinitializeMelon()
@@ -37,7 +36,6 @@ namespace SkoofidonsHRDepartment
                 Singleton<LoadManager>.Instance.onLoadComplete.RemoveListener(OnLoadCompleteAction);
             }
             ModManagerIntegration.Deinitialize();
-            BotanistTimingController.Deinitialize();
             CleanerActionSpeedController.Deinitialize();
             EmployeeSpeedController.RestoreAndClear();
             PackagerUIFix.ClearReferences();
@@ -70,7 +68,6 @@ namespace SkoofidonsHRDepartment
                 IsGameLoaded = false;
                 GamePatches.ClearState();
                 EmployeeController.ClearCache();
-                BotanistTimingController.ClearState();
                 CleanerActionSpeedController.ClearState();
                 PackagerUIFix.ClearReferences();
             }

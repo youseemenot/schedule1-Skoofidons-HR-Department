@@ -40,6 +40,7 @@ namespace SkoofidonsHRDepartment
             {
                 if (typeName == "Packager") ApplyWorkSpeed(employee.WorkSpeedController, Config.PackagerSpeed.Value);
                 else if (typeName == "Chemist") ApplyWorkSpeed(employee.WorkSpeedController, Config.ChemistWorkSpeed.Value);
+                else if (typeName == "Botanist") ApplyWorkSpeed(employee.WorkSpeedController, Config.BotanistWorkSpeed.Value);
             }
             catch (Exception) { /* Work-stack cleanup remains tracked if a native update failed. */ }
         }

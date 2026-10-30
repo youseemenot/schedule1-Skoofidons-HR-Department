@@ -176,30 +176,24 @@ if (args.Contains("--combined"))
             .Where(f => f.Name.Contains("Speed") || f.Name.Contains("Timing")).Select(f => f.Name).OrderBy(n => n);
         Expect(actual.SequenceEqual(expected.OrderBy(n => n)), "Extra speed controls or botanist enable switch remain.");
     });
-    Check("compiled timing policy scales harvest and employee speed once", () => {
-        var type = assembly.GetType("SkoofidonsHRDepartment.BotanistTimingPolicy");
-        Expect(type != null, "Timing policy missing from main DLL.");
-        var action = Enum.Parse(assembly.GetType("SkoofidonsHRDepartment.TimingAction")!, "Harvest");
-        var input = new object[] { action, 7.5f, 2f, 7f, true, 0f };
-        Expect((bool)type!.GetMethod("TryResolveWait")!.Invoke(null, input)!, "Harvest duration was rejected.");
-        Expect(Math.Abs((float)input[5] - 7.5f / 7f) < .0001f, "The game's7.5second wait at multiplier7 must be divided by7, without another work-speed adjustment.");
+    Check("compiled Botanist work rate uses the native employee work stack", () => {
+        var controller = assembly.GetType("SkoofidonsHRDepartment.EmployeeSpeedController")!;
+        var apply = controller.GetMethod("Apply")!;
+        var fields = ReferencedMembers(apply).OfType<FieldInfo>().ToArray();
+        Expect(fields.Any(f => f.DeclaringType?.Name == "Config" && f.Name == "BotanistWorkSpeed"), "Botanist work rate is not routed to native employee application.");
+        Expect(CalledMethods(apply).Any(m => m.Name == "ApplyWorkSpeed"), "Native work stack application missing.");
     });
-    Check("compiled timing hook uses the contextual coroutine wrapper", () => {
-        var controller = assembly.GetType("SkoofidonsHRDepartment.BotanistTimingController");
-        var observer = controller?.GetMethod("MoveNextPostfix", BindingFlags.NonPublic | BindingFlags.Static);
-        Expect(observer != null, "Contextual timing hook missing.");
-        Expect(observer!.GetParameters().Single(p => p.Name == "__result").ParameterType == typeof(bool), "MoveNext result must remain read-only.");
-        var routine = observer.GetParameters().Single(p => p.Name == "__instance").ParameterType;
-        var target = routine.GetMethod("MoveNext", BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)!;
-        System.Runtime.CompilerServices.RuntimeHelpers.PrepareMethod(target.MethodHandle);
-        Expect(!controller!.CustomAttributes.Any(a => a.AttributeType.Name == "HarmonyPatch"), "Timing registration must remain explicit.");
+    Check("compiled Botanist multiplier has no second duration hook", () => {
+        Expect(assembly.GetType("SkoofidonsHRDepartment.BotanistTimingController") == null, "Old contextual timing hook would divide an already scaled wait again.");
+        Expect(assembly.GetType("SkoofidonsHRDepartment.BotanistTimingPolicy") == null, "Obsolete per-action duration path remains compiled.");
     });
     Check("compiled lifecycle wires work-rate changes and layout size tracking", () => {
         var core = assembly.GetType("SkoofidonsHRDepartment.Core")!;
-        Expect(CalledMethods(core.GetMethod("OnInitializeMelon")!).Any(m => m.DeclaringType?.Name == "BotanistTimingController" && m.Name == "Initialize"), "Timing initialization not wired.");
         Expect(CalledMethods(core.GetMethod("OnUpdate")!).Any(m => m.DeclaringType?.Name == "ClipboardLayoutController" && m.Name == "RefreshTracked"), "Layout size tracking not wired.");
         var save = assembly.GetType("SkoofidonsHRDepartment.ModManagerIntegration")!.GetMethod("OnSettingsChanged", BindingFlags.NonPublic | BindingFlags.Static)!;
-        Expect(CalledMethods(save).Any(m => m.DeclaringType?.Name == "BotanistTimingController" && m.Name == "RefreshRegistration"), "Work-rate changes cannot apply after save.");
+        Expect(CalledMethods(save).Any(m => m.DeclaringType?.Name == "EmployeeController" && m.Name == "ApplyToSpawnedEmployees"), "Saved work rates are not applied to live employees.");
+        Expect(CalledMethods(core.GetMethod("OnDeinitializeMelon")!).Any(m => m.DeclaringType?.Name == "EmployeeSpeedController" && m.Name == "RestoreAndClear"), "Owned work multiplier cleanup is missing.");
+        Expect(!CalledMethods(save).Any(m => m.DeclaringType?.Name == "BotanistTimingController"), "Save still registers old timing hook.");
     });
     Check("compiled layout budgets fit normal panels and scroll tiny panels", () => {
         var type = assembly.GetType("SkoofidonsHRDepartment.ClipboardLayoutPolicy");
@@ -218,6 +212,12 @@ if (args.Contains("--combined"))
 }
 if (args.Contains("--unified"))
 {
+    Check("machine timer scaffold is absent from active preferences", () => {
+        var config = assembly.GetType("SkoofidonsHRDepartment.Config")!;
+        var fields = config.GetFields(BindingFlags.Public | BindingFlags.Static);
+        Expect(fields.Count(f => f.FieldType.Name == "MelonPreferences_Category") == 5, "Unexpected active settings category.");
+        Expect(!fields.Any(f => f.Name.Contains("Machine") || f.Name.Contains("CookTime") || f.Name.Contains("MixTime")), "Deferred machine settings became active.");
+    });
     Check("compiled movement multiplier scales speed and cap sevenfold", () => {
         var policy = assembly.GetType("SkoofidonsHRDepartment.EmployeeSpeedPolicy");
         Expect(policy != null, "Normalized employee speed policy missing.");
@@ -267,7 +267,9 @@ if (args.Contains("--unified"))
 Console.WriteLine($"{checks - failures}/{checks} checks passed. These checks do not execute Unity or native employee code.");
 return failures == 0 ? 0 : 1;
 
-static IEnumerable<MethodBase> CalledMethods(MethodInfo method)
+static IEnumerable<MethodBase> CalledMethods(MethodInfo method) => ReferencedMembers(method).OfType<MethodBase>();
+
+static IEnumerable<MemberInfo> ReferencedMembers(MethodInfo method)
 {
     var codes = typeof(OpCodes).GetFields(BindingFlags.Public | BindingFlags.Static)
         .Where(field => field.FieldType == typeof(OpCode))
@@ -281,6 +283,9 @@ static IEnumerable<MethodBase> CalledMethods(MethodInfo method)
         var operand = codes[value].OperandType;
         if (operand == OperandType.InlineMethod)
             yield return method.Module.ResolveMethod(BitConverter.ToInt32(il, offset),
+                method.DeclaringType?.GetGenericArguments(), method.GetGenericArguments())!;
+        else if (operand == OperandType.InlineField)
+            yield return method.Module.ResolveField(BitConverter.ToInt32(il, offset),
                 method.DeclaringType?.GetGenericArguments(), method.GetGenericArguments())!;
         offset += operand switch {
             OperandType.InlineNone => 0,
