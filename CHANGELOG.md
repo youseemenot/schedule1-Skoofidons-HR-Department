@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.1.0 — 2026-10-30
+
+- Promote user-tested beta.4 to stable. Runtime changes from beta.4 are limited to version metadata and the initialization log message; release validation compares behavior against the tested DLL.
+- Give Handler, Chemist, Botanist and Cleaner the same movement/work speed settings: 1 = normal; higher movement values mean faster movement, higher work values mean shorter work stages.
+- Cover Handler packaging/pressing and item transfer, Chemist station/oven/mixer/cauldron work, Botanist pot/fungal actions/drying-rack loading/spawn station, and five Cleaner action routines. Preserve fixed preparation/recovery pauses, quantities and native work effects.
+- Add adaptive clipboard layout for all four professions, retaining the Handler route counter and expanded station list from 1.0.5.
+- Use new multiplier preference keys rather than reinterpreting old absolute movement speeds/seconds. Defaults are 1; fees, wages and assignment limits retain their numeric meanings.
+- Keep automatic machine timers as a separate inactive scaffold. Co-op and property capacity changes remain deferred.
+
+Validation: beta.4 passed the user's singleplayer check with no problems reported; supplied log confirms its exact hash and all five Cleaner callbacks at factor 22. Stable is rebuilt for its version stamp and receives the same 109 offline checks plus executable-behavior comparison. Detailed individual gameplay measurements remain unrecorded. See [release notes](docs/releases/1.1.0.md).
+
 ## 1.1.0-beta.4 — Expanded Botanist native work speed, unpublished
 
 - Apply Botanist Work speed through the native Employee.WorkSpeedController, like Handler/Chemist. Cover pot/fungal GrowContainer actions, drying-rack loading and spawn-station work with one existing preference.
