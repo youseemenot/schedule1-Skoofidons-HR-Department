@@ -71,6 +71,8 @@ The stable managed suite has 22 checks. Add `--combined --unified` for 31 checks
 
 ## Known limitations
 
+* The [employee process audit](docs/research/2026-10-30-employee-process-coverage.md) distinguishes Work speed coverage from fixed setup/recovery, animation, navigation and machine timers. Handler/Chemist accelerate station work and pre-transfer item waits, while fixed post-transfer, door and press pauses remain. Botanist's factor covers the five pot actions; drying racks, spawn station, fungal actions and supply pickup remain outside it. Cleaner scales the five action coroutines' waits, while turns/animation/physics remain independent. A multiplier of 7 does not promise a sevenfold reduction of the whole duty cycle.
+
 * Co-op configuration synchronization is not implemented. This release was tested in singleplayer.
 * Candidate timing overrides change each eligible action's contextual wait; game constants and shared GetActionDuration bodies remain untouched. Fungal/unknown actions and other NPC types retain their durations. Actual gameplay timing/resource/cancellation behavior awaits the joint test.
 * Candidate clipboard layout uses typed components for all four professions and actual panel geometry. Handler shares space between two lists; very short panels use one outer scroll area. Resizing, wheel routing, multi-selection and other UI scales/languages still need gameplay validation. The word `free` remains English.
