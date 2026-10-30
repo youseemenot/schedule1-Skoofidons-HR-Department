@@ -15,7 +15,6 @@ namespace SkoofidonsHRDepartment
         private readonly MachineTimerLedger ledger;
         private readonly List<LoadScope> scopes = new();
         private readonly Dictionary<string, Pending> pending = new(StringComparer.Ordinal);
-        private readonly Dictionary<string, LoadScope> asyncRestores = new(StringComparer.Ordinal);
 
         public sealed class LoadScope
         {
@@ -35,33 +34,28 @@ namespace SkoofidonsHRDepartment
 
         public MachineTimerPersistence(MachineTimerLedger ledger) => this.ledger = ledger ?? throw new ArgumentNullException(nameof(ledger));
 
-        public MachineTimerRecord Capture(MachineTimerSnapshot snapshot, double configuredRate, bool allowAsyncRestore = false)
+        public MachineTimerRecord Capture(MachineTimerSnapshot snapshot, double configuredRate)
         {
             string parentKey = ParentKey(snapshot.Kind, snapshot.Guid);
-            string markerKey = MarkerKey(snapshot.Kind, snapshot.Guid);
-            bool asynchronous = allowAsyncRestore && asyncRestores.Remove(markerKey);
             if (ledger.TryGet(snapshot.Key, out MachineTimerRecord existing) && existing.Identity == snapshot.Identity)
             {
                 DiscardPosition(snapshot, parentKey);
-                if (!IsLoading(snapshot.Kind)) asyncRestores.Remove(markerKey);
                 return existing;
             }
             bool loading = IsLoading(snapshot.Kind);
             double rate = configuredRate, fraction = 0;
-            if (asynchronous || loading)
+            if (loading)
             {
                 rate = 1;
                 // Another parent's load must not unlock an unrelated stale save.
-                if ((asynchronous || HasActiveParent(parentKey)) && TryConsume(snapshot, parentKey, out Entry restored))
+                if (HasActiveParent(parentKey) && TryConsume(snapshot, parentKey, out Entry restored))
                 { rate = restored.Rate; fraction = restored.Fraction; }
-                if (asynchronous && parentKey != null && snapshot.Kind != MachineTimerKind.Drying) pending.Remove(parentKey);
             }
             else
             {
                 // Explicit creation after loading is new work, even if loading never
                 // materialized the operation represented by an old pending entry.
                 DiscardPosition(snapshot, parentKey);
-                asyncRestores.Remove(markerKey);
             }
             ledger.Capture(snapshot.Key, snapshot.Identity, rate, fraction);
             return ledger.GetOrAdopt(snapshot.Key, snapshot.Identity);
@@ -118,12 +112,10 @@ namespace SkoofidonsHRDepartment
                     var staged = new Pending { Owner = token };
                     foreach (Entry entry in parsed) if (entry.Kind == kind) staged.Entries.Add(entry.Index, entry);
                     pending[key] = staged;
-                    asyncRestores.Remove(key);
                 }
                 else if (!preserveOuter)
                 {
                     pending.Remove(key);
-                    asyncRestores.Remove(key);
                 }
             }
             scopes.Add(token);
@@ -137,21 +129,6 @@ namespace SkoofidonsHRDepartment
             var discard = new List<string>();
             foreach (var pair in pending) if (Within(pair.Value.Owner, token)) discard.Add(pair.Key);
             foreach (string key in discard) pending.Remove(key);
-            discard.Clear();
-            foreach (var pair in asyncRestores) if (Within(pair.Value, token)) discard.Add(pair.Key);
-            foreach (string key in discard) asyncRestores.Remove(key);
-        }
-
-        public void MarkAsyncRestore(MachineTimerKind kind, string guid)
-        {
-            string key = ParentKey(kind, guid);
-            LoadScope owner = null;
-            for (int i = scopes.Count - 1; i >= 0; i--)
-                if (scopes[i].Kind == kind) { owner = scopes[i]; break; }
-            // A malformed base GUID cannot authorize a previous load's metadata,
-            // but still needs a one-shot legacy marker owned by this failing scope.
-            if (key != null && owner != null && owner.ParentKey != key) pending.Remove(key);
-            asyncRestores[MarkerKey(kind, guid)] = owner;
         }
 
         public bool IsLoading(MachineTimerKind kind)
@@ -162,7 +139,7 @@ namespace SkoofidonsHRDepartment
 
         public void Clear()
         {
-            scopes.Clear(); pending.Clear(); asyncRestores.Clear(); ledger.Clear();
+            scopes.Clear(); pending.Clear(); ledger.Clear();
         }
 
         private bool HasActiveParent(string key)
@@ -203,9 +180,9 @@ namespace SkoofidonsHRDepartment
         private static bool ProgressMatches(MachineTimerKind kind, double saved, double current) =>
             FloatingProgress(kind) ? Math.Abs(saved - current) <= 1e-4 * Math.Max(1, Math.Abs(current)) : saved == current;
         private static bool FloatingProgress(MachineTimerKind kind) =>
-            kind == MachineTimerKind.Drying || kind == MachineTimerKind.PlantGrowth || kind == MachineTimerKind.ShroomGrowth;
+            kind == MachineTimerKind.Drying;
         private static bool ValidSnapshot(MachineTimerSnapshot snapshot) =>
-            snapshot != null && Enum.IsDefined(typeof(MachineTimerKind), snapshot.Kind) && snapshot.Index >= 0 &&
+            snapshot != null && CapturedKind(snapshot.Kind) && snapshot.Index >= 0 &&
             !string.IsNullOrEmpty(snapshot.Fingerprint) && snapshot.Fingerprint.Length <= MaxFingerprintLength &&
             double.IsFinite(snapshot.Progress) && snapshot.Progress >= 0 &&
             (FloatingProgress(snapshot.Kind) || snapshot.Progress == Math.Truncate(snapshot.Progress));
@@ -216,8 +193,8 @@ namespace SkoofidonsHRDepartment
             string normalized = NormalizeGuid(guid);
             return normalized == null ? null : ((int)kind).ToString(System.Globalization.CultureInfo.InvariantCulture) + ":" + normalized;
         }
-        private static string MarkerKey(MachineTimerKind kind, string guid) => ParentKey(kind, guid) ??
-            ((int)kind).ToString(System.Globalization.CultureInfo.InvariantCulture) + ":invalid";
+        private static bool CapturedKind(MachineTimerKind kind) => kind is MachineTimerKind.Chemistry or MachineTimerKind.Oven or
+            MachineTimerKind.Mixing or MachineTimerKind.Cauldron or MachineTimerKind.Drying;
 
         private static string ReadBaseGuid(string json)
         {
@@ -253,7 +230,7 @@ namespace SkoofidonsHRDepartment
                 foreach (JsonElement item in array.EnumerateArray())
                 {
                     if (!UniqueObject(item) || !item.TryGetProperty("Kind", out var kindValue) || kindValue.ValueKind != JsonValueKind.String ||
-                        !Enum.TryParse(kindValue.GetString(), false, out MachineTimerKind kind) || !Enum.IsDefined(typeof(MachineTimerKind), kind) || kind.ToString() != kindValue.GetString() ||
+                        !Enum.TryParse(kindValue.GetString(), false, out MachineTimerKind kind) || !CapturedKind(kind) || kind.ToString() != kindValue.GetString() ||
                         !item.TryGetProperty("Index", out var indexValue) || !indexValue.TryGetInt32(out int index) || index < 0 || !slots.Add((kind, index)) ||
                         !item.TryGetProperty("Fingerprint", out var fingerprint) || fingerprint.ValueKind != JsonValueKind.String ||
                         !item.TryGetProperty("Progress", out var progressValue) || !Number(progressValue, out double progress) ||

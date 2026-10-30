@@ -14,6 +14,7 @@ namespace SkoofidonsHRDepartment
 
             if (_modManagerFound)
             {
+                PreferenceCategoryOrderIntegration.Initialize();
                 ModSettingsEvents.OnPhonePreferencesSaved += OnSettingsChanged;
                 ModSettingsEvents.OnMenuPreferencesSaved += OnSettingsChanged;
                 MelonLogger.Msg("Mod Manager found! Phone integration active.");
@@ -22,6 +23,7 @@ namespace SkoofidonsHRDepartment
 
         public static void Deinitialize()
         {
+            PreferenceCategoryOrderIntegration.Deinitialize();
             if (_modManagerFound)
             {
                 ModSettingsEvents.OnPhonePreferencesSaved -= OnSettingsChanged;

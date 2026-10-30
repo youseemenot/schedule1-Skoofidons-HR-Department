@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text.Json;
 using Il2CppScheduleOne.EntityFramework;
-using Il2CppScheduleOne.Growing;
 using Il2CppScheduleOne.ObjectScripts;
 using MelonLoader;
 
@@ -35,9 +34,9 @@ namespace SkoofidonsHRDepartment
         private static string Key(MachineTimerKind kind, nint pointer) => kind + ":" + PointerId(pointer);
         private static string GuidOf(BuildableItem owner) => owner.GUID.ToString();
         private static string Fingerprint(params object[] values) => JsonSerializer.Serialize(values);
-        private static MachineTimerRecord Capture(MachineTimerSnapshot snapshot, double rate, bool asyncRestore = false)
+        private static MachineTimerRecord Capture(MachineTimerSnapshot snapshot, double rate)
         {
-            var record = State.Capture(snapshot, rate, asyncRestore);
+            var record = State.Capture(snapshot, rate);
             CaptureSamples.TryGetValue(snapshot.Kind, out int count);
             if (count < 8)
             {
@@ -100,25 +99,6 @@ namespace SkoofidonsHRDepartment
             return new(MachineTimerKind.Drying, Key(MachineTimerKind.Drying, operation.Pointer), PointerId(operation.Pointer), GuidOf(owner),
                 Fingerprint(operation.ItemID, operation.Quantity, (int)operation.StartQuality), operation.Time, int.MaxValue, index);
         }
-
-        private static MachineTimerSnapshot PlantSnapshot(Pot owner)
-        {
-            Plant plant = owner.Plant;
-            if (plant == null) return null;
-            return new(MachineTimerKind.PlantGrowth, Key(MachineTimerKind.PlantGrowth, plant.Pointer), PointerId(plant.Pointer), GuidOf(owner),
-                Fingerprint(plant.SeedDefinition?.ID), plant.NormalizedGrowthProgress, int.MaxValue);
-        }
-
-        private static MachineTimerSnapshot ColonySnapshot(MushroomBed owner)
-        {
-            ShroomColony colony = owner.CurrentColony;
-            if (colony == null) return null;
-            return new(MachineTimerKind.ShroomGrowth, Key(MachineTimerKind.ShroomGrowth, colony.Pointer), PointerId(colony.Pointer), GuidOf(owner),
-                Fingerprint(colony._spawnDefinition?.ID), colony.GrowthProgress, int.MaxValue);
-        }
-
-        private static double GrowthRate(MachineTimerKind kind, nint pointer) =>
-            Ledger.TryGet(Key(kind, pointer), out var record) && record.Identity == PointerId(pointer) ? record.CapturedRate : 1;
 
         public static void ClearState()
         {

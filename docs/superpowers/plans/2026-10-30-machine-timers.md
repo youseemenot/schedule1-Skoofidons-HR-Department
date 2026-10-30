@@ -1,3 +1,5 @@
+> Исторический документ beta.1. Политика роста изменена в [beta.2](../../testing/2026-10-30-machine-timers-beta2.md): текущий множитель действует на все растущие культуры. Для машин сохраняется правило новых партий.
+
 # Machine timer implementation plan
 
 > **For agentic workers:** independent pure policy/ledger task may use superpowers:dispatching-parallel-agents; root owns native integration. Review delegated task and the whole candidate before delivery. Execute continuously under the user's requested scope.

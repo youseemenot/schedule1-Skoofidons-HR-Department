@@ -212,6 +212,18 @@ if (args.Contains("--combined"))
 }
 if (args.Contains("--unified"))
 {
+    Check("HR category sorting groups employees before Fixer and machines without renaming keys", () => {
+        var policy = assembly.GetType("SkoofidonsHRDepartment.PreferenceCategoryOrder");
+        Expect(policy != null, "Scoped category ordering policy missing.");
+        const string prefix = "Skoofidon's HR Department_";
+        var original = new[] { "Fixer", "Packager", "Machines", "Cleaner", "Botanist", "Chemist" }.Select(s => prefix + s).ToArray();
+        string SortKey(string id) => (string)policy!.GetMethod("GetSortKey")!.Invoke(null, new object[] { id, id })!;
+        var ordered = original.OrderBy(SortKey, StringComparer.Ordinal).ToArray();
+        Expect(ordered.SequenceEqual(new[] { "Botanist", "Chemist", "Cleaner", "Packager", "Fixer", "Machines" }.Select(s => prefix + s)), "Employee/Fixer/Machine order is wrong.");
+        Expect(SortKey("OtherMod_Packager") == "OtherMod_Packager" && SortKey(prefix + "FutureCategory") == prefix + "FutureCategory", "Unknown category key was modified.");
+        var integration = assembly.GetType("SkoofidonsHRDepartment.PreferenceCategoryOrderIntegration")!;
+        Expect((int)integration.GetMethod("VerifyManagedBindings")!.Invoke(null, null)! == 3, "All three Phone App category selectors must be covered.");
+    });
     Check("machine and growth timers expose seven separate rate preferences", () => {
         var config = assembly.GetType("SkoofidonsHRDepartment.Config")!;
         var fields = config.GetFields(BindingFlags.Public | BindingFlags.Static);
@@ -231,7 +243,7 @@ if (args.Contains("--unified"))
     Check("all guarded machine targets and injected callbacks resolve and JIT", () => {
         var controller = assembly.GetType("SkoofidonsHRDepartment.MachineTimerController");
         Expect(controller != null, "Machine timer controller missing.");
-        Expect((int)controller!.GetMethod("VerifyManagedBindings")!.Invoke(null, null)! == 45, "Audited target set changed.");
+        Expect((int)controller!.GetMethod("VerifyManagedBindings")!.Invoke(null, null)! == 36, "Audited target set changed.");
     });
     Check("actual DLL preserves captured factors through save and load", () => {
         var ledgerType = assembly.GetType("SkoofidonsHRDepartment.MachineTimerLedger")!;
@@ -242,25 +254,29 @@ if (args.Contains("--unified"))
         object State() => Activator.CreateInstance(stateType, Activator.CreateInstance(ledgerType))!;
         double Rate(object record) => (double)record.GetType().GetProperty("CapturedRate")!.GetValue(record)!;
         var state = State(); var snapshot = Snapshot("original");
-        stateType.GetMethod("Capture")!.Invoke(state, new[] { snapshot, (object)7d, false });
-        Expect(Rate(stateType.GetMethod("Capture")!.Invoke(state, new[] { snapshot, (object)2d, false })!) == 7d, "Existing factor was replaced by a preference change.");
+        stateType.GetMethod("Capture")!.Invoke(state, new[] { snapshot, (object)7d });
+        Expect(Rate(stateType.GetMethod("Capture")!.Invoke(state, new[] { snapshot, (object)2d })!) == 7d, "Existing factor was replaced by a preference change.");
         var snapshots = Array.CreateInstance(snapshotType, 1); snapshots.SetValue(snapshot, 0);
         string json = (string)stateType.GetMethod("Serialize")!.Invoke(state, new object[] { snapshots })!;
         var restored = State();
         object scope = stateType.GetMethod("BeginLoad")!.Invoke(restored, new object[] { kind, "{\"GUID\":\"aa63bc20-e2e3-44e9-b808-50cf94c270cd\"}", json })!;
-        object record = stateType.GetMethod("Capture")!.Invoke(restored, new[] { Snapshot("restored"), (object)2d, false })!;
+        object record = stateType.GetMethod("Capture")!.Invoke(restored, new[] { Snapshot("restored"), (object)2d })!;
         Expect(Rate(record) == 7d, "Saved factor was not restored.");
         stateType.GetMethod("EndLoad")!.Invoke(restored, new[] { scope, (object)false });
     });
-    Check("growth rate lookup cannot preempt asynchronous saved-rate restoration", () => {
+    Check("all live crop growth reads current preferences without per-crop capture", () => {
         var controller = assembly.GetType("SkoofidonsHRDepartment.MachineTimerController")!;
-        controller.GetMethod("ClearState")!.Invoke(null, null);
-        var kind = Enum.Parse(assembly.GetType("SkoofidonsHRDepartment.MachineTimerKind")!, "PlantGrowth");
-        var lookup = controller.GetMethod("GrowthRate", BindingFlags.NonPublic | BindingFlags.Static)!;
-        Expect((double)lookup.Invoke(null, new object[] { kind, new IntPtr(0x12345) })! == 1d, "Unknown growth must stay native.");
-        var ledger = controller.GetField("Ledger", BindingFlags.NonPublic | BindingFlags.Static)!.GetValue(null)!;
-        object[] input = { "PlantGrowth:12345", null! };
-        Expect(!(bool)ledger.GetType().GetMethod("TryGet")!.Invoke(ledger, input)!, "A read-only growth lookup adopted rate1 before async restore.");
+        foreach (var name in new[] { "PlantGrowPrefix", "ShroomGrowPrefix" }) {
+            var calls = CalledMethods(controller.GetMethod(name)!).ToList();
+            Expect(calls.Any(m => m.Name == "ConfiguredRate"), "Growth callback does not read current preferences: " + name);
+            Expect(!calls.Any(m => m.Name == "GrowthRate" || m.Name == "Capture"), "Growth still depends on captured crop rates: " + name);
+        }
+        var specs = (Array)controller.GetField("PatchSpecs", BindingFlags.NonPublic | BindingFlags.Static)!.GetValue(null)!;
+        foreach (var spec in specs) {
+            string owner = (string)spec.GetType().GetProperty("Owner")!.GetValue(spec)!;
+            Expect(!new[] { "Pot", "MushroomBed", "PotLoader", "MushroomBedLoader" }.Any(n => owner.EndsWith("." + n)), "Obsolete crop creation/save/load hook remains: " + owner);
+        }
+        Expect(assembly.GetType("SkoofidonsHRDepartment.MachineTimerPersistence")!.GetMethod("MarkAsyncRestore") == null, "Per-crop restore machinery remains.");
     });
     Check("drying capture targets the reached broadcast path across serialized identities", () => {
         var controller = assembly.GetType("SkoofidonsHRDepartment.MachineTimerController")!;
@@ -269,15 +285,6 @@ if (args.Contains("--unified"))
         Expect(specs.Cast<object>().Any(s => Name(s) == "PleaseReceiveOp"), "Reached server broadcast method is not hooked.");
         Expect(!specs.Cast<object>().Any(s => Name(s) == "RpcLogic___SendOperation_1307702229"), "Drying capture still relies on the inlined/bypassed send logic.");
         Expect(assembly.GetType("SkoofidonsHRDepartment.MachineDryingCaptureQueue") != null, "Serialized receiver cannot recover its captured factor.");
-    });
-    Check("proven new plants and colonies discard recycled pointer records", () => {
-        var controller = assembly.GetType("SkoofidonsHRDepartment.MachineTimerController")!;
-        foreach (var name in new[] { "PotSeedPostfix", "ColonyCreatePostfix" }) {
-            var calls = CalledMethods(controller.GetMethod(name, BindingFlags.Public | BindingFlags.Static)!).ToList();
-            int forget = calls.FindIndex(m => m.DeclaringType?.Name == "MachineTimerLedger" && m.Name == "Forget");
-            int capture = calls.FindIndex(m => m.Name == "Capture");
-            Expect(forget >= 0 && capture > forget, "New crop can retain the previous occupant's factor: " + name);
-        }
     });
     Check("compiled movement multiplier scales speed and cap sevenfold", () => {
         var policy = assembly.GetType("SkoofidonsHRDepartment.EmployeeSpeedPolicy");

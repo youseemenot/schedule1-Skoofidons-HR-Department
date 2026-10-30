@@ -37,9 +37,9 @@ Check("unknown and replaced operations never adopt current preferences", () =>
     Near(1, p.Capture(S(), 7).CapturedRate);
     Near(1, p.GetOrAdopt(S(identity: "unknown-replacement")).CapturedRate);
 });
-Check("all seven kinds retain their captured factor and fraction across a JSON roundtrip", () =>
+Check("all five machine kinds retain their captured factor and fraction across a JSON roundtrip", () =>
 {
-    foreach (MachineTimerKind kind in Enum.GetValues<MachineTimerKind>())
+    foreach (MachineTimerKind kind in new[] { MachineTimerKind.Chemistry, MachineTimerKind.Oven, MachineTimerKind.Mixing, MachineTimerKind.Cauldron, MachineTimerKind.Drying })
     {
         var ledger = new MachineTimerLedger(); var p = new MachineTimerPersistence(ledger); var s = S(kind);
         p.Capture(s, 1.5); ledger.TryAdvance(s.Key, s.Identity, 1, 90, out _);
@@ -83,7 +83,7 @@ Check("kind index fingerprint and integer native progress must match", () =>
 });
 Check("float timers accept bounded native serialization rounding only", () =>
 {
-    foreach (var kind in new[] { MachineTimerKind.Drying, MachineTimerKind.PlantGrowth, MachineTimerKind.ShroomGrowth })
+    foreach (var kind in new[] { MachineTimerKind.Drying })
     {
         Near(2, Restore(Payload(kind, progress: .5), S(kind, progress: .50009)).CapturedRate);
         Near(1, Restore(Payload(kind, progress: .5), S(kind, progress: .5002)).CapturedRate);
@@ -137,29 +137,6 @@ Check("new single operation discards old pending restore after load completes", 
     Near(7, p.Capture(S(identity: "new"), 7).CapturedRate);
     Near(1, p.GetOrAdopt(S(identity: "unrecognized")).CapturedRate);
 });
-Check("asynchronous plant load preserves valid restore beyond loader return", () =>
-{
-    var p = New(); var scope = p.BeginLoad(MachineTimerKind.PlantGrowth, Base(), Payload(MachineTimerKind.PlantGrowth, progress: .5));
-    p.MarkAsyncRestore(MachineTimerKind.PlantGrowth, guid); p.EndLoad(scope, false);
-    Near(2, p.Capture(S(MachineTimerKind.PlantGrowth, progress: .5), 7, true).CapturedRate);
-    Near(7, p.Capture(S(MachineTimerKind.PlantGrowth, identity: "next", progress: 0), 7, true).CapturedRate);
-});
-Check("asynchronous legacy plant and failed matches use one shot rate one markers", () =>
-{
-    foreach (string payload in new[] { null, Payload(MachineTimerKind.PlantGrowth, progress: .5) })
-    {
-        var p = New(); var scope = p.BeginLoad(MachineTimerKind.PlantGrowth, Base(), payload);
-        p.MarkAsyncRestore(MachineTimerKind.PlantGrowth, guid); p.EndLoad(scope, false);
-        Near(1, p.Capture(S(MachineTimerKind.PlantGrowth, progress: .9), 7, true).CapturedRate);
-        Near(7, p.Capture(S(MachineTimerKind.PlantGrowth, identity: "next", progress: 0), 7, true).CapturedRate);
-    }
-});
-Check("failed asynchronous loader removes its marker and staged payload", () =>
-{
-    var p = New(); var scope = p.BeginLoad(MachineTimerKind.PlantGrowth, Base(), Payload(MachineTimerKind.PlantGrowth));
-    p.MarkAsyncRestore(MachineTimerKind.PlantGrowth, guid); p.EndLoad(scope, true);
-    Near(7, p.Capture(S(MachineTimerKind.PlantGrowth), 7, true).CapturedRate);
-});
 Check("drying positions with identical fingerprints restore independent captured rates", () =>
 {
     var source = New(); var a = S(MachineTimerKind.Drying, progress: 5); var b = S(MachineTimerKind.Drying, progress: 5, index: 1);
@@ -184,13 +161,18 @@ Check("adoption consumes mismatched pending position rather than resurrecting it
     Near(1, p.GetOrAdopt(S(MachineTimerKind.Drying, progress: 11)).CapturedRate);
     Near(1, p.GetOrAdopt(S(MachineTimerKind.Drying, identity: "later", progress: 10)).CapturedRate);
 });
-Check("clear removes ledger pending scopes and asynchronous markers", () =>
+Check("clear removes ledger pending restores and load scopes", () =>
 {
     var p = New(); p.Capture(S(), 2);
-    var scope = p.BeginLoad(MachineTimerKind.PlantGrowth, Base(), Payload(MachineTimerKind.PlantGrowth));
-    p.MarkAsyncRestore(MachineTimerKind.PlantGrowth, guid); p.Clear(); p.EndLoad(scope, false);
-    Near(1, p.GetOrAdopt(S()).CapturedRate); Near(7, p.Capture(S(MachineTimerKind.PlantGrowth), 7, true).CapturedRate);
-    Expect(!p.IsLoading(MachineTimerKind.PlantGrowth), "Clear left a load scope");
+    var scope = p.BeginLoad(MachineTimerKind.Drying, Base(), Payload(MachineTimerKind.Drying));
+    p.Clear(); p.EndLoad(scope, false);
+    Near(1, p.GetOrAdopt(S()).CapturedRate); Near(1, p.GetOrAdopt(S(MachineTimerKind.Drying)).CapturedRate);
+    Expect(!p.IsLoading(MachineTimerKind.Drying), "Clear left a load scope");
+});
+Check("growth no longer writes per-crop captured-rate metadata", () =>
+{
+    foreach (var kind in new[] { MachineTimerKind.PlantGrowth, MachineTimerKind.ShroomGrowth })
+        Expect(New().Serialize(new[] { S(kind) }) == "", "Crop wrote obsolete captured-rate metadata");
 });
 Check("oversized deeply nested and oversized entry arrays safely use legacy rate", () =>
 {
@@ -206,26 +188,6 @@ Check("invalid source metadata cannot write transferable save state", () =>
     Expect(p.Serialize(Array.Empty<MachineTimerSnapshot>()) == "", "Empty operation set wrote a payload");
 });
 
-Check("invalid base identity cannot reuse stale asynchronous restoration", () =>
-{
-    var p = New(); var kind = MachineTimerKind.PlantGrowth;
-    var old = p.BeginLoad(kind, Base(), Payload(kind)); p.EndLoad(old, false);
-    var scope = p.BeginLoad(kind, "{}"); p.MarkAsyncRestore(kind, guid); p.EndLoad(scope, false);
-    Near(1, p.Capture(S(kind), 7, true).CapturedRate);
-});
-Check("failed loader with missing base GUID still owns its asynchronous marker", () =>
-{
-    var p = New(); var kind = MachineTimerKind.PlantGrowth;
-    var scope = p.BeginLoad(kind, "{}"); p.MarkAsyncRestore(kind, guid); p.EndLoad(scope, true);
-    Near(7, p.Capture(S(kind), 7, true).CapturedRate);
-});
-Check("invalid native parent GUID still inhibits asynchronous legacy preference capture", () =>
-{
-    var p = New(); var kind = MachineTimerKind.PlantGrowth;
-    var scope = p.BeginLoad(kind, "{}"); p.MarkAsyncRestore(kind, "invalid"); p.EndLoad(scope, false);
-    Near(1, p.Capture(S(kind, parent: "invalid"), 7, true).CapturedRate);
-    Near(7, p.Capture(S(kind, identity: "new", parent: "invalid"), 7, true).CapturedRate);
-});
 Check("known ledger identities cannot leave pending save data for later replacements", () =>
 {
     foreach (bool capture in new[] { false, true })

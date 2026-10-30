@@ -23,8 +23,6 @@ namespace SkoofidonsHRDepartment
                 var operations = rack.DryingOperations;
                 for (int i = 0; i < operations.Count; i++) Add(DryingSnapshot(rack, operations[i], i));
             }
-            else if (owner.TryCast<Pot>() is { } pot) Add(PlantSnapshot(pot));
-            else if (owner.TryCast<MushroomBed>() is { } bed) Add(ColonySnapshot(bed));
             return result;
         }
 
@@ -78,8 +76,5 @@ namespace SkoofidonsHRDepartment
         private static void CauldronLoadLegacyPrefix(string __0, out MachineTimerPersistence.LoadScope __state) => __state = BeginLoad(MachineTimerKind.Cauldron, __0);
         private static void DryingLoadDynamicPrefix(DynamicSaveData __0, out MachineTimerPersistence.LoadScope __state) => __state = BeginLoad(MachineTimerKind.Drying, __0);
         private static void DryingLoadLegacyPrefix(string __0, out MachineTimerPersistence.LoadScope __state) => __state = BeginLoad(MachineTimerKind.Drying, __0);
-        private static void PotLoadDynamicPrefix(DynamicSaveData __0, out MachineTimerPersistence.LoadScope __state) => __state = BeginLoad(MachineTimerKind.PlantGrowth, __0);
-        private static void PotLoadLegacyPrefix(string __0, out MachineTimerPersistence.LoadScope __state) => __state = BeginLoad(MachineTimerKind.PlantGrowth, __0);
-        private static void BedLoadDynamicPrefix(DynamicSaveData __0, out MachineTimerPersistence.LoadScope __state) => __state = BeginLoad(MachineTimerKind.ShroomGrowth, __0);
     }
 }

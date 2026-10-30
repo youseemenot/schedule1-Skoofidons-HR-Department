@@ -116,5 +116,23 @@ Check("slow growth reaches completion from an unclamped request and preserves ze
     MachineGrowthContext.Exit(scope);
 });
 
+Check("all existing crops use the next callback rate without rewriting accumulated growth", () =>
+{
+    foreach (var kind in new[] { MachineTimerKind.PlantGrowth, MachineTimerKind.ShroomGrowth })
+    {
+        foreach (nint pointer in new nint[] { 11, 22 })
+        {
+            var first = MachineGrowthContext.Enter(kind, pointer, 7);
+            Expect(Scale(kind, pointer, .4f, .41f, out float progress), "Existing crop did not accelerate");
+            Near(.47f, progress); MachineGrowthContext.Exit(first);
+            var next = MachineGrowthContext.Enter(kind, pointer, .5);
+            Expect(Scale(kind, pointer, progress, progress + .01f, out float slower), "Changed rate did not apply on next callback");
+            Near(.475f, slower); MachineGrowthContext.Exit(next);
+            Expect(!Scale(kind, pointer, .4f, .8f, out float restored), "Loading progress outside growth callback was changed");
+            Near(.8f, restored);
+        }
+    }
+});
+
 Console.WriteLine($"{checks - failures}/{checks} growth context checks passed");
 return failures == 0 ? 0 : 1;

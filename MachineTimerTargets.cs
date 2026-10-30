@@ -99,7 +99,7 @@ namespace SkoofidonsHRDepartment
                     _machineHarmony.Patch(methods[i], prefix: Wrap(spec.Prefix), postfix: Wrap(spec.Postfix), finalizer: Wrap(spec.Finalizer));
                 }
                 _active = true;
-                MelonLogger.Msg("[HR MACHINE TIMERS READY] " + methods.Length + " audited targets; seven captured new-operation rates. Runtime testing pending.");
+                MelonLogger.Msg("[HR MACHINE TIMERS READY] " + methods.Length + " audited targets; five captured machine rates; current growth rates for all crops. Runtime testing pending.");
             }
             catch (Exception ex)
             {

@@ -104,11 +104,15 @@ namespace SkoofidonsHRDepartment
             MachineMixingRate = MachineRate("MixingRate", "Mixing");
             MachineCauldronRate = MachineRate("CauldronRate", "Cauldron");
             MachineDryingRate = MachineRate("DryingRate", "Drying");
-            MachinePlantRate = MachineRate("PlantRate", "Plant growth");
-            MachineShroomRate = MachineRate("ShroomRate", "Mushroom growth");
+            MachinePlantRate = GrowthRate("PlantRate", "Plant growth");
+            MachineShroomRate = GrowthRate("ShroomRate", "Mushroom growth");
 
             MelonPreferences.Save();
         }
+
+        private static MelonPreferences_Entry<float> GrowthRate(string key, string title) =>
+            MachinesCat.CreateEntry(key, 1f, title + " x (higher = less time)",
+                "All growing cultures: 1 = normal; 7 = seven times faster; 0.5 = half speed. After saving settings, the next growth tick uses this factor. Accumulated progress and native growing conditions are preserved.");
 
         private static MelonPreferences_Entry<float> MachineRate(string key, string title) =>
             MachinesCat.CreateEntry(key, 1f, title + " x (higher = less time)",
