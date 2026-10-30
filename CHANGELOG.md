@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.3 — Handler layout and station-limit test candidate, unreleased
+
+- Move the route Hint to the right edge and reserve label space; keep the tooltip available while fitting the counter on one line.
+- Normalize Handler list contents to their viewport top instead of retaining the prefab's old station offset. Leave room above routes for From/To headings. Initialize typed Handler panels including inactive prefabs and after binding.
+- Apply the existing Handler Settings / Max Stations preference to both the employee and live Stations.MaxItems field. Existing stations are not deleted when lowering the limit.
+- Add a managed external API regression check for live station limits. Visual and station assignment checks require singleplayer validation; station UI expansion beyond its native 10 entries is outside this candidate.
+
 ## 1.0.2 — Handler route-counter test candidate, unreleased
 
 - Show actual used/limit/free Handler routes, including incomplete route entries, from the bound RouteListField.

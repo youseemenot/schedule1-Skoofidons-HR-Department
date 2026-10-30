@@ -76,10 +76,8 @@ namespace SkoofidonsHRDepartment
             if (typeName == "Packager")
             {
                 var packager = emp.Cast<Packager>();
-                packager.MaxAssignedStations = Config.PackagerMaxStations.Value;
+                ApplyHandlerLimits(packager);
                 packager.PackagingSpeedMultiplier = Config.PackagerSpeed.Value;
-                if (packager.configuration != null && packager.configuration.Routes != null)
-                    packager.configuration.Routes.MaxRoutes = Config.PackagerMaxRoutes.Value;
             }
             else if (typeName == "Chemist")
             {
@@ -101,6 +99,19 @@ namespace SkoofidonsHRDepartment
                 if (cleaner.configuration != null && cleaner.configuration.Bins != null)
                     cleaner.configuration.Bins.MaxItems = Config.CleanerMaxBins.Value;
             }
+        }
+
+        public static void ApplyHandlerLimits(Packager packager)
+        {
+            packager.MaxAssignedStations = Config.PackagerMaxStations.Value;
+            var configuration = packager.configuration;
+            if (configuration == null) return;
+            // The constructor copies the employee limit once. Existing employees
+            // also need the live field used by selection and its Assigned label.
+            if (configuration.Stations != null)
+                configuration.Stations.MaxItems = Config.PackagerMaxStations.Value;
+            if (configuration.Routes != null)
+                configuration.Routes.MaxRoutes = Config.PackagerMaxRoutes.Value;
         }
 
         private static void ApplyWalkSpeed(Employee emp, float speed)

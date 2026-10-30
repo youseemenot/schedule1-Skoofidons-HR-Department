@@ -87,6 +87,13 @@ if (!args.Contains("--baseline"))
         foreach (var target in CalledMethods(refresh))
             Expect(!(target.Name == "set_interactable" && target.DeclaringType?.Namespace == "UnityEngine.UI"), "Counter writes a button state the game's visibility refresh cannot restore.");
     });
+    Check("Handler limits update the live station selection field", () => {
+        var apply = assembly.GetType("SkoofidonsHRDepartment.EmployeeController")!.GetMethod("ApplyHandlerLimits");
+        Expect(apply != null, "Handler limit adapter is missing.");
+        var calls = CalledMethods(apply!).ToArray();
+        Expect(calls.Any(m => m.Name == "get_Stations" && m.DeclaringType?.Name == "PackagerConfiguration"), "Live Handler Stations field is not accessed.");
+        Expect(calls.Any(m => m.Name == "set_MaxItems" && m.DeclaringType?.Name == "ObjectListField"), "Live station limit is not updated.");
+    });
 }
 Console.WriteLine($"{checks - failures}/{checks} checks passed. These checks do not execute Unity or native employee code.");
 return failures == 0 ? 0 : 1;
