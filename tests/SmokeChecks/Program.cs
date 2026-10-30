@@ -165,6 +165,53 @@ if (!args.Contains("--baseline"))
             }
     });
 }
+if (args.Contains("--combined"))
+{
+    Check("combined DLL exposes all six botanist timing settings", () => {
+        var config = assembly.GetType("SkoofidonsHRDepartment.Config")!;
+        foreach (var name in new[] { "BotanistActionTimingEnabled", "BotanistSoilTime", "BotanistWaterTime", "BotanistAdditiveTime", "BotanistSeedTime", "BotanistHarvestSecondsPerItem" })
+            Expect(config.GetField(name, BindingFlags.Public | BindingFlags.Static) != null, "Timing preference missing: " + name);
+    });
+    Check("compiled timing policy scales harvest and employee speed once", () => {
+        var type = assembly.GetType("SkoofidonsHRDepartment.BotanistTimingPolicy");
+        Expect(type != null, "Timing policy missing from main DLL.");
+        var action = Enum.Parse(assembly.GetType("SkoofidonsHRDepartment.TimingAction")!, "Harvest");
+        var input = new object[] { action, 7.5f, 2f, .5f, true, 0f };
+        Expect((bool)type!.GetMethod("TryResolveWait")!.Invoke(null, input)!, "Harvest duration was rejected.");
+        Expect(Math.Abs((float)input[5] - 3.75f) < .0001f, "Fifteen items at .5 seconds/item and speed2 must take3.75seconds.");
+    });
+    Check("compiled timing hook uses the contextual coroutine wrapper", () => {
+        var controller = assembly.GetType("SkoofidonsHRDepartment.BotanistTimingController");
+        var observer = controller?.GetMethod("MoveNextPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+        Expect(observer != null, "Contextual timing hook missing.");
+        Expect(observer!.GetParameters().Single(p => p.Name == "__result").ParameterType == typeof(bool), "MoveNext result must remain read-only.");
+        var routine = observer.GetParameters().Single(p => p.Name == "__instance").ParameterType;
+        var target = routine.GetMethod("MoveNext", BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)!;
+        System.Runtime.CompilerServices.RuntimeHelpers.PrepareMethod(target.MethodHandle);
+        Expect(!controller!.CustomAttributes.Any(a => a.AttributeType.Name == "HarmonyPatch"), "Timing registration must remain explicit.");
+    });
+    Check("compiled lifecycle wires timing toggles and layout size tracking", () => {
+        var core = assembly.GetType("SkoofidonsHRDepartment.Core")!;
+        Expect(CalledMethods(core.GetMethod("OnInitializeMelon")!).Any(m => m.DeclaringType?.Name == "BotanistTimingController" && m.Name == "Initialize"), "Timing initialization not wired.");
+        Expect(CalledMethods(core.GetMethod("OnUpdate")!).Any(m => m.DeclaringType?.Name == "ClipboardLayoutController" && m.Name == "RefreshTracked"), "Layout size tracking not wired.");
+        var save = assembly.GetType("SkoofidonsHRDepartment.ModManagerIntegration")!.GetMethod("OnSettingsChanged", BindingFlags.NonPublic | BindingFlags.Static)!;
+        Expect(CalledMethods(save).Any(m => m.DeclaringType?.Name == "BotanistTimingController" && m.Name == "RefreshRegistration"), "Timing toggle cannot apply after save.");
+    });
+    Check("compiled layout budgets fit normal panels and scroll tiny panels", () => {
+        var type = assembly.GetType("SkoofidonsHRDepartment.ClipboardLayoutPolicy");
+        Expect(type != null, "Layout policy missing from main DLL.");
+        var method = type!.GetMethod("Calculate")!;
+        object Layout(float height) => method.Invoke(null, new object[] { height, 60f, new[] { 44f, 80f }, new[] { 500f, 500f } })!;
+        var normal = Layout(480f);
+        Expect(!(bool)normal.GetType().GetField("OuterScroll")!.GetValue(normal)!, "Normal panel unnecessarily uses outer scroll.");
+        var sections = (Array)normal.GetType().GetField("Sections")!.GetValue(normal)!;
+        var last = sections.GetValue(sections.Length - 1)!;
+        float end = (float)last.GetType().GetField("ViewportTop")!.GetValue(last)! + (float)last.GetType().GetField("Height")!.GetValue(last)!;
+        Expect(end <= 480f, "Last viewport extends beyond its panel.");
+        var tiny = Layout(80f);
+        Expect((bool)tiny.GetType().GetField("OuterScroll")!.GetValue(tiny)! && (float)tiny.GetType().GetField("ContentHeight")!.GetValue(tiny)! > 80f, "Tiny panel does not expose scrollable content.");
+    });
+}
 Console.WriteLine($"{checks - failures}/{checks} checks passed. These checks do not execute Unity or native employee code.");
 return failures == 0 ? 0 : 1;
 

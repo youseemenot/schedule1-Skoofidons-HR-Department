@@ -35,12 +35,13 @@ namespace SkoofidonsHRDepartment
         public static MelonPreferences_Entry<float> BotanistFee;
         public static MelonPreferences_Entry<float> BotanistWalkSpeed;
 
-        // Action timings are game constants; generated setters are not writable settings.
-        // public static MelonPreferences_Entry<float> BotanistSoilTime;
-        // public static MelonPreferences_Entry<float> BotanistWaterTime;
-        // public static MelonPreferences_Entry<float> BotanistAdditiveTime;
-        // public static MelonPreferences_Entry<float> BotanistSeedTime;
-        // public static MelonPreferences_Entry<float> BotanistHarvestTime;
+        // Overrides apply to individual actions; the game's constants stay intact.
+        public static MelonPreferences_Entry<bool> BotanistActionTimingEnabled;
+        public static MelonPreferences_Entry<float> BotanistSoilTime;
+        public static MelonPreferences_Entry<float> BotanistWaterTime;
+        public static MelonPreferences_Entry<float> BotanistAdditiveTime;
+        public static MelonPreferences_Entry<float> BotanistSeedTime;
+        public static MelonPreferences_Entry<float> BotanistHarvestSecondsPerItem;
 
         // Уборщик
         public static MelonPreferences_Entry<int> CleanerMaxBins;
@@ -74,6 +75,20 @@ namespace SkoofidonsHRDepartment
             BotanistWage = BotanistCat.CreateEntry("DailyWage", 200f, "Daily Wage", "Higher = Costs more per day");
             BotanistFee = BotanistCat.CreateEntry("SigningFee", 1000f, "Signing Fee", "Base cost to hire");
             BotanistWalkSpeed = BotanistCat.CreateEntry("WalkSpeed", 1.2f, "Walk Speed", "Higher = Walks faster");
+            BotanistActionTimingEnabled = BotanistCat.CreateEntry("ActionTimingOverridesEnabled", false,
+                "Custom Action Times", "Enable custom durations for newly started botanist actions. Singleplayer test feature.");
+            BotanistSoilTime = BotanistCat.CreateEntry("SoilTime", 10f, "Soil Time (seconds)",
+                "Base seconds before the employee work-speed adjustment. Applies to the next action.");
+            BotanistWaterTime = BotanistCat.CreateEntry("WaterTime", 10f, "Water Time (seconds)",
+                "Base seconds before the employee work-speed adjustment. Applies to the next action.");
+            BotanistAdditiveTime = BotanistCat.CreateEntry("AdditiveTime", 10f, "Additive Time (seconds)",
+                "Base seconds before the employee work-speed adjustment. Applies to the next action.");
+            BotanistSeedTime = BotanistCat.CreateEntry("SeedTime", 15f, "Seed Time (seconds)",
+                "Base seconds before the employee work-speed adjustment. Applies to the next action.");
+            // Old HarvestTime had an ambiguous whole-action default of 15. Do
+            // not migrate it to the new seconds-per-unit setting.
+            BotanistHarvestSecondsPerItem = BotanistCat.CreateEntry("HarvestSecondsPerItem", 1f,
+                "Harvest Seconds Per Item", "Base seconds per harvested unit. Scales with product count and employee work speed.");
 
             CleanerCat = MelonPreferences.CreateCategory("Skoofidon's HR Department_Cleaner", "Cleaner Settings");
             CleanerMaxBins = CleanerCat.CreateEntry("MaxBins", 3, "Max Bins", "Higher = Clean more bins");

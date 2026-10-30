@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.0-beta.1 — Combined singleplayer test candidate, unpublished
+
+- Add disabled-by-default Custom Action Times for botanist soil/water/additive/seed durations and harvest seconds per unit. Preserve employee work-speed scaling once; ignore invalid settings, unknown/fungal actions and non-botanist owners. Apply only to newly started actions.
+- Register the unique contextual coroutine hook manually while enabled, with pinned game/API/native-body and conflicting-owner checks. Never hook shared GetActionDuration bodies or write game constants. Preserve other features if timing registration fails.
+- Replace fixed/English-scanned list layout with typed adaptive panels for Handler, Botanist, Chemist and Cleaner. Share Handler's available list space, reserve static fields/headings, and use one outer scroll region when inner viewports cannot fit.
+- Track size/content changes without repeated Resources scans, preserve scroll positions, recover generated wrappers after reference cleanup, hide unused row roots and keep native multi-selection blockers above generated controls.
+- Prepared for the user's requested joint test. The read-only probe is a separate earlier experiment and must not remain loaded alongside this timing hook. Public stable version remains 1.0.5; gameplay acceptance is pending.
+
 ## 1.0.5 — 2026-10-30
 
 Changes since the previous public release, 1.0.1:

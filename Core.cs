@@ -4,9 +4,9 @@ using Il2CppScheduleOne.DevUtilities;
 using Il2CppScheduleOne.Persistence;
 using UnityEngine.Events;
 
-[assembly: MelonInfo(typeof(SkoofidonsHRDepartment.Core), "Skoofidon's HR Department", "1.0.5", "Skoofidon")]
-[assembly: System.Reflection.AssemblyVersion("1.0.5.0")]
-[assembly: System.Reflection.AssemblyFileVersion("1.0.5.0")]
+[assembly: MelonInfo(typeof(SkoofidonsHRDepartment.Core), "Skoofidon's HR Department", "1.1.0-beta.1", "Skoofidon")]
+[assembly: System.Reflection.AssemblyVersion("1.1.0.0")]
+[assembly: System.Reflection.AssemblyFileVersion("1.1.0.0")]
 [assembly: MelonGame("TVGS", "Schedule I")]
 [assembly: MelonColor(255, 0, 200, 0)]
 
@@ -24,8 +24,9 @@ namespace SkoofidonsHRDepartment
         {
             Instance = this;
             Config.Initialize();
+            BotanistTimingController.Initialize();
             ModManagerIntegration.Initialize();
-            LoggerInstance.Msg("HR Department 1.0.5 Handler parent-lookup fix test build (Schedule I 0.4.7f12).");
+            LoggerInstance.Msg("HR Department 1.1.0-beta.1 combined botanist timings and adaptive clipboard test build (Schedule I 0.4.7f12).");
         }
 
         public override void OnDeinitializeMelon()
@@ -35,8 +36,11 @@ namespace SkoofidonsHRDepartment
                 Singleton<LoadManager>.Instance.onLoadComplete.RemoveListener(OnLoadCompleteAction);
             }
             ModManagerIntegration.Deinitialize();
+            BotanistTimingController.Deinitialize();
             PackagerUIFix.ClearReferences();
         }
+
+        public override void OnUpdate() => ClipboardLayoutController.RefreshTracked();
 
         public override void OnSceneWasInitialized(int buildIndex, string sceneName)
         {
@@ -63,6 +67,7 @@ namespace SkoofidonsHRDepartment
                 IsGameLoaded = false;
                 GamePatches.ClearState();
                 EmployeeController.ClearCache();
+                BotanistTimingController.ClearState();
                 PackagerUIFix.ClearReferences();
             }
         }

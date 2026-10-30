@@ -1,189 +1,28 @@
-using Il2CppScheduleOne.UI.Management;
-using HarmonyLib;
 using Il2CppInterop.Runtime;
 using Il2CppInterop.Runtime.InteropTypes;
-using Il2CppTMPro;
+using Il2CppScheduleOne.Management.UI;
+using Il2CppScheduleOne.UI.Management;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace SkoofidonsHRDepartment
 {
     public static class PackagerUIFix
     {
-        public static PackagerConfigPanel FindHandlerPanel(Component component)
-        {
-            if (component == null) return null;
-            // The generated GetComponentInParent<T>(bool) contains invalid
-            // Cast<T> constraints in this interop build. Use its native overload.
-            return component.GetComponentInParent(Il2CppType.Of<PackagerConfigPanel>(), true)
-                ?.TryCast<PackagerConfigPanel>();
-        }
-
+        public static PackagerConfigPanel FindHandlerPanel(Component component) => component == null ? null :
+            component.GetComponentInParent(Il2CppType.Of<PackagerConfigPanel>(), true)?.TryCast<PackagerConfigPanel>();
         public static void InitializeRouteOverride()
         {
-            foreach (var panel in Resources.FindObjectsOfTypeAll<PackagerConfigPanel>())
-                EnsureHandlerPanel(panel);
-            var allTexts = Resources.FindObjectsOfTypeAll<TextMeshProUGUI>();
-
-            foreach (var textComponent in allTexts)
-            {
-                if (textComponent.text == null || textComponent.transform.parent == null) continue;
-
-                // 2. Фикс для назначенных станций (Assigned)
-                if (textComponent.text.StartsWith("Assigned"))
-                {
-                    if (textComponent.transform.parent.Find("Contents") != null)
-                    {
-                        // Handler uses its typed panel binding below, including
-                        // panels instantiated after scene initialization.
-                        if (FindHandlerPanel(textComponent) != null) continue;
-                        FixListUI(textComponent, textComponent.transform.parent, null, 330f);
-                    }
-                }
-            }
+            // Initialization only; Bind catches subsequent panel instances.
+            foreach (var panel in Resources.FindObjectsOfTypeAll<ConfigPanel>()) ClipboardLayoutController.Apply(panel);
         }
-
-        public static void EnsureRouteScrollArea(RouteListFieldUI ui)
-        {
-            if (ui == null || ui.FieldLabel == null) return;
-            var parent = ui.transform;
-            if (parent.Find("Contents") == null && parent.Find("SkoofScrollArea") == null)
-                parent = ui.FieldLabel.transform.parent;
-            EnsureHandlerScroll(parent, 75f, 160f);
-            // The game's Hint is fixed at x=105, immediately after "Routes".
-            // Reserve the right edge for it rather than covering the counter.
-            FitHandlerHeading(ui.FieldLabel, parent, 17.5f, 45f);
-        }
-
-        private static void FitHandlerHeading(TextMeshProUGUI label, Transform parent, float hintInset, float labelInset)
-        {
-            if (label == null || parent == null) return;
-            var hint = parent.Find("Hint")?.GetComponent<RectTransform>();
-            if (hint != null)
-            {
-                hint.anchorMin = hint.anchorMax = new Vector2(1f, 1f);
-                hint.anchoredPosition = new Vector2(-hintInset, -20f);
-            }
-            var labelRect = label.rectTransform;
-            labelRect.anchorMin = new Vector2(0f, 1f);
-            labelRect.anchorMax = new Vector2(1f, 1f);
-            labelRect.pivot = new Vector2(0.5f, 0.5f);
-            labelRect.sizeDelta = new Vector2(-labelInset, 40f);
-            labelRect.anchoredPosition = new Vector2(-labelInset / 2f, -20f);
-            label.enableWordWrapping = false;
-            label.enableAutoSizing = true;
-            label.fontSizeMin = 18f;
-            label.fontSizeMax = 26f;
-            label.overflowMode = TextOverflowModes.Ellipsis;
-            label.raycastTarget = false;
-        }
-
-        public static void EnsureHandlerPanel(PackagerConfigPanel panel)
-        {
-            if (panel == null) return;
-            if (panel.StationsUI != null)
-            {
-                EnsureHandlerScroll(panel.StationsUI.transform, 50f, 110f);
-                // Leave both the Hint and the native edit/clear control usable
-                // when Assigned contains two- or three-digit counts.
-                FitHandlerHeading(panel.StationsUI.FieldLabel, panel.StationsUI.transform, 57.5f, 80f);
-            }
-            EnsureRouteScrollArea(panel.RoutesUI);
-        }
-
-        private static void EnsureHandlerScroll(Transform parent, float top, float height)
-        {
-            if (parent == null || parent.Find("SkoofScrollArea") != null) return;
-            var contents = parent.Find("Contents")?.GetComponent<RectTransform>();
-            if (contents == null) return;
-            var scrollObj = new GameObject("SkoofScrollArea", new Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppReferenceArray<Il2CppSystem.Type>(
-                new[] { Il2CppInterop.Runtime.Il2CppType.Of<RectTransform>() }));
-            var viewport = scrollObj.GetComponent<RectTransform>();
-            viewport.SetParent(parent, false);
-            viewport.anchorMin = new Vector2(0f, 1f);
-            viewport.anchorMax = new Vector2(1f, 1f);
-            viewport.pivot = new Vector2(0.5f, 1f);
-            viewport.sizeDelta = new Vector2(0f, height);
-            viewport.anchoredPosition = new Vector2(0f, -top);
-            scrollObj.AddComponent<RectMask2D>();
-            // A transparent Graphic gives empty space a scroll-event target.
-            scrollObj.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0f);
-            var scroll = scrollObj.AddComponent<ScrollRect>();
-            contents.SetParent(viewport, false);
-            contents.anchorMin = new Vector2(0f, 1f);
-            contents.anchorMax = new Vector2(1f, 1f);
-            contents.pivot = new Vector2(0.5f, 1f);
-            contents.anchoredPosition = Vector2.zero;
-            contents.sizeDelta = Vector2.zero;
-            var fitter = contents.GetComponent<ContentSizeFitter>() ?? contents.gameObject.AddComponent<ContentSizeFitter>();
-            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-            scroll.viewport = viewport;
-            scroll.content = contents;
-            scroll.horizontal = false;
-            scroll.vertical = true;
-            scroll.movementType = ScrollRect.MovementType.Clamped;
-            scroll.scrollSensitivity = 15f;
-            LayoutRebuilder.ForceRebuildLayoutImmediate(contents);
-            scroll.verticalNormalizedPosition = 1f;
-        }
-
+        public static void EnsureHandlerPanel(PackagerConfigPanel panel) => ClipboardLayoutController.Apply(panel);
+        public static void EnsureRouteScrollArea(RouteListFieldUI ui) => EnsureHandlerPanel(FindHandlerPanel(ui));
         public static void UpdateRouteCount() => RouteCounterController.RefreshAll();
-
-        private static void FixListUI(TextMeshProUGUI label, Transform parent, string newTitle, float scrollHeight)
-        {
-            if (parent == null) return;
-
-            // Теперь мы гарантированно меняем именно заголовок
-            if (newTitle != null && label != null)
-            {
-                label.text = newTitle;
-                label.raycastTarget = false;
-            }
-
-            Transform contents = parent.Find("Contents");
-            if (contents == null || parent.Find("SkoofScrollArea") != null) return;
-
-            // Расширяем родительский блок, чтобы заполнить пустоту на планшете
-            LayoutElement le = parent.gameObject.GetComponent<LayoutElement>();
-            if (le == null) le = parent.gameObject.AddComponent<LayoutElement>();
-            le.minHeight = scrollHeight + 40f;
-
-            GameObject scrollObj = new GameObject("SkoofScrollArea");
-            scrollObj.transform.SetParent(parent, false);
-
-            RectTransform rt = scrollObj.AddComponent<RectTransform>();
-            rt.anchorMin = new Vector2(0, 1);
-            rt.anchorMax = new Vector2(1, 1);
-            rt.pivot = new Vector2(0.5f, 1);
-            rt.anchoredPosition = new Vector2(0, -35);
-            rt.sizeDelta = new Vector2(0, scrollHeight);
-
-            scrollObj.AddComponent<RectMask2D>();
-            ScrollRect scrollRect = scrollObj.AddComponent<ScrollRect>();
-
-            contents.SetParent(rt, false);
-
-            ContentSizeFitter fitter = contents.gameObject.GetComponent<ContentSizeFitter>();
-            if (fitter == null) fitter = contents.gameObject.AddComponent<ContentSizeFitter>();
-            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-
-            scrollRect.content = contents.GetComponent<RectTransform>();
-            scrollRect.horizontal = false;
-            scrollRect.vertical = true;
-            scrollRect.scrollSensitivity = 15f; // Чувствительность колесика мыши
-        }
-
         public static void ClearReferences()
         {
+            ClipboardLayoutController.Clear();
             RouteCounterController.Clear();
             HandlerStationController.Clear();
         }
-    }
-
-    [HarmonyPatch(typeof(PackagerConfigPanel), nameof(PackagerConfigPanel.BindInternal))]
-    internal static class HandlerPanelLayoutPatch
-    {
-        [HarmonyPostfix]
-        private static void Postfix(PackagerConfigPanel __instance) => PackagerUIFix.EnsureHandlerPanel(__instance);
     }
 }

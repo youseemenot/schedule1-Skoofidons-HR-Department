@@ -20,6 +20,7 @@
     <Reference Include="MelonLoader"><HintPath>$(LoaderDirectory)/MelonLoader.dll</HintPath></Reference>
     <Reference Include="0Harmony"><HintPath>$(LoaderDirectory)/0Harmony.dll</HintPath></Reference>
     <Reference Include="Il2CppInterop.Runtime"><HintPath>$(LoaderDirectory)/Il2CppInterop.Runtime.dll</HintPath></Reference>
+    <Reference Include="Il2CppInterop.Common"><HintPath>$(LoaderDirectory)/Il2CppInterop.Common.dll</HintPath></Reference>
     <Reference Include="Il2Cppmscorlib"><HintPath>$(InteropDirectory)/Il2Cppmscorlib.dll</HintPath></Reference>
     <Reference Include="Il2CppFishNet.Runtime"><HintPath>$(InteropDirectory)/Il2CppFishNet.Runtime.dll</HintPath></Reference>
 
