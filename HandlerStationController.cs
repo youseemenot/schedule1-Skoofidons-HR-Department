@@ -148,7 +148,7 @@ namespace SkoofidonsHRDepartment
         public static void RefreshLayout(ObjectListFieldUI ui, bool resetToTop = false)
         {
             if (ui == null || !IsHandlerStations(ui.Fields)) return;
-            var panel = ui.GetComponentInParent<PackagerConfigPanel>(true);
+            var panel = PackagerUIFix.FindHandlerPanel(ui);
             PackagerUIFix.EnsureHandlerPanel(panel);
             if (ui.Fields.Count == 1 && ui.Fields[0].SelectedObjects != null && ui.Entries != null)
             {

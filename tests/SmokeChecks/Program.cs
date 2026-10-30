@@ -151,6 +151,19 @@ if (!args.Contains("--baseline"))
         var refresh = assembly.GetType("SkoofidonsHRDepartment.HandlerStationController")?.GetMethod("RefreshLayout");
         Expect(refresh != null && CalledMethods(refresh).Any(m => m.Name == "SetAssignedVisibility" && m.DeclaringType?.Name == "StationRowExpansion"), "Unity adapter does not apply the tested visibility policy.");
     });
+    Check("UI parent lookup wrappers can be JIT-compiled without constraint violations", () => {
+        foreach (var type in assembly.GetTypes())
+            foreach (var method in type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance | BindingFlags.DeclaredOnly))
+            {
+                if (method.GetMethodBody() == null) continue;
+                foreach (var target in CalledMethods(method))
+                    if (target.DeclaringType?.Namespace == "UnityEngine" && target.Name == "GetComponentInParent")
+                        // Compile only: no Unity method or type initializer is
+                        // executed. Exposes invalid generated Cast<T> IL that
+                        // member-existence API checks cannot detect.
+                        System.Runtime.CompilerServices.RuntimeHelpers.PrepareMethod(target.MethodHandle);
+            }
+    });
 }
 Console.WriteLine($"{checks - failures}/{checks} checks passed. These checks do not execute Unity or native employee code.");
 return failures == 0 ? 0 : 1;
@@ -168,7 +181,8 @@ static IEnumerable<MethodBase> CalledMethods(MethodInfo method)
         if (value == 0xfe) value = (ushort)(0xfe00 | il[offset++]);
         var operand = codes[value].OperandType;
         if (operand == OperandType.InlineMethod)
-            yield return method.Module.ResolveMethod(BitConverter.ToInt32(il, offset))!;
+            yield return method.Module.ResolveMethod(BitConverter.ToInt32(il, offset),
+                method.DeclaringType?.GetGenericArguments(), method.GetGenericArguments())!;
         offset += operand switch {
             OperandType.InlineNone => 0,
             OperandType.ShortInlineBrTarget or OperandType.ShortInlineI or OperandType.ShortInlineVar => 1,

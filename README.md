@@ -2,7 +2,7 @@
 
 A MelonLoader mod for **Schedule I** that configures employee stats and assignment limits through Mod Manager & Phone App.
 
-**Working branch: 1.0.4 Handler test build.** The released baseline remains 1.0.1. This candidate adds the used/limit/free route counter, fixes the Handler list layout and live station limit, and expands station rows beyond the native ten as assignments are added. See [the station-list test checklist](docs/testing/2026-10-30-handler-station-rows.md) and [the route-counter checklist](docs/testing/2026-10-30-handler-route-counter.md). Gameplay validation of the candidate remains pending.
+**Working branch: 1.0.5 Handler test build.** The released baseline remains 1.0.1. This candidate includes the route counter and expanded station rows, and fixes a generated parent-lookup wrapper that raised VerificationException in 1.0.4. The user confirmed the pictured station was simply scrolled out of view; that screenshot is not a rendering failure. See [the station-list test checklist](docs/testing/2026-10-30-handler-station-rows.md), [the route-counter checklist](docs/testing/2026-10-30-handler-route-counter.md), and [the 1.0.5 regression record](docs/testing/2026-10-30-parent-lookup-regression.md). Full gameplay acceptance remains pending.
 
 **1.0.1 is the singleplayer compatibility update for Schedule I 0.4.7f12 (IL2CPP)**, Steam build **25796331**, MelonLoader **0.7.3**, and Phone App **2.2.4**. Compilation passed, and on 2026-10-30 the user reported a successful gameplay test. The supplied log confirms startup, Phone App integration and preference saving without errors; individual checklist scenarios have not all been documented separately. See [the test result](docs/testing/2026-10-30-singleplayer-result.md) and [download releases](https://github.com/youseemenot/schedule1-Skoofidons-HR-Department/releases).
 
@@ -24,7 +24,7 @@ A MelonLoader mod for **Schedule I** that configures employee stats and assignme
 1. Close the game and move every previous HR DLL, including `.dll.disabled` backups, **outside `Mods`**. Do not keep both `SkoofidonsHRDepartment.dll` and `SkoofidonsHRDepartment.dll.disabled` there: Phone App uses those names to enable/disable the mod, and an existing destination blocks the rename.
 2. Copy only `SkoofidonsHRDepartment.dll` to `Mods`. Do not distribute or install game/loader reference DLLs from a build directory.
 3. Launch the game. After an update, MelonLoader may first regenerate its IL2CPP assemblies.
-4. Confirm the expected HR version (**1.0.4** for this candidate, **1.0.1** for the published release) and **Schedule I 0.4.7f12** in the new `MelonLoader/Latest.log`. Follow the candidate checklist above or [the baseline singleplayer checklist](docs/SINGLEPLAYER_TESTING.md).
+4. Confirm the expected HR version (**1.0.5** for this candidate, **1.0.1** for the published release) and **Schedule I 0.4.7f12** in the new `MelonLoader/Latest.log`. Follow the candidate checklist above or [the baseline singleplayer checklist](docs/SINGLEPLAYER_TESTING.md).
 
 ## Build from source
 
@@ -49,7 +49,7 @@ dotnet run --project tests/SmokeChecks -c Release -- `
   'S:\SteamLibrary\steamapps\common\Schedule I\MelonLoader\Il2CppAssemblies'
 ```
 
-The managed checks exercise the actual mod's clipboard handlers, counter presentation, external API boundaries, station row allocation/rollback and visibility policy without starting Unity (21 checks for 1.0.4). They do not validate rendering, native UI callbacks or Unity cloning, NPC movement, wages, or spawning. Use `--baseline` as a final argument when running the new checks against the legacy clipboard implementation; the candidate-only checks are then skipped.
+The managed checks exercise the actual mod's clipboard handlers, counter presentation, external API boundaries, station row allocation/rollback, visibility and parent-lookup JIT compilation without starting Unity (22 checks for 1.0.5). The JIT check catches invalid generated helper IL that member-existence checks miss. These checks do not validate rendering, native UI callbacks or Unity cloning, NPC movement, wages, or spawning. Use `--baseline` as a final argument when running the new checks against the legacy clipboard implementation; the candidate-only checks are then skipped.
 
 ## Known limitations
 

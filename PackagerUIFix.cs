@@ -1,5 +1,7 @@
 using Il2CppScheduleOne.UI.Management;
 using HarmonyLib;
+using Il2CppInterop.Runtime;
+using Il2CppInterop.Runtime.InteropTypes;
 using Il2CppTMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -8,6 +10,15 @@ namespace SkoofidonsHRDepartment
 {
     public static class PackagerUIFix
     {
+        public static PackagerConfigPanel FindHandlerPanel(Component component)
+        {
+            if (component == null) return null;
+            // The generated GetComponentInParent<T>(bool) contains invalid
+            // Cast<T> constraints in this interop build. Use its native overload.
+            return component.GetComponentInParent(Il2CppType.Of<PackagerConfigPanel>(), true)
+                ?.TryCast<PackagerConfigPanel>();
+        }
+
         public static void InitializeRouteOverride()
         {
             foreach (var panel in Resources.FindObjectsOfTypeAll<PackagerConfigPanel>())
@@ -25,7 +36,7 @@ namespace SkoofidonsHRDepartment
                     {
                         // Handler uses its typed panel binding below, including
                         // panels instantiated after scene initialization.
-                        if (textComponent.GetComponentInParent<PackagerConfigPanel>(true) != null) continue;
+                        if (FindHandlerPanel(textComponent) != null) continue;
                         FixListUI(textComponent, textComponent.transform.parent, null, 330f);
                     }
                 }
