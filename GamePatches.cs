@@ -23,8 +23,17 @@ namespace SkoofidonsHRDepartment
             if (__instance != null)
             {
                 EmployeeController.AddEmployee(__instance);
-                if (!Core.IsGameLoaded) EmployeeController.ApplyStats(__instance);
             }
+        }
+
+        // Start runs after configuration/movement initialization, also for new hires.
+        [HarmonyPatch(typeof(Employee), "Start")]
+        [HarmonyPostfix]
+        public static void EmployeeStartPostfix(Employee __instance)
+        {
+            if (__instance == null) return;
+            EmployeeController.AddEmployee(__instance);
+            EmployeeController.ApplyStats(__instance);
         }
 
         // --- 2. Перерасчет комиссии Фиксера ---
@@ -52,16 +61,13 @@ namespace SkoofidonsHRDepartment
         [HarmonyPostfix]
         public static void MenuClosePostfix() => _isScrollBlocked = false;
 
-        [HarmonyPatch(typeof(ManagementInterface), "Close")]
-        [HarmonyPrefix]
-        public static bool MenuClosePrefix() => !_isScrollBlocked; // Запрещаем закрывать, если скроллим
+        public static void ClearState() => _isScrollBlocked = false;
 
         [HarmonyPatch(typeof(GameInput), "OnScrollWheel")]
         [HarmonyPrefix]
-        public static bool DisableScrollWheel(InputValue value)
+        public static bool DisableScrollWheel()
         {
-            if (_isScrollBlocked) { value.Get<float>(); return false; }
-            return true;
+            return !_isScrollBlocked;
         }
     }
 }

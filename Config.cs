@@ -35,7 +35,7 @@ namespace SkoofidonsHRDepartment
         public static MelonPreferences_Entry<float> BotanistFee;
         public static MelonPreferences_Entry<float> BotanistWalkSpeed;
 
-        // (Тайминги ботаника скрыты из-за защиты памяти в версии 0.4.5+)
+        // Action timings are game constants; generated setters are not writable settings.
         // public static MelonPreferences_Entry<float> BotanistSoilTime;
         // public static MelonPreferences_Entry<float> BotanistWaterTime;
         // public static MelonPreferences_Entry<float> BotanistAdditiveTime;

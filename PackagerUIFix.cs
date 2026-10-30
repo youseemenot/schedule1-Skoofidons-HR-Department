@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Collections.Generic;
 using Il2CppTMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -8,8 +9,11 @@ namespace SkoofidonsHRDepartment
 {
     public static class PackagerUIFix
     {
+        private static readonly List<TextMeshProUGUI> RouteLabels = new List<TextMeshProUGUI>();
+
         public static void InitializeRouteOverride()
         {
+            RouteLabels.Clear();
             var allTexts = Resources.FindObjectsOfTypeAll<TextMeshProUGUI>();
 
             foreach (var textComponent in allTexts)
@@ -19,8 +23,10 @@ namespace SkoofidonsHRDepartment
                 // 1. Фикс для маршрутов (Handler)
                 if (textComponent.text.Contains("Routes"))
                 {
-                    if (textComponent.transform.parent.Find("Contents") != null)
+                    if (textComponent.transform.parent.Find("Contents") != null ||
+                        textComponent.transform.parent.Find("SkoofScrollArea") != null)
                     {
+                        RouteLabels.Add(textComponent);
                         // Добавляем счетчик из конфига
                         string routeTitle = $"Routes (Max: {Config.PackagerMaxRoutes.Value})";
                         // Передаем сам textComponent, чтобы точно изменить нужный текст, а не иконку
@@ -45,7 +51,11 @@ namespace SkoofidonsHRDepartment
             }
         }
 
-        public static void UpdateRouteCount() { }
+        public static void UpdateRouteCount()
+        {
+            foreach (var label in RouteLabels)
+                if (label != null) label.text = $"Routes (Max: {Config.PackagerMaxRoutes.Value})";
+        }
 
         private static void FixListUI(TextMeshProUGUI label, Transform parent, string newTitle, float scrollHeight)
         {
@@ -91,6 +101,6 @@ namespace SkoofidonsHRDepartment
             scrollRect.scrollSensitivity = 15f; // Чувствительность колесика мыши
         }
 
-        public static void ClearReferences() { }
+        public static void ClearReferences() => RouteLabels.Clear();
     }
 }

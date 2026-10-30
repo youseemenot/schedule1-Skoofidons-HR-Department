@@ -1,29 +1,41 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyName>SkoofidonsHRDepartment</AssemblyName>
-    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
-    <TargetFramework>netcoreapp6.0</TargetFramework>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <TargetFramework>net6.0</TargetFramework>
   </PropertyGroup>
   <PropertyGroup>
     <LangVersion>11.0</LangVersion>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <DisableTransitiveFrameworkReferenceDownloads>true</DisableTransitiveFrameworkReferenceDownloads>
+    <AssemblySearchPath_UseCandidateAssemblyFiles>false</AssemblySearchPath_UseCandidateAssemblyFiles>
+    <GameDirectory Condition="'$(GameDirectory)' == ''">$(SCHEDULE_I_GAME_DIR)</GameDirectory>
+    <LoaderDirectory>$(GameDirectory)/MelonLoader/net6</LoaderDirectory>
+    <InteropDirectory Condition="'$(InteropDirectory)' == ''">$(GameDirectory)/MelonLoader/Il2CppAssemblies</InteropDirectory>
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="MelonLoader"><HintPath>MelonLoader.dll</HintPath></Reference>
-    <Reference Include="0Harmony"><HintPath>0Harmony.dll</HintPath></Reference>
-    <Reference Include="Il2CppInterop.Runtime"><HintPath>Il2CppInterop.Runtime.dll</HintPath></Reference>
-    <Reference Include="Il2Cppmscorlib"><HintPath>Il2Cppmscorlib.dll</HintPath></Reference>
-    <Reference Include="Il2CppFishNet.Runtime"><HintPath>Il2CppFishNet.Runtime.dll</HintPath></Reference>
+    <Compile Include="*.cs" />
+    <Reference Include="MelonLoader"><HintPath>$(LoaderDirectory)/MelonLoader.dll</HintPath></Reference>
+    <Reference Include="0Harmony"><HintPath>$(LoaderDirectory)/0Harmony.dll</HintPath></Reference>
+    <Reference Include="Il2CppInterop.Runtime"><HintPath>$(LoaderDirectory)/Il2CppInterop.Runtime.dll</HintPath></Reference>
+    <Reference Include="Il2Cppmscorlib"><HintPath>$(InteropDirectory)/Il2Cppmscorlib.dll</HintPath></Reference>
+    <Reference Include="Il2CppFishNet.Runtime"><HintPath>$(InteropDirectory)/Il2CppFishNet.Runtime.dll</HintPath></Reference>
 
-    <Reference Include="UnityEngine.CoreModule"><HintPath>UnityEngine.CoreModule.dll</HintPath></Reference>
-    <Reference Include="UnityEngine.UI"><HintPath>UnityEngine.UI.dll</HintPath></Reference>
-    <Reference Include="Unity.InputSystem"><HintPath>Unity.InputSystem.dll</HintPath></Reference>
+    <Reference Include="UnityEngine.CoreModule"><HintPath>$(InteropDirectory)/UnityEngine.CoreModule.dll</HintPath></Reference>
+    <Reference Include="UnityEngine.UI"><HintPath>$(InteropDirectory)/UnityEngine.UI.dll</HintPath></Reference>
+    <Reference Include="Unity.InputSystem"><HintPath>$(InteropDirectory)/Unity.InputSystem.dll</HintPath></Reference>
 
-    <Reference Include="Assembly-CSharp"><HintPath>Assembly-CSharp.dll</HintPath></Reference>
-    <Reference Include="Il2CppScheduleOne.Core"><HintPath>Il2CppScheduleOne.Core.dll</HintPath></Reference>
+    <Reference Include="Assembly-CSharp"><HintPath>$(InteropDirectory)/Assembly-CSharp.dll</HintPath></Reference>
+    <Reference Include="Il2CppScheduleOne.Core"><HintPath>$(InteropDirectory)/Il2CppScheduleOne.Core.dll</HintPath></Reference>
 
-    <Reference Include="ModManager&amp;PhoneApp"><HintPath>ModManager&amp;PhoneApp.dll</HintPath></Reference>
-    <Reference Include="Unity.TextMeshPro"><HintPath>Unity.TextMeshPro.dll</HintPath></Reference>
+    <Reference Include="ModManager&amp;PhoneApp"><HintPath>$(GameDirectory)/Mods/ModManager&amp;PhoneApp.dll</HintPath></Reference>
+    <Reference Include="Unity.TextMeshPro"><HintPath>$(InteropDirectory)/Unity.TextMeshPro.dll</HintPath></Reference>
+    <Reference Update="@(Reference)"><Private>false</Private></Reference>
   </ItemGroup>
+  <Target Name="ValidateGameReferences" BeforeTargets="ResolveAssemblyReferences">
+    <Error Condition="'$(GameDirectory)' == ''" Text="Set GameDirectory or SCHEDULE_I_GAME_DIR to the Schedule I installation directory." />
+    <Error Condition="'%(Reference.HintPath)' != '' and !Exists('%(Reference.HintPath)')" Text="Missing game dependency: %(Reference.HintPath). Install MelonLoader and Phone App, then generate current IL2CPP assemblies." />
+  </Target>
 </Project>

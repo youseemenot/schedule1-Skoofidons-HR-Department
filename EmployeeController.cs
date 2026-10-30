@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using Il2CppScheduleOne.Employees;
 using Il2CppScheduleOne.DevUtilities;
 using Il2CppInterop.Runtime.InteropTypes;
-using System;
 
 namespace SkoofidonsHRDepartment
 {
@@ -47,25 +46,25 @@ namespace SkoofidonsHRDepartment
             {
                 emp.DailyWage = Config.PackagerWage.Value;
                 emp.SigningFee = Config.PackagerFee.Value;
-                if (emp.Movement != null) emp.Movement.WalkSpeed = Config.PackagerWalkSpeed.Value;
+                ApplyWalkSpeed(emp, Config.PackagerWalkSpeed.Value);
             }
             else if (typeName == "Chemist")
             {
                 emp.DailyWage = Config.ChemistWage.Value;
                 emp.SigningFee = Config.ChemistFee.Value;
-                if (emp.Movement != null) emp.Movement.WalkSpeed = Config.ChemistWalkSpeed.Value;
+                ApplyWalkSpeed(emp, Config.ChemistWalkSpeed.Value);
             }
             else if (typeName == "Botanist")
             {
                 emp.DailyWage = Config.BotanistWage.Value;
                 emp.SigningFee = Config.BotanistFee.Value;
-                if (emp.Movement != null) emp.Movement.WalkSpeed = Config.BotanistWalkSpeed.Value;
+                ApplyWalkSpeed(emp, Config.BotanistWalkSpeed.Value);
             }
             else if (typeName == "Cleaner")
             {
                 emp.DailyWage = Config.CleanerWage.Value;
                 emp.SigningFee = Config.CleanerFee.Value;
-                if (emp.Movement != null) emp.Movement.WalkSpeed = Config.CleanerWalkSpeed.Value;
+                ApplyWalkSpeed(emp, Config.CleanerWalkSpeed.Value);
             }
 
             if (!isPrefab)
@@ -94,8 +93,7 @@ namespace SkoofidonsHRDepartment
                 // Это поле не статическое, менять можно!
                 botanist.MaxAssignedPots = Config.BotanistMaxStations.Value;
 
-                // ТАЙМИНГИ БОТАНИКА УДАЛЕНЫ ИЗ-ЗА ЗАЩИТЫ ПАМЯТИ ИГРЫ
-                // (SoilPourTime, WaterPourTime и др. вызывали краш)
+                // Action timings are game constants, not writable employee settings.
             }
             else if (typeName == "Cleaner")
             {
@@ -103,6 +101,12 @@ namespace SkoofidonsHRDepartment
                 if (cleaner.configuration != null && cleaner.configuration.Bins != null)
                     cleaner.configuration.Bins.MaxItems = Config.CleanerMaxBins.Value;
             }
+        }
+
+        private static void ApplyWalkSpeed(Employee emp, float speed)
+        {
+            // Set an absolute base speed; repeated saves must not compound it.
+            emp.Movement?.SpeedController?.SetDefaultSpeed(speed);
         }
     }
 }

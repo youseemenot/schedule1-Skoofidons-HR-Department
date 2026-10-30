@@ -4,7 +4,9 @@ using Il2CppScheduleOne.DevUtilities;
 using Il2CppScheduleOne.Persistence;
 using UnityEngine.Events;
 
-[assembly: MelonInfo(typeof(SkoofidonsHRDepartment.Core), "Skoofidon's HR Department", "1.0.0", "Skoofidon")]
+[assembly: MelonInfo(typeof(SkoofidonsHRDepartment.Core), "Skoofidon's HR Department", "1.0.1", "Skoofidon")]
+[assembly: System.Reflection.AssemblyVersion("1.0.1.0")]
+[assembly: System.Reflection.AssemblyFileVersion("1.0.1.0")]
 [assembly: MelonGame("TVGS", "Schedule I")]
 [assembly: MelonColor(255, 0, 200, 0)]
 
@@ -23,7 +25,7 @@ namespace SkoofidonsHRDepartment
             Instance = this;
             Config.Initialize();
             ModManagerIntegration.Initialize();
-            LoggerInstance.Msg("Skoofidon's HR Department initialized successfully!");
+            LoggerInstance.Msg("HR Department 1.0.1 singleplayer test build (Schedule I 0.4.7f12).");
         }
 
         public override void OnDeinitializeMelon()
@@ -57,6 +59,8 @@ namespace SkoofidonsHRDepartment
         {
             if (sceneName == "Main")
             {
+                IsGameLoaded = false;
+                GamePatches.ClearState();
                 EmployeeController.ClearCache();
                 PackagerUIFix.ClearReferences();
             }
