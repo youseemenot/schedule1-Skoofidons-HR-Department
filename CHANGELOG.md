@@ -5,7 +5,9 @@
 - Apply Botanist Work speed through the native Employee.WorkSpeedController, like Handler/Chemist. Cover pot/fungal GrowContainer actions, drying-rack loading and spawn-station work with one existing preference.
 - Remove the five-action duration hook, its registration lifecycle, obsolete policy and policy tests. Avoid applying the factor twice; preserve native work effects, quantities and resources.
 - Preserve fixed pauses as requested, including dryer unload's single 0.5s animation wait and both supply-pickup waits. Retain existing Handler/Chemist/Cleaner behavior and machine clocks.
-- Add 14 reproducible native coverage checks and update actual-DLL regression checks. Prepare an isolated inactive machine-timer module outline with no active settings or patches. Runtime acceptance pending; no publication or co-op work.
+- Add 14 reproducible native coverage checks and update actual-DLL regression checks. Prepare an isolated inactive machine-timer module outline with no active settings or patches. User test result is recorded below; no publication or co-op work.
+
+Validation, 2026-10-30: the user reported no problems during singleplayer testing. Supplied log confirms the exact DLL, initialization/settings saves and all five Cleaner callbacks at factor 22, with no errors. One Il2CppInterop fallback warning and Phone App deprecated-event notifications are recorded separately. See [test result](docs/testing/2026-10-30-beta.4-singleplayer-result.md); individual scenario measurements were not supplied. DLL SHA256 remains E99020D98FFCDBC38C4DF874FC47F4F33ED3C7D7A45D51357B58AC2077898AAA. No publication performed.
 
 ## 1.1.0-beta.3 — Two speed settings per profession, unpublished
 
