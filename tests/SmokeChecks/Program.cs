@@ -167,10 +167,14 @@ if (!args.Contains("--baseline"))
 }
 if (args.Contains("--combined"))
 {
-    Check("combined DLL exposes all six botanist timing settings", () => {
+    Check("all professions expose exactly movement and work speed preferences", () => {
         var config = assembly.GetType("SkoofidonsHRDepartment.Config")!;
-        foreach (var name in new[] { "BotanistActionTimingEnabled", "BotanistSoilSpeed", "BotanistWaterSpeed", "BotanistAdditiveSpeed", "BotanistSeedSpeed", "BotanistHarvestSpeed" })
-            Expect(config.GetField(name, BindingFlags.Public | BindingFlags.Static) != null, "Timing preference missing: " + name);
+        var expected = new[] { "PackagerWalkSpeed", "PackagerSpeed", "ChemistWalkSpeed", "ChemistWorkSpeed", "BotanistWalkSpeed", "BotanistWorkSpeed", "CleanerWalkSpeed", "CleanerWorkSpeed" };
+        foreach (var name in expected)
+            Expect(config.GetField(name, BindingFlags.Public | BindingFlags.Static) != null, "Speed preference missing: " + name);
+        var actual = config.GetFields(BindingFlags.Public | BindingFlags.Static)
+            .Where(f => f.Name.Contains("Speed") || f.Name.Contains("Timing")).Select(f => f.Name).OrderBy(n => n);
+        Expect(actual.SequenceEqual(expected.OrderBy(n => n)), "Extra speed controls or botanist enable switch remain.");
     });
     Check("compiled timing policy scales harvest and employee speed once", () => {
         var type = assembly.GetType("SkoofidonsHRDepartment.BotanistTimingPolicy");
@@ -190,12 +194,12 @@ if (args.Contains("--combined"))
         System.Runtime.CompilerServices.RuntimeHelpers.PrepareMethod(target.MethodHandle);
         Expect(!controller!.CustomAttributes.Any(a => a.AttributeType.Name == "HarmonyPatch"), "Timing registration must remain explicit.");
     });
-    Check("compiled lifecycle wires timing toggles and layout size tracking", () => {
+    Check("compiled lifecycle wires work-rate changes and layout size tracking", () => {
         var core = assembly.GetType("SkoofidonsHRDepartment.Core")!;
         Expect(CalledMethods(core.GetMethod("OnInitializeMelon")!).Any(m => m.DeclaringType?.Name == "BotanistTimingController" && m.Name == "Initialize"), "Timing initialization not wired.");
         Expect(CalledMethods(core.GetMethod("OnUpdate")!).Any(m => m.DeclaringType?.Name == "ClipboardLayoutController" && m.Name == "RefreshTracked"), "Layout size tracking not wired.");
         var save = assembly.GetType("SkoofidonsHRDepartment.ModManagerIntegration")!.GetMethod("OnSettingsChanged", BindingFlags.NonPublic | BindingFlags.Static)!;
-        Expect(CalledMethods(save).Any(m => m.DeclaringType?.Name == "BotanistTimingController" && m.Name == "RefreshRegistration"), "Timing toggle cannot apply after save.");
+        Expect(CalledMethods(save).Any(m => m.DeclaringType?.Name == "BotanistTimingController" && m.Name == "RefreshRegistration"), "Work-rate changes cannot apply after save.");
     });
     Check("compiled layout budgets fit normal panels and scroll tiny panels", () => {
         var type = assembly.GetType("SkoofidonsHRDepartment.ClipboardLayoutPolicy");

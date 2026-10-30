@@ -19,6 +19,8 @@ namespace SkoofidonsHRDepartment
 
         public static bool IsFirstWait(int before, int after, bool running) => before == 0 && after == 1 && running;
 
+        public static bool RequiresPatch(float multiplier) => PositiveFinite(multiplier) && multiplier != 1f;
+
         public static float Resolve(TimingAction action, float originalDuration, float configuredMultiplier, bool enabled)
         {
             if (!enabled || !Known(action) || !NonNegativeFinite(originalDuration) || !PositiveFinite(configuredMultiplier))

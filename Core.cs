@@ -4,9 +4,9 @@ using Il2CppScheduleOne.DevUtilities;
 using Il2CppScheduleOne.Persistence;
 using UnityEngine.Events;
 
-[assembly: MelonInfo(typeof(SkoofidonsHRDepartment.Core), "Skoofidon's HR Department", "1.1.0-beta.2", "Skoofidon")]
+[assembly: MelonInfo(typeof(SkoofidonsHRDepartment.Core), "Skoofidon's HR Department", "1.1.0-beta.3", "Skoofidon")]
 [assembly: System.Reflection.AssemblyVersion("1.1.0.0")]
-[assembly: System.Reflection.AssemblyFileVersion("1.1.0.1")]
+[assembly: System.Reflection.AssemblyFileVersion("1.1.0.2")]
 [assembly: MelonGame("TVGS", "Schedule I")]
 [assembly: MelonColor(255, 0, 200, 0)]
 
@@ -27,7 +27,7 @@ namespace SkoofidonsHRDepartment
             BotanistTimingController.Initialize();
             CleanerActionSpeedController.Initialize();
             ModManagerIntegration.Initialize();
-            LoggerInstance.Msg("HR Department 1.1.0-beta.2 unified beneficial speed multipliers test build (Schedule I 0.4.7f12).");
+            LoggerInstance.Msg("HR Department 1.1.0-beta.3 movement and work speed controls test build (Schedule I 0.4.7f12).");
         }
 
         public override void OnDeinitializeMelon()

@@ -23,6 +23,13 @@ void Wait(string action, float wait, float speed, float multiplier, bool enabled
 }
 
 string[] actions = { "Soil", "Water", "Additive", "Seed", "Harvest" };
+Check("normal and invalid work rates need no botanist patch", () => {
+    foreach (float value in new[] { 1f, 0f, -1f, float.NaN, float.PositiveInfinity, float.NegativeInfinity })
+        Expect(!(bool)Call("RequiresPatch", value));
+});
+Check("one common work rate activates acceleration or slowdown without a switch", () => {
+    foreach (float value in new[] { 7f, 2f, .5f, .01f }) Expect((bool)Call("RequiresPatch", value));
+});
 foreach (string action in actions) {
     Check(action + " multiplier one preserves exact game duration", () => {
         foreach (float duration in new[] { 0f, -0f, float.Epsilon, 15.125f, float.MaxValue })

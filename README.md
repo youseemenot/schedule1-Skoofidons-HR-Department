@@ -2,7 +2,7 @@
 
 A MelonLoader mod for **Schedule I** that configures employee stats and assignment limits through Mod Manager & Phone App.
 
-**Local test candidate: 1.1.0-beta.2.** Adds work rates for Handler, Chemist and Cleaner, five botanist action rates, movement multipliers and adaptive clipboard layout. Every performance multiplier uses 1 = normal and 7 = seven times faster. Prepared for the user's combined gameplay test; runtime acceptance is pending. The public release remains 1.0.5. See [the current checklist](docs/testing/2026-10-30-unified-speed-candidate.md).
+**Local test candidate: 1.1.0-beta.3.** Every profession has the same two performance settings: movement speed and work speed. One botanist work rate covers soil, water, additives, planting and harvest, without a separate switch. Every multiplier uses 1 = normal and 7 = seven times faster. Includes adaptive clipboard layout; runtime acceptance is pending. The public release remains 1.0.5. See [the current checklist](docs/testing/2026-10-30-two-speed-candidate.md).
 
 **Current version: [1.0.5](https://github.com/youseemenot/schedule1-Skoofidons-HR-Department/releases/tag/v1.0.5), tested in singleplayer.** On 2026-10-30 the user confirmed that more than ten Handler stations can be assigned, scrolling and removal work, and the logs contain no errors. This release includes the used/limit/free route counter, expanded station rows and the parent-lookup compatibility fix. See [the test result](docs/testing/2026-10-30-1.0.5-singleplayer-result.md). Individual stress, multi-selection and save/reload scenarios remain unrecorded.
 
@@ -29,21 +29,20 @@ All performance values default to **1**. Movement uses original speed × multipl
 | Setting | Default | Meaning |
 | --- | --- | --- |
 | Move speed x — all four professions | 1 | Scale original movement speed and its cap |
-| Packing and pressing x — Handler | 1 | Native work-speed multiplier for packaging and brick presses |
-| Station work x — Chemist | 1 | Manual loading, preparation, stirring and harvesting stages |
-| Cleaning actions x — Cleaner | 1 | Pickup, bagging, grabber emptying and bag disposal waits |
-| Custom action rates — Botanist | Off | Enable the five action multipliers below |
-| Soil filling / Watering / Additives / Planting / Harvesting x | 1 each | Shorten the original contextual wait; preserve harvest quantity and native work-speed effects |
+| Work speed x — Handler | 1 | Packaging and brick presses |
+| Work speed x — Chemist | 1 | Manual loading, preparation, stirring and harvesting stages |
+| Work speed x — Cleaner | 1 | Pickup, bagging, grabber emptying and bag disposal waits |
+| Work speed x — Botanist | 1 | One factor for soil, water, additives, planting and harvest; preserve quantity and native work-speed effects |
 
 Save preferences to apply. Botanist changes affect the next action; Cleaner changes affect future yielded waits. Already scheduled waits retain their duration. Passive machine recipe timers are unchanged. Invalid/nonpositive multipliers retain or restore normal behavior. Repeated saves do not compound movement/work rates; native work buffs remain in effect.
 
-New `WalkSpeedMultiplier`, `WorkSpeedMultiplier` and five botanist `*SpeedMultiplier` keys prevent old absolute speeds or seconds from being reinterpreted as factors. Set desired values again after upgrading; the botanist enable flag is retained. Keep a preferences backup for rollback. Contextual timing hooks are restricted to the audited game binary and reject conflicts. Keep the separate SkoofidonsHRBotanistProbe DLL outside Mods.
+The keys are `WalkSpeedMultiplier` and `WorkSpeedMultiplier` in each profession's category. Botanist's new work key starts at 1; the five earlier action values and enable flag are no longer registered or used. Other beta.2 movement/work values retain their keys. Old absolute speeds or seconds are not reinterpreted as multipliers. Keep a preferences backup for rollback. Contextual timing hooks are restricted to the audited game binary and reject conflicts. Keep the separate SkoofidonsHRBotanistProbe DLL outside Mods. Returning work speed to 1 restores normal waits for future actions without a separate switch.
 
 ## Installation
 1. Close the game and move every previous HR DLL, including `.dll.disabled` backups, **outside `Mods`**. Do not keep both `SkoofidonsHRDepartment.dll` and `SkoofidonsHRDepartment.dll.disabled` there: Phone App uses those names to enable/disable the mod, and an existing destination blocks the rename.
 2. Copy only `SkoofidonsHRDepartment.dll` to `Mods`. Do not distribute or install game/loader reference DLLs from a build directory.
 3. Launch the game. After an update, MelonLoader may first regenerate its IL2CPP assemblies.
-4. Confirm the installed HR version (**1.0.5** stable or **1.1.0-beta.2** local candidate) and **Schedule I 0.4.7f12** in the new `MelonLoader/Latest.log`. For station limits, open **Handler Settings → Max stations** in Phone App, save and reopen the clipboard. See [the station-list checklist](docs/testing/2026-10-30-handler-station-rows.md) and [the route-counter checklist](docs/testing/2026-10-30-handler-route-counter.md).
+4. Confirm the installed HR version (**1.0.5** stable or **1.1.0-beta.3** local candidate) and **Schedule I 0.4.7f12** in the new `MelonLoader/Latest.log`. For station limits, open **Handler Settings → Max stations** in Phone App, save and reopen the clipboard. See [the station-list checklist](docs/testing/2026-10-30-handler-station-rows.md) and [the route-counter checklist](docs/testing/2026-10-30-handler-route-counter.md).
 
 ## Build from source
 
@@ -68,7 +67,7 @@ dotnet run --project tests/SmokeChecks -c Release -- `
   'S:\SteamLibrary\steamapps\common\Schedule I\MelonLoader\Il2CppAssemblies'
 ```
 
-The stable managed suite has 22 checks. Add `--combined --unified` for 31 checks on this candidate's actual DLL, including timing/lifecycle/layout boundaries. Pure suites cover botanist timing (39), employee rates (12), Cleaner waits (8) and layout budgets (43): 133 checks in total. These do not execute Unity or native employee callbacks, rendering, cloning or resource handling. The JIT check catches invalid generated helper IL that member-existence checks miss. Use `--baseline` for the legacy clipboard implementation.
+The stable managed suite has 22 checks. Add `--combined --unified` for 31 checks on this candidate's actual DLL, including preference schema and timing/lifecycle/layout boundaries. Pure suites cover botanist timing (41), employee rates (12), Cleaner waits (8) and layout budgets (43): 135 checks in total. These do not execute Unity or native employee callbacks, rendering, cloning or resource handling. The JIT check catches invalid generated helper IL that member-existence checks miss. Use `--baseline` for the legacy clipboard implementation.
 
 ## Known limitations
 

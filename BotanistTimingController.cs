@@ -17,7 +17,7 @@ using Routine = Il2CppScheduleOne.NPCs.Behaviour.GrowContainerBehaviour.ObjectCo
 namespace SkoofidonsHRDepartment
 {
     /// <summary>
-    /// Opt-in, manually registered patch of the audited contextual iterator.
+    /// Manually registered patch of the audited contextual iterator, only for non-neutral work rates.
     /// No GetActionDuration patch: that native body is shared with unrelated graphics code.
     /// Registration/API checks do not establish gameplay correctness; joint runtime testing is still required.
     /// </summary>
@@ -45,7 +45,7 @@ namespace SkoofidonsHRDepartment
         {
             try
             {
-                if (!_initialized || Config.BotanistActionTimingEnabled?.Value != true)
+                if (!_initialized || !BotanistTimingPolicy.RequiresPatch(ConfiguredMultiplier()))
                 {
                     RemovePatch();
                     _registrationErrorLogged = false;
@@ -142,14 +142,14 @@ namespace SkoofidonsHRDepartment
         private static void MoveNextPrefix(Routine __instance, out int __state)
         {
             __state = int.MinValue;
-            if (!_active || Config.BotanistActionTimingEnabled?.Value != true || __instance == null) return;
+            if (!_active || !BotanistTimingPolicy.RequiresPatch(ConfiguredMultiplier()) || __instance == null) return;
             try { __state = __instance.__1__state; }
             catch (Exception ex) { LogHookError(ex); }
         }
 
         private static void MoveNextPostfix(Routine __instance, bool __result, int __state)
         {
-            if (!_active || Config.BotanistActionTimingEnabled?.Value != true || __instance == null || __state != 0) return;
+            if (!_active || !BotanistTimingPolicy.RequiresPatch(ConfiguredMultiplier()) || __instance == null || __state != 0) return;
             try
             {
                 if (!BotanistTimingPolicy.IsFirstWait(__state, __instance.__1__state, __result) || __instance._i_5__3 != 0f) return;
@@ -163,7 +163,7 @@ namespace SkoofidonsHRDepartment
                     npc.GetIl2CppType().FullName != "ScheduleOne.Employees.Botanist") return;
                 float originalWait = __instance._waitTime_5__2;
                 float speed = botanist.CurrentWorkSpeed;
-                float multiplier = ConfiguredMultiplier(kind);
+                float multiplier = ConfiguredMultiplier();
                 if (!BotanistTimingPolicy.TryResolveWait(kind, originalWait, speed, multiplier, true, out float desiredWait))
                 {
                     LogSample(kind, "SKIPPED", originalWait, originalWait, speed, multiplier);
@@ -176,15 +176,7 @@ namespace SkoofidonsHRDepartment
             catch (Exception ex) { LogHookError(ex); }
         }
 
-        private static float ConfiguredMultiplier(TimingAction kind) => kind switch
-        {
-            TimingAction.Soil => Config.BotanistSoilSpeed.Value,
-            TimingAction.Water => Config.BotanistWaterSpeed.Value,
-            TimingAction.Additive => Config.BotanistAdditiveSpeed.Value,
-            TimingAction.Seed => Config.BotanistSeedSpeed.Value,
-            TimingAction.Harvest => Config.BotanistHarvestSpeed.Value,
-            _ => float.NaN
-        };
+        private static float ConfiguredMultiplier() => Config.BotanistWorkSpeed?.Value ?? 1f;
 
         private static void LogSample(TimingAction kind, string status, float original, float desired, float speed, float multiplier)
         {

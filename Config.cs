@@ -36,13 +36,7 @@ namespace SkoofidonsHRDepartment
         public static MelonPreferences_Entry<float> BotanistFee;
         public static MelonPreferences_Entry<float> BotanistWalkSpeed;
 
-        // Overrides apply to individual actions; the game's constants stay intact.
-        public static MelonPreferences_Entry<bool> BotanistActionTimingEnabled;
-        public static MelonPreferences_Entry<float> BotanistSoilSpeed;
-        public static MelonPreferences_Entry<float> BotanistWaterSpeed;
-        public static MelonPreferences_Entry<float> BotanistAdditiveSpeed;
-        public static MelonPreferences_Entry<float> BotanistSeedSpeed;
-        public static MelonPreferences_Entry<float> BotanistHarvestSpeed;
+        public static MelonPreferences_Entry<float> BotanistWorkSpeed;
 
         // Уборщик
         public static MelonPreferences_Entry<int> CleanerMaxBins;
@@ -55,8 +49,8 @@ namespace SkoofidonsHRDepartment
             category.CreateEntry("WalkSpeedMultiplier", 1f, "Move speed x (higher = faster)",
                 "1 = game normal; 7 = seven times faster; 0.5 = half speed. Relative to the employee's original movement speed.");
 
-        private static MelonPreferences_Entry<float> ActionRate(MelonPreferences_Category category, string key, string title) =>
-            category.CreateEntry(key, 1f, title + " x (higher = less time)",
+        private static MelonPreferences_Entry<float> WorkRate(MelonPreferences_Category category) =>
+            category.CreateEntry("WorkSpeedMultiplier", 1f, "Work speed x (higher = less time)",
                 "1 = normal time; 7 = normal time divided by seven; 0.5 = twice as long. Preserves native work-speed effects and quantities.");
 
         public static void Initialize()
@@ -69,7 +63,7 @@ namespace SkoofidonsHRDepartment
             PackagerCat = MelonPreferences.CreateCategory("Skoofidon's HR Department_Packager", "Handler Settings");
             PackagerMaxRoutes = PackagerCat.CreateEntry("MaxRoutes", 5, "Max routes (higher = more routes)", "Higher = More delivery points");
             PackagerMaxStations = PackagerCat.CreateEntry("MaxStations", 3, "Max stations (higher = more stations)", "Higher = Work at more tables");
-            PackagerSpeed = ActionRate(PackagerCat, "WorkSpeedMultiplier", "Packing and pressing");
+            PackagerSpeed = WorkRate(PackagerCat);
             PackagerWage = PackagerCat.CreateEntry("DailyWage", 200f, "Daily Wage", "Higher = Costs more per day");
             PackagerFee = PackagerCat.CreateEntry("SigningFee", 1000f, "Signing Fee", "Base cost to hire");
             PackagerWalkSpeed = Movement(PackagerCat);
@@ -79,28 +73,22 @@ namespace SkoofidonsHRDepartment
             ChemistWage = ChemistCat.CreateEntry("DailyWage", 300f, "Daily Wage", "Higher = Costs more per day");
             ChemistFee = ChemistCat.CreateEntry("SigningFee", 1500f, "Signing Fee", "Base cost to hire");
             ChemistWalkSpeed = Movement(ChemistCat);
-            ChemistWorkSpeed = ActionRate(ChemistCat, "WorkSpeedMultiplier", "Station work");
+            ChemistWorkSpeed = WorkRate(ChemistCat);
 
             BotanistCat = MelonPreferences.CreateCategory("Skoofidon's HR Department_Botanist", "Botanist Settings");
             BotanistMaxStations = BotanistCat.CreateEntry("MaxStations", 8, "Max pots (higher = more pots)", "Higher = Work at more pots");
             BotanistWage = BotanistCat.CreateEntry("DailyWage", 200f, "Daily Wage", "Higher = Costs more per day");
             BotanistFee = BotanistCat.CreateEntry("SigningFee", 1000f, "Signing Fee", "Base cost to hire");
             BotanistWalkSpeed = Movement(BotanistCat);
-            BotanistActionTimingEnabled = BotanistCat.CreateEntry("ActionTimingOverridesEnabled", false,
-                "Custom action rates (on = enabled)", "Enable per-action time reductions. Larger multipliers mean shorter actions.");
-            // New keys avoid reinterpreting stored seconds as speed multipliers.
-            BotanistSoilSpeed = ActionRate(BotanistCat, "SoilSpeedMultiplier", "Soil filling");
-            BotanistWaterSpeed = ActionRate(BotanistCat, "WaterSpeedMultiplier", "Watering");
-            BotanistAdditiveSpeed = ActionRate(BotanistCat, "AdditiveSpeedMultiplier", "Additives");
-            BotanistSeedSpeed = ActionRate(BotanistCat, "SeedSpeedMultiplier", "Planting");
-            BotanistHarvestSpeed = ActionRate(BotanistCat, "HarvestSpeedMultiplier", "Harvesting");
+            // One common work rate replaces the experimental five settings and switch.
+            BotanistWorkSpeed = WorkRate(BotanistCat);
 
             CleanerCat = MelonPreferences.CreateCategory("Skoofidon's HR Department_Cleaner", "Cleaner Settings");
             CleanerMaxBins = CleanerCat.CreateEntry("MaxBins", 3, "Max bins (higher = more bins)", "Higher = Clean more bins");
             CleanerWage = CleanerCat.CreateEntry("DailyWage", 100f, "Daily Wage", "Higher = Costs more per day");
             CleanerFee = CleanerCat.CreateEntry("SigningFee", 500f, "Signing Fee", "Base cost to hire");
             CleanerWalkSpeed = Movement(CleanerCat);
-            CleanerWorkSpeed = ActionRate(CleanerCat, "WorkSpeedMultiplier", "Cleaning actions");
+            CleanerWorkSpeed = WorkRate(CleanerCat);
 
             MelonPreferences.Save();
         }

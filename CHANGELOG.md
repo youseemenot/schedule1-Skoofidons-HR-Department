@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.0-beta.3 — Two speed settings per profession, unpublished
+
+- Use the same Move speed and Work speed labels for all four professions. Both default to 1; increasing work speed shortens action waits.
+- Replace five botanist action multipliers and Custom action rates switch with one WorkSpeedMultiplier for soil, water, additives, planting and harvesting. Non-neutral valid values apply automatically after saving; 1 restores normal behavior for future actions.
+- Start the new botanist work key at 1 rather than guessing how to merge different prior action values. Retain existing movement and other professions' work keys and values. Keep native timing guards, resources, yield lifecycle and adaptive clipboard unchanged.
+- Candidate prepared for a combined singleplayer test; no GitHub publication or co-op change.
+
 ## 1.1.0-beta.2 — Unified performance multipliers, unpublished
 
 - Make every performance multiplier use 1 = normal, 7 = seven times faster, 0.5 = half speed. Labels explain that higher movement values mean faster movement and higher action values mean less time.
