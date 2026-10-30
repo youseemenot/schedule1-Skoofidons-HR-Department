@@ -212,11 +212,72 @@ if (args.Contains("--combined"))
 }
 if (args.Contains("--unified"))
 {
-    Check("machine timer scaffold is absent from active preferences", () => {
+    Check("machine and growth timers expose seven separate rate preferences", () => {
         var config = assembly.GetType("SkoofidonsHRDepartment.Config")!;
         var fields = config.GetFields(BindingFlags.Public | BindingFlags.Static);
-        Expect(fields.Count(f => f.FieldType.Name == "MelonPreferences_Category") == 5, "Unexpected active settings category.");
-        Expect(!fields.Any(f => f.Name.Contains("Machine") || f.Name.Contains("CookTime") || f.Name.Contains("MixTime")), "Deferred machine settings became active.");
+        Expect(fields.Count(f => f.FieldType.Name == "MelonPreferences_Category") == 6, "Machine Timers category missing or duplicated.");
+        foreach (var name in new[] { "MachineChemistryRate", "MachineOvenRate", "MachineMixingRate", "MachineCauldronRate", "MachineDryingRate", "MachinePlantRate", "MachineShroomRate" })
+            Expect(fields.Any(f => f.Name == name && f.FieldType.IsGenericType && f.FieldType.GenericTypeArguments.Single() == typeof(float)), "Machine preference missing: " + name);
+    });
+    Check("machine timer lifecycle and settings preserve the new-operation boundary", () => {
+        var controller = assembly.GetType("SkoofidonsHRDepartment.MachineTimerController");
+        Expect(controller != null, "Machine timer controller missing.");
+        var core = assembly.GetType("SkoofidonsHRDepartment.Core")!;
+        Expect(CalledMethods(core.GetMethod("OnInitializeMelon")!).Any(m => m.DeclaringType == controller && m.Name == "Initialize"), "Machine initialization missing.");
+        Expect(CalledMethods(core.GetMethod("OnDeinitializeMelon")!).Any(m => m.DeclaringType == controller && m.Name == "Deinitialize"), "Machine cleanup missing.");
+        var save = assembly.GetType("SkoofidonsHRDepartment.ModManagerIntegration")!.GetMethod("OnSettingsChanged", BindingFlags.NonPublic | BindingFlags.Static)!;
+        Expect(!CalledMethods(save).Any(m => m.DeclaringType == controller && m.Name == "ClearState"), "Preference save discards rates captured by running operations.");
+    });
+    Check("all guarded machine targets and injected callbacks resolve and JIT", () => {
+        var controller = assembly.GetType("SkoofidonsHRDepartment.MachineTimerController");
+        Expect(controller != null, "Machine timer controller missing.");
+        Expect((int)controller!.GetMethod("VerifyManagedBindings")!.Invoke(null, null)! == 45, "Audited target set changed.");
+    });
+    Check("actual DLL preserves captured factors through save and load", () => {
+        var ledgerType = assembly.GetType("SkoofidonsHRDepartment.MachineTimerLedger")!;
+        var stateType = assembly.GetType("SkoofidonsHRDepartment.MachineTimerPersistence")!;
+        var snapshotType = assembly.GetType("SkoofidonsHRDepartment.MachineTimerSnapshot")!;
+        var kind = Enum.Parse(assembly.GetType("SkoofidonsHRDepartment.MachineTimerKind")!, "Oven");
+        object Snapshot(string identity) => Activator.CreateInstance(snapshotType, new object[] { kind, "oven", identity, "aa63bc20-e2e3-44e9-b808-50cf94c270cd", "batch", 10d, 20, 0 })!;
+        object State() => Activator.CreateInstance(stateType, Activator.CreateInstance(ledgerType))!;
+        double Rate(object record) => (double)record.GetType().GetProperty("CapturedRate")!.GetValue(record)!;
+        var state = State(); var snapshot = Snapshot("original");
+        stateType.GetMethod("Capture")!.Invoke(state, new[] { snapshot, (object)7d, false });
+        Expect(Rate(stateType.GetMethod("Capture")!.Invoke(state, new[] { snapshot, (object)2d, false })!) == 7d, "Existing factor was replaced by a preference change.");
+        var snapshots = Array.CreateInstance(snapshotType, 1); snapshots.SetValue(snapshot, 0);
+        string json = (string)stateType.GetMethod("Serialize")!.Invoke(state, new object[] { snapshots })!;
+        var restored = State();
+        object scope = stateType.GetMethod("BeginLoad")!.Invoke(restored, new object[] { kind, "{\"GUID\":\"aa63bc20-e2e3-44e9-b808-50cf94c270cd\"}", json })!;
+        object record = stateType.GetMethod("Capture")!.Invoke(restored, new[] { Snapshot("restored"), (object)2d, false })!;
+        Expect(Rate(record) == 7d, "Saved factor was not restored.");
+        stateType.GetMethod("EndLoad")!.Invoke(restored, new[] { scope, (object)false });
+    });
+    Check("growth rate lookup cannot preempt asynchronous saved-rate restoration", () => {
+        var controller = assembly.GetType("SkoofidonsHRDepartment.MachineTimerController")!;
+        controller.GetMethod("ClearState")!.Invoke(null, null);
+        var kind = Enum.Parse(assembly.GetType("SkoofidonsHRDepartment.MachineTimerKind")!, "PlantGrowth");
+        var lookup = controller.GetMethod("GrowthRate", BindingFlags.NonPublic | BindingFlags.Static)!;
+        Expect((double)lookup.Invoke(null, new object[] { kind, new IntPtr(0x12345) })! == 1d, "Unknown growth must stay native.");
+        var ledger = controller.GetField("Ledger", BindingFlags.NonPublic | BindingFlags.Static)!.GetValue(null)!;
+        object[] input = { "PlantGrowth:12345", null! };
+        Expect(!(bool)ledger.GetType().GetMethod("TryGet")!.Invoke(ledger, input)!, "A read-only growth lookup adopted rate1 before async restore.");
+    });
+    Check("drying capture targets the reached broadcast path across serialized identities", () => {
+        var controller = assembly.GetType("SkoofidonsHRDepartment.MachineTimerController")!;
+        var specs = (Array)controller.GetField("PatchSpecs", BindingFlags.NonPublic | BindingFlags.Static)!.GetValue(null)!;
+        string Name(object spec) => (string)spec.GetType().GetProperty("Name")!.GetValue(spec)!;
+        Expect(specs.Cast<object>().Any(s => Name(s) == "PleaseReceiveOp"), "Reached server broadcast method is not hooked.");
+        Expect(!specs.Cast<object>().Any(s => Name(s) == "RpcLogic___SendOperation_1307702229"), "Drying capture still relies on the inlined/bypassed send logic.");
+        Expect(assembly.GetType("SkoofidonsHRDepartment.MachineDryingCaptureQueue") != null, "Serialized receiver cannot recover its captured factor.");
+    });
+    Check("proven new plants and colonies discard recycled pointer records", () => {
+        var controller = assembly.GetType("SkoofidonsHRDepartment.MachineTimerController")!;
+        foreach (var name in new[] { "PotSeedPostfix", "ColonyCreatePostfix" }) {
+            var calls = CalledMethods(controller.GetMethod(name, BindingFlags.Public | BindingFlags.Static)!).ToList();
+            int forget = calls.FindIndex(m => m.DeclaringType?.Name == "MachineTimerLedger" && m.Name == "Forget");
+            int capture = calls.FindIndex(m => m.Name == "Capture");
+            Expect(forget >= 0 && capture > forget, "New crop can retain the previous occupant's factor: " + name);
+        }
     });
     Check("compiled movement multiplier scales speed and cap sevenfold", () => {
         var policy = assembly.GetType("SkoofidonsHRDepartment.EmployeeSpeedPolicy");

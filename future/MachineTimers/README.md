@@ -1,6 +1,6 @@
-# Machine timer module — inactive scaffold
+# Machine timer module — local 1.2.0-beta.1 candidate
 
-Status: deferred by the user on 2026-10-30. This directory is excluded from the current top-level C# compile. It registers no settings, patches, save fields or runtime callbacks. Employee Work speed must not consume these machine clocks.
+The user resumed this block and selected drying plus plant/fungal growth, applying factors only to new operations. Implementation lives in the root MachineTimer*.cs and MachineGrowth*.cs files. This directory remains an overview; stable1.1.0 does not contain active machine code. The local candidate awaits gameplay verification.
 
 ## Audited integration inventory
 
@@ -11,10 +11,12 @@ Status: deferred by the user on 2026-10-30. This directory is excluded from the 
 | MixingStation / Mk2 | MixTimePerItem × MixOperation quantity, OnTimePass | Batch quantity, mixer consumption, progress and output |
 | Cauldron | CookTime / RemainingCookTime | Operation identity, ingredients and product |
 
-See [the native process audit](../../docs/research/2026-10-30-employee-process-coverage.md) for addresses and evidence. Drying/world growth clocks require a separate audit before adding them to this inventory.
+DryingRack changes per-operation float progress while retaining native quality transitions. Plant/fungal growth changes only positive deltas inside native growth callbacks, preserving their environmental checks and water timing. See [the design](../../docs/superpowers/specs/2026-10-30-machine-timers-design.md) and [candidate checklist](../../docs/testing/2026-10-30-machine-timers-candidate.md).
 
-## Reserved boundary
+## Operation boundary and saves
 
-Future configuration belongs in its own Machine Timers category, independent of employee type and presence. Defaults must preserve native clocks. Do not add entries or compile an override until this block is explicitly resumed.
+Machine Timers has seven independent factors, default1. A batch captures its value at actual start. A preference change affects only subsequent batches. Existing/unrecognized operations and legacy saves without metadata use1. Mixing/Mk2 share a factor; simultaneous drying operations retain separate captures. No extra enable switch is required.
 
-Before implementation, decide whether changes affect only new operations or also running ones, how to retain fractional progress when native timers are integer game minutes, and how to distinguish player-started operations. Then audit save/reload, recipe completion/resource quantities, Mk2 behavior, cancellation and any shared native bodies. Co-op needs its own design; it is not implicitly enabled by this outline.
+Native progress fields retain their meaning. Versioned additional DynamicSaveData stores captured factors and fractional integer-minute credit; malformed/future/mismatched data falls back to1. Saved asynchronous plant creation has a persistent restore marker; drying matches captured server requests to serialized receiver batches instead of object pointers. Removing the candidate retains native progress; its extra factors are then ignored and may be discarded on a subsequent save.
+
+Preparation/recovery waits, worker Work speed, global time, watering and unrelated equipment remain independent. Passive spawn-station time is not duplicated: its existing stage belongs to employee work. Native per-tick completion and drying quality limits remain. Co-op synchronization is deferred.

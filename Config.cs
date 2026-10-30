@@ -9,6 +9,14 @@ namespace SkoofidonsHRDepartment
         public static MelonPreferences_Category ChemistCat;
         public static MelonPreferences_Category BotanistCat;
         public static MelonPreferences_Category CleanerCat;
+        public static MelonPreferences_Category MachinesCat;
+        public static MelonPreferences_Entry<float> MachineChemistryRate;
+        public static MelonPreferences_Entry<float> MachineOvenRate;
+        public static MelonPreferences_Entry<float> MachineMixingRate;
+        public static MelonPreferences_Entry<float> MachineCauldronRate;
+        public static MelonPreferences_Entry<float> MachineDryingRate;
+        public static MelonPreferences_Entry<float> MachinePlantRate;
+        public static MelonPreferences_Entry<float> MachineShroomRate;
 
         // Фиксер
         public static MelonPreferences_Entry<float> FixerFeeLess5;
@@ -90,7 +98,20 @@ namespace SkoofidonsHRDepartment
             CleanerWalkSpeed = Movement(CleanerCat);
             CleanerWorkSpeed = WorkRate(CleanerCat);
 
+            MachinesCat = MelonPreferences.CreateCategory("Skoofidon's HR Department_Machines", "Machine Timers");
+            MachineChemistryRate = MachineRate("ChemistryRate", "Chemistry");
+            MachineOvenRate = MachineRate("OvenRate", "Oven");
+            MachineMixingRate = MachineRate("MixingRate", "Mixing");
+            MachineCauldronRate = MachineRate("CauldronRate", "Cauldron");
+            MachineDryingRate = MachineRate("DryingRate", "Drying");
+            MachinePlantRate = MachineRate("PlantRate", "Plant growth");
+            MachineShroomRate = MachineRate("ShroomRate", "Mushroom growth");
+
             MelonPreferences.Save();
         }
+
+        private static MelonPreferences_Entry<float> MachineRate(string key, string title) =>
+            MachinesCat.CreateEntry(key, 1f, title + " x (higher = less time)",
+                "New operations only: 1 = normal; 7 = seven times faster; 0.5 = half speed. The captured factor survives saving/loading. Existing operations retain their factor; employee actions are separate.");
     }
 }

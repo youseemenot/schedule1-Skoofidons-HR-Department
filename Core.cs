@@ -4,9 +4,9 @@ using Il2CppScheduleOne.DevUtilities;
 using Il2CppScheduleOne.Persistence;
 using UnityEngine.Events;
 
-[assembly: MelonInfo(typeof(SkoofidonsHRDepartment.Core), "Skoofidon's HR Department", "1.1.0", "Skoofidon")]
-[assembly: System.Reflection.AssemblyVersion("1.1.0.0")]
-[assembly: System.Reflection.AssemblyFileVersion("1.1.0.0")]
+[assembly: MelonInfo(typeof(SkoofidonsHRDepartment.Core), "Skoofidon's HR Department", "1.2.0-beta.1", "Skoofidon")]
+[assembly: System.Reflection.AssemblyVersion("1.2.0.0")]
+[assembly: System.Reflection.AssemblyFileVersion("1.2.0.0")]
 [assembly: MelonGame("TVGS", "Schedule I")]
 [assembly: MelonColor(255, 0, 200, 0)]
 
@@ -25,8 +25,9 @@ namespace SkoofidonsHRDepartment
             Instance = this;
             Config.Initialize();
             CleanerActionSpeedController.Initialize();
+            MachineTimerController.Initialize();
             ModManagerIntegration.Initialize();
-            LoggerInstance.Msg("HR Department 1.1.0 initialized (Schedule I 0.4.7f12).");
+            LoggerInstance.Msg("HR Department 1.2.0-beta.1 machine/growth timer candidate initialized (Schedule I 0.4.7f12).");
         }
 
         public override void OnDeinitializeMelon()
@@ -37,6 +38,7 @@ namespace SkoofidonsHRDepartment
             }
             ModManagerIntegration.Deinitialize();
             CleanerActionSpeedController.Deinitialize();
+            MachineTimerController.Deinitialize();
             EmployeeSpeedController.RestoreAndClear();
             PackagerUIFix.ClearReferences();
         }
@@ -69,6 +71,7 @@ namespace SkoofidonsHRDepartment
                 GamePatches.ClearState();
                 EmployeeController.ClearCache();
                 CleanerActionSpeedController.ClearState();
+                MachineTimerController.ClearState();
                 PackagerUIFix.ClearReferences();
             }
         }

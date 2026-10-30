@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.0-beta.1 — Machine and growth timer candidate, unpublished
+
+- Add seven default1 factors in Machine Timers: chemistry, oven, mixing/Mk2, cauldron, drying, plant growth and mushroom growth. Higher values shorten affected time; 0.5 slows it down.
+- Capture the factor only when a new operation/crop starts. Preserve it across preference changes and native DynamicSaveData roundtrips, including fractional minute credit. Existing/legacy operations use1.
+- Keep native completion, product quantities, quality, temperature, lighting and moisture conditions. Change growth deltas only; do not accelerate water consumption, employee actions, global time or fixed pauses.
+- Handle the oven's separate minute path, Mk2's base call, per-operation drying factors, serialized drying delivery and asynchronous plant restoration. Use captured factors for machine ETA displays.
+- Register45 unique, pinned-binary targets manually after API/native-owner validation; remove the machine block's patches on registration failure. Singleplayer runtime testing is pending. Stable GitHub release remains1.1.0.
+
 ## 1.1.0 — 2026-10-30
 
 - Promote user-tested beta.4 to stable. Runtime changes from beta.4 are limited to version metadata and the initialization log message; release validation compares behavior against the tested DLL.
