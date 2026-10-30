@@ -63,3 +63,5 @@ The managed checks exercise the actual mod's clipboard handlers, counter present
 ## Planned work
 
 The [research](docs/superpowers/specs/2026-10-30-unfinished-features-research.md) and [staged plan](docs/superpowers/plans/2026-10-30-unfinished-features.md) cover the route counter (included in 1.0.5), property employee capacities, adaptive clipboard layout, and experimental botanist action timing. Property capacities, adaptive layout and action timing remain planned. Co-op remains deferred.
+
+The separate [Botanist Timing Probe](docs/testing/botanist-duration-probe.md) is an observation-only research module, outside the main HR DLL and public 1.0.5 assets. It observes a contextual action coroutine; direct duration hooks were rejected after finding shared native bodies with graphics methods. Timing overrides remain gated on in-game observations.

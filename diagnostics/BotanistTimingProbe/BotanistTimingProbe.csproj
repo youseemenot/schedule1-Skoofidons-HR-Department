@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>SkoofidonsHRBotanistProbe</AssemblyName>
+    <TargetFramework>net6.0</TargetFramework>
+    <LangVersion>11.0</LangVersion>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DisableTransitiveFrameworkReferenceDownloads>true</DisableTransitiveFrameworkReferenceDownloads>
+    <GameDirectory Condition="'$(GameDirectory)' == ''">$(SCHEDULE_I_GAME_DIR)</GameDirectory>
+    <LoaderDirectory>$(GameDirectory)/MelonLoader/net6</LoaderDirectory>
+    <InteropDirectory>$(GameDirectory)/MelonLoader/Il2CppAssemblies</InteropDirectory>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="*.cs" />
+    <Reference Include="MelonLoader"><HintPath>$(LoaderDirectory)/MelonLoader.dll</HintPath></Reference>
+    <Reference Include="0Harmony"><HintPath>$(LoaderDirectory)/0Harmony.dll</HintPath></Reference>
+    <Reference Include="Il2CppInterop.Common"><HintPath>$(LoaderDirectory)/Il2CppInterop.Common.dll</HintPath></Reference>
+    <Reference Include="Il2CppInterop.Runtime"><HintPath>$(LoaderDirectory)/Il2CppInterop.Runtime.dll</HintPath></Reference>
+    <Reference Include="Il2Cppmscorlib"><HintPath>$(InteropDirectory)/Il2Cppmscorlib.dll</HintPath></Reference>
+    <Reference Include="Il2CppFishNet.Runtime"><HintPath>$(InteropDirectory)/Il2CppFishNet.Runtime.dll</HintPath></Reference>
+    <Reference Include="UnityEngine.CoreModule"><HintPath>$(InteropDirectory)/UnityEngine.CoreModule.dll</HintPath></Reference>
+    <Reference Include="Assembly-CSharp"><HintPath>$(InteropDirectory)/Assembly-CSharp.dll</HintPath></Reference>
+    <Reference Include="Il2CppScheduleOne.Core"><HintPath>$(InteropDirectory)/Il2CppScheduleOne.Core.dll</HintPath></Reference>
+    <Reference Update="@(Reference)"><Private>false</Private></Reference>
+  </ItemGroup>
+  <Target Name="ValidateReferences" BeforeTargets="ResolveAssemblyReferences">
+    <Error Condition="'$(GameDirectory)' == ''" Text="Set GameDirectory or SCHEDULE_I_GAME_DIR." />
+    <Error Condition="'%(Reference.HintPath)' != '' and !Exists('%(Reference.HintPath)')" Text="Missing diagnostic dependency: %(Reference.HintPath)." />
+  </Target>
+</Project>
