@@ -2,10 +2,101 @@
 
 A MelonLoader mod for **Schedule I** that configures employee stats and assignment limits through Mod Manager & Phone App.
 
-**Local candidate: 1.2.0-beta.2.** Five machine factors apply to new batches and survive saving/loading. Plant and mushroom factors apply to the future growth of **all growing cultures**, including existing and loaded crops; accumulated progress is preserved. Settings now group Botanist, Chemist, Cleaner, Handler, then Fixer and Machine Timers. See [the candidate checklist](docs/testing/2026-10-30-machine-timers-beta2.md). The user reported no problems in the checks performed on beta.1 ([result](docs/testing/2026-10-30-machine-beta1-result.md)); beta.2 still needs gameplay verification. Neither candidate is published; public stable remains 1.1.0.* Five machine factors are captured once per new batch. Existing batches keep their factor (legacy defaults to1); versioned save data stores factors/fractional credit. Plant/mushroom growth instead reads the current preference each native growth callback, including for old saves; no per-crop factor metadata is needed. Completion stays limited by native ticks; drying retains its one-quality-step-per-call limit on large skips. Full gameplay coverage remains unrecorded.
+**Current stable version: [1.2.0](https://github.com/youseemenot/schedule1-Skoofidons-HR-Department/releases/tag/v1.2.0).** Adds machine timers, live growth factors and grouped settings. Based on user-tested 1.2.0-beta.2: correct settings order, factors applied to already-growing plants/mushrooms, no progress jumps or errors reported. Stable changes only version metadata and the startup message; release validation compares executable behavior with the tested DLL. See [release notes](docs/releases/1.2.0.md), [test result](docs/testing/2026-10-30-machine-beta2-result.md) and [regression checklist](docs/testing/2026-10-30-machine-timers-beta2.md).
 
-A MelonLoader mod for **Schedule I** that configures employee stats and assignment limits through Mod Manager & Phone App.
+Earlier stable version [1.0.5](https://github.com/youseemenot/schedule1-Skoofidons-HR-Department/releases/tag/v1.0.5) introduced the Handler route counter and more than ten displayed station assignments, with user-tested scrolling/removal. These features remain included in 1.2.0. See [the earlier result](docs/testing/2026-10-30-1.0.5-singleplayer-result.md).
 
-**Local candidate: 1.2.0-beta.2.** Five machine factors apply to new batches and survive saving/loading. Plant and mushroom factors apply to the future growth of **all growing cultures**, including existing and loaded crops; accumulated progress is preserved. Settings now group Botanist, Chemist, Cleaner, Handler, then Fixer and Machine Timers. See [the candidate checklist](docs/testing/2026-10-30-machine-timers-beta2.md). The user reported no problems in the checks performed on beta.1 ([result](docs/testing/2026-10-30-machine-beta1-result.md)); beta.2 still needs gameplay verification. Neither candidate is published; public stable remains 1.1.0.
+Supported test environment: **Schedule I 0.4.7f12 (IL2CPP)**, Steam build **25796331**, MelonLoader **0.7.3**, and Phone App **2.2.4**. [Download releases](https://github.com/youseemenot/schedule1-Skoofidons-HR-Department/releases).
+
+## Features
+
+* **Customizable Employee Stats:** Adjust daily wages, signing fees, movement and work multipliers for Handlers, Chemists, Botanists, and Cleaners.
+* **Machine and growth speed:** Separate factors for chemistry, oven, mixing/Mk2, cauldron, drying, plants and mushrooms. Five machines capture their factor per new batch; all growing plants/mushrooms use current growth settings.
+* **Settings order:** Botanist → Chemist → Cleaner → Handler → Fixer → Machine Timers, preserving identifiers and stored values.
+* **Fixer:** Adjust two incremental hiring-commission rates and a cap. Fixer has no wage or movement settings.
+* **Expanded Work Limits:** Override the maximum number of assigned routes, stations, pots, and trash bins.
+* **Mod Manager Integration:** Apply settings after saving from the Phone App or its menu.
+* **UI Improvements:** Scrollable assignment areas. Handler routes show used/limit/free counts and grow visual rows only when existing route data needs more rows. Lowering a limit preserves existing routes and blocks new additions while full.
+* **Handler stations:** `Handler Settings → Max Stations` (`MaxStations`, default 3) controls `Assigned (used/limit)` for packaging stations and brick presses. It is independent of `Max Routes`. Existing employee selection fields receive the limit after preferences are saved; reopen the clipboard to refresh its station heading. For a single Handler, the scrollable list grows beyond ten rows to display actual assignments, keeping native row labels/icons and indexed removal. Lowering the limit preserves and displays existing assignments.
+
+## Requirements
+
+* Schedule I **0.4.7f12, IL2CPP branch**. Mono builds are not supported by this project.
+* MelonLoader **0.7.3** and its .NET 6 runtime.
+* Mod Manager & Phone App **2.2.4** by Prowiler (required).
+* Other game/loader/Phone App combinations need a separate compatibility check.
+
+## Performance settings
+
+Machine Timers has seven independent factors, default1: Chemistry / Oven / Mixing / Cauldron / Drying / Plant growth / Mushroom growth. Titles show `x (higher = less time)`. Mixing covers both mixer versions. Growth affects future native progress, preserving accumulated progress, environmental conditions and water timing; employee work remains separate. Read [the module overview](future/MachineTimers/README.md) for save and scope details.
+
+| Process | When a changed factor applies |
+| --- | --- |
+| Chemistry, Oven, Mixing/Mk2, Cauldron, Drying | New batches only; captured factor survives save/load. Existing batches keep their factor, with legacy/unrecognized batches defaulting to1. |
+| Plant and mushroom growth | Next native growth calculation for all growing cultures, including already planted and loaded crops. Past progress is unchanged; no per-crop factor is saved. |
+
+All performance values default to **1**. Movement uses original speed × multiplier; action waits use normal wait ÷ multiplier. Thus **7** means seven times faster movement or one seventh of the action wait, and **0.5** means half speed or twice the wait. Titles state `higher = faster` or `higher = less time`. Limits remain counts, and wages/fees remain currency amounts.
+
+| Setting | Default | Meaning |
+| --- | --- | --- |
+| Move speed x — all four professions | 1 | Scale original movement speed and its cap |
+| Work speed x — Handler | 1 | Packaging and brick presses |
+| Work speed x — Chemist | 1 | Manual loading, preparation, stirring and harvesting stages |
+| Work speed x — Cleaner | 1 | Pickup, bagging, grabber emptying and bag disposal waits |
+| Work speed x — Botanist | 1 | Pot and fungal actions, drying-rack loading and spawn-station work; preserve quantities and native work effects |
+
+Save preferences to apply. Botanist changes affect the next action; Cleaner changes affect future yielded waits. Already scheduled waits retain their duration. Machine timers use the separate settings described above. Invalid/nonpositive multipliers retain or restore normal behavior. Repeated saves do not compound movement/work rates; native work buffs remain in effect.
+
+The keys are `WalkSpeedMultiplier` and `WorkSpeedMultiplier` in each profession's category; all beta.3 values retain their keys. The five earlier botanist action values and enable flag are no longer used, and old absolute speeds/seconds are not reinterpreted as factors. Keep a preferences backup for rollback. Botanist shares the native work-stack integration with Handler/Chemist, with no extra duration hook; only Cleaner needs the audited contextual hooks. Keep the research BotanistProbe DLL outside Mods. Returning work speed to 1 removes the mod's work entry for future actions.
+
+## Installation
+
+1. Close the game and move every previous HR DLL, including `.dll.disabled` backups, **outside `Mods`**. Do not keep both `SkoofidonsHRDepartment.dll` and `SkoofidonsHRDepartment.dll.disabled` there: Phone App uses those names to enable/disable the mod, and an existing destination blocks the rename.
+2. Copy only `SkoofidonsHRDepartment.dll` to `Mods`. Do not distribute or install game/loader reference DLLs from a build directory.
+3. Launch the game. After an update, MelonLoader may first regenerate its IL2CPP assemblies.
+4. Confirm **HR 1.2.0**, plus **Schedule I 0.4.7f12** in the new `MelonLoader/Latest.log`. For station limits, open **Handler Settings → Max stations** in Phone App, save and reopen the clipboard. See [the station-list checklist](docs/testing/2026-10-30-handler-station-rows.md) and [the route-counter checklist](docs/testing/2026-10-30-handler-route-counter.md).
+
+## Build from source
+
+Use a .NET SDK supporting C# 11 (SDK 10.0.204 was used here), with the .NET 6 reference pack available through NuGet. Keep the target framework at `net6.0` for this loader.
+
+First start the updated game once so MelonLoader generates matching references. From PowerShell:
+
+```powershell
+.\scripts\Build.ps1 -GameDirectory 'S:\SteamLibrary\steamapps\common\Schedule I'
+```
+
+The script checks `GameAssembly.dll` against the generator's recorded SHA-512 and rejects stale references. For an independently generated set, supply `-InteropDirectory`; that directory must contain `game-reference.json` whose `GameAssemblySha512` records the binary used for generation. Optional `-PackageCache` and `-RestoreSource` support an existing/offline NuGet cache.
+
+Output: `bin/Release/net6.0/SkoofidonsHRDepartment.dll` and `build-info.json`. Dependency paths are configurable; dependency DLLs are not copied into the output. Direct MSBuild use supports `-p:GameDirectory=...` (or `SCHEDULE_I_GAME_DIR`) and `-p:InteropDirectory=...`; use the script when freshness validation is required.
+
+## Automated checks
+
+```powershell
+dotnet run --project tests/SmokeChecks -c Release -- `
+  'bin/Release/net6.0/SkoofidonsHRDepartment.dll' `
+  'S:\SteamLibrary\steamapps\common\Schedule I' `
+  'S:\SteamLibrary\steamapps\common\Schedule I\MelonLoader\Il2CppAssemblies'
+```
+
+Stable 1.2.0 has 176 offline checks: actual DLL38 (`--combined --unified`), machine policy/queue29, save state23, growth context9, employee rates12, Cleaner8, layout43 and Botanist native coverage14. The actual-DLL suite resolves/JIT-compiles all 36 guarded native machine/growth targets and three managed Phone App category selectors. API checking covers 265 external references and 13 automatic Harmony targets. These checks do not execute Unity, real detours, save I/O or rendering; gameplay evidence is recorded separately.
+
+## Known limitations
+
+* The [employee process audit](docs/research/2026-10-30-employee-process-coverage.md) distinguishes Work speed from fixed setup/recovery, navigation and machine clocks. Per user instruction, fixed post-transfer, door, press and botanist supply/unload waits remain native. Dryer unload retains its single 0.5s animation wait; drying itself is a machine/world process. Cleaner retains its existing five action hooks. A factor of 7 does not promise a sevenfold reduction of the whole duty cycle.
+
+* Co-op configuration synchronization is not implemented. This release was tested in singleplayer.
+* Employee work factors preserve native quantities and resource operations; game constants/shared GetActionDuration bodies remain untouched. The user reported no problems in the beta.4 test; detailed timing, resource/cancellation measurements remain unrecorded. Stable1.2.0 activates the [separate machine module](future/MachineTimers/README.md).
+* Five machine factors are captured per new batch, with versioned save metadata for factors/fractional credit. Plant/mushroom growth reads the current preference every native growth callback, including for old saves; no per-crop capture/save/load layer is used. Completion remains limited by native ticks; drying retains its one-quality-step-per-call limit on large skips. User testing confirmed live crop changes and no progress jumps; exhaustive resource/save scenarios remain unrecorded.
+* Clipboard layout uses typed components for all four professions and actual panel geometry. Handler shares space between two lists; very short panels use one outer scroll area. Individual results for resizing, wheel routing, multi-selection and other UI scales/languages remain unrecorded. The word `free` remains English.
+* Extra station rows are added for one selected Handler, not for other professions or multi-selection. Assignment of more than ten stations, scrolling and removal were user-tested. Stress, multi-selection and save/reload scenarios remain separately unrecorded; extreme assignment counts have not been profiled.
+* Fixer preserves the 1.0.0 formula: it uses `LifetimeEmployeesRecruited`, applies the lower rate to loop indices 0–5, then the higher rate, and caps the total. The existing `5+` label does not precisely describe that boundary. Economy behavior has deliberately not been redesigned in this compatibility build.
+* Valid gameplay ranges for arbitrary settings are not yet enforced. Begin with positive, moderate speeds and assignment limits.
+
+## Planned work
+
+The [research](docs/superpowers/specs/2026-10-30-unfinished-features-research.md) and [staged plan](docs/superpowers/plans/2026-10-30-unfinished-features.md) record development history. Employee work rates and adaptive layout are in1.1.0; machine/growth timers are in stable1.2.0. Property capacities and co-op remain deferred.
+
+The separate [Botanist Timing Probe](docs/testing/botanist-duration-probe.md) is a historical observation-only research module, outside the main HR DLL and release assets. It is not needed for 1.1.0; the final Botanist implementation uses native employee work speed instead of a duration hook.
 
 Development decisions follow the [architecture-first project guidance](docs/DEVELOPMENT.md).

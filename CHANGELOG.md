@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.2.0 — 2026-10-30
+
+- Promote user-tested1.2.0-beta.2 to stable. Runtime differences are limited to version metadata and the startup label; executable parity is checked before publication.
+- Add seven speed factors: chemistry, oven, mixing/Mk2, cauldron, drying, plant growth and mushroom growth. Higher values shorten affected time;1 is normal,7 is sevenfold progress,0.5 half speed.
+- Five machines capture the factor for new batches and retain it across save/load. Current plant/mushroom factors affect all growing cultures without rewriting accumulated progress or tracking per-crop factors.
+- Group Phone App settings Botanist, Chemist, Cleaner, Handler, Fixer, Machine Timers while preserving saved values. Retain all employee and clipboard features from1.1.0.
+- User confirmed correct ordering, growth changes on existing plants/mushrooms, no progress jumps and no errors. Broader beta.1 checks also reported no problems.176 offline checks and API/native-target verification cover the promoted build; exhaustive gameplay scenarios remain unrecorded.
+
+See [release notes](docs/releases/1.2.0.md) and [beta.2 result](docs/testing/2026-10-30-machine-beta2-result.md). Co-op remains deferred.
+
+## 1.2.0-beta.2 — Live crop growth and settings order, unpublished
+
+- Apply current plant/mushroom factors to future growth of all growing cultures, including existing and loaded crops. Preserve accumulated progress and native conditions.
+- Remove per-crop capture/save/load and asynchronous restore markers. Keep new-batch capture and save behavior for the five machines; reduce guarded native targets from45 to36.
+- Group settings Botanist, Chemist, Cleaner, Handler, Fixer, Machine Timers without changing preference identifiers or values.
+- User subsequently confirmed correct order, live growth factors, no progress jumps and no errors; promoted to stable1.2.0 above.
+
 ## 1.2.0-beta.1 — Machine and growth timer candidate, unpublished
 
 - Add seven default1 factors in Machine Timers: chemistry, oven, mixing/Mk2, cauldron, drying, plant growth and mushroom growth. Higher values shorten affected time; 0.5 slows it down.
