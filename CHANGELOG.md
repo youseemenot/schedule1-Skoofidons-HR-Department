@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.4 — Expanded Handler station-list test candidate, unreleased
+
+- Extend native Handler station rows beyond ten according to actual assignments, using the existing Max Stations preference. Keep native text/icon population and indexed removal.
+- Clear inherited delete events on clones; account for native Bind wiring listeners after Refresh, avoiding duplicate clone callbacks on rebinding.
+- Explicitly activate assigned row roots after Refresh/Bind and hide unused roots. Preserve visible over-limit assignments after lowering the limit; native Refresh alone only toggles row children.
+- Rebuild station content height, clamp scroll after removal, and reset to the top when binding a selection. Fit longer Assigned counts beside the Hint and edit controls.
+- Roll back partial row creation on failure, preserve original rows/data, clear tracked UI on unload. Add managed allocation, rollback, visibility and adapter-boundary checks. Gameplay acceptance remains pending.
+
 ## 1.0.3 — Handler layout and station-limit test candidate, unreleased
 
 - Move the route Hint to the right edge and reserve label space; keep the tooltip available while fitting the counter on one line.

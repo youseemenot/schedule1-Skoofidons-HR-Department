@@ -94,6 +94,63 @@ if (!args.Contains("--baseline"))
         Expect(calls.Any(m => m.Name == "get_Stations" && m.DeclaringType?.Name == "PackagerConfiguration"), "Live Handler Stations field is not accessed.");
         Expect(calls.Any(m => m.Name == "set_MaxItems" && m.DeclaringType?.Name == "ObjectListField"), "Live station limit is not updated.");
     });
+    int[] ExpandRows(int[] rows, int assigned, Func<int, int, int> create, Action<int> destroy)
+    {
+        var type = assembly.GetType("SkoofidonsHRDepartment.StationRowExpansion");
+        Expect(type != null, "Station row expansion is not implemented.");
+        return (int[])type!.GetMethod("Expand")!.MakeGenericMethod(typeof(int))
+            .Invoke(null, new object[] { rows, assigned, create, destroy })!;
+    }
+    Check("fifteen assigned stations retain all ten native rows and create five indexed rows", () => {
+        var original = Enumerable.Range(100, 10).ToArray();
+        var indexes = new List<int>();
+        var rows = ExpandRows(original, 15, (template, index) => {
+            Expect(template == 100, "Wrong template row."); indexes.Add(index); return 100 + index;
+        }, _ => throw new Exception("Successful expansion destroyed a row."));
+        Expect(rows.SequenceEqual(Enumerable.Range(100, 15)), "Station rows were truncated or reordered.");
+        Expect(indexes.SequenceEqual(Enumerable.Range(10, 5)), "New rows do not match their actual station indexes.");
+        Expect(original.SequenceEqual(Enumerable.Range(100, 10)), "Original array was mutated.");
+    });
+    Check("lower station occupancy never discards expanded rows", () => {
+        var rows = Enumerable.Range(0, 15).ToArray();
+        Expect(ReferenceEquals(rows, ExpandRows(rows, 3, (_, _) => throw new Exception("Unexpected allocation."), _ => throw new Exception("Unexpected deletion."))), "Expanded rows were replaced on lower occupancy.");
+    });
+    Check("repeated station refresh does not allocate duplicate rows", () => {
+        var rows = Enumerable.Range(0, 15).ToArray();
+        Expect(ReferenceEquals(rows, ExpandRows(rows, 15, (_, _) => throw new Exception("Duplicate row."), _ => { })), "Same occupancy allocated again.");
+    });
+    Check("failed station expansion rolls back only newly created resources", () => {
+        var original = Enumerable.Range(0, 10).ToArray();
+        var destroyed = new List<int>();
+        bool failed = false;
+        try { ExpandRows(original, 13, (_, index) => index == 12 ? throw new InvalidOperationException("clone failed") : index, destroyed.Add); }
+        catch (TargetInvocationException ex) when (ex.InnerException is InvalidOperationException) { failed = true; }
+        Expect(failed, "Factory failure was swallowed.");
+        Expect(destroyed.OrderBy(i => i).SequenceEqual(new[] { 10, 11 }), "Rollback destroyed original rows or leaked a clone.");
+        Expect(original.SequenceEqual(Enumerable.Range(0, 10)), "Failure changed the original rows.");
+    });
+    Check("missing station template fails before any resource is created", () => {
+        bool failed = false;
+        try { ExpandRows(Array.Empty<int>(), 1, (_, _) => throw new Exception("Invalid factory call."), _ => { }); }
+        catch (TargetInvocationException ex) when (ex.InnerException is InvalidOperationException) { failed = true; }
+        Expect(failed, "Missing template did not fail safely.");
+    });
+    Check("station visibility restores every assigned row and hides unused rows", () => {
+        var visibility = assembly.GetType("SkoofidonsHRDepartment.StationRowExpansion")?.GetMethod("SetAssignedVisibility");
+        Expect(visibility != null, "Explicit root visibility handling is missing.");
+        var rows = Enumerable.Range(0, 19).ToArray();
+        var visible = new bool[19]; // Includes inactive clones/native-hidden roots.
+        Action<int, bool> setVisible = (index, active) => visible[index] = active;
+        visibility!.MakeGenericMethod(typeof(int)).Invoke(null, new object[] { rows, 15, setVisible });
+        Expect(visible.SequenceEqual(rows.Select(i => i < 15)), "Assignments above ten stayed hidden or unused rows filled the viewport.");
+        visibility.MakeGenericMethod(typeof(int)).Invoke(null, new object[] { rows, 3, setVisible });
+        Expect(visible.SequenceEqual(rows.Select(i => i < 3)), "Removing assignments left visible stale rows.");
+        Expect(rows.Length == 19, "Visibility discarded allocated rows.");
+    });
+    Check("station refresh applies the tested row visibility policy", () => {
+        var refresh = assembly.GetType("SkoofidonsHRDepartment.HandlerStationController")?.GetMethod("RefreshLayout");
+        Expect(refresh != null && CalledMethods(refresh).Any(m => m.Name == "SetAssignedVisibility" && m.DeclaringType?.Name == "StationRowExpansion"), "Unity adapter does not apply the tested visibility policy.");
+    });
 }
 Console.WriteLine($"{checks - failures}/{checks} checks passed. These checks do not execute Unity or native employee code.");
 return failures == 0 ? 0 : 1;

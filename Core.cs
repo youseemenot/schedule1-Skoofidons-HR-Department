@@ -4,9 +4,9 @@ using Il2CppScheduleOne.DevUtilities;
 using Il2CppScheduleOne.Persistence;
 using UnityEngine.Events;
 
-[assembly: MelonInfo(typeof(SkoofidonsHRDepartment.Core), "Skoofidon's HR Department", "1.0.3", "Skoofidon")]
-[assembly: System.Reflection.AssemblyVersion("1.0.3.0")]
-[assembly: System.Reflection.AssemblyFileVersion("1.0.3.0")]
+[assembly: MelonInfo(typeof(SkoofidonsHRDepartment.Core), "Skoofidon's HR Department", "1.0.4", "Skoofidon")]
+[assembly: System.Reflection.AssemblyVersion("1.0.4.0")]
+[assembly: System.Reflection.AssemblyFileVersion("1.0.4.0")]
 [assembly: MelonGame("TVGS", "Schedule I")]
 [assembly: MelonColor(255, 0, 200, 0)]
 
@@ -25,7 +25,7 @@ namespace SkoofidonsHRDepartment
             Instance = this;
             Config.Initialize();
             ModManagerIntegration.Initialize();
-            LoggerInstance.Msg("HR Department 1.0.3 Handler layout and station-limit test build (Schedule I 0.4.7f12).");
+            LoggerInstance.Msg("HR Department 1.0.4 expanded Handler station-list test build (Schedule I 0.4.7f12).");
         }
 
         public override void OnDeinitializeMelon()
@@ -35,7 +35,7 @@ namespace SkoofidonsHRDepartment
                 Singleton<LoadManager>.Instance.onLoadComplete.RemoveListener(OnLoadCompleteAction);
             }
             ModManagerIntegration.Deinitialize();
-            RouteCounterController.Clear();
+            PackagerUIFix.ClearReferences();
         }
 
         public override void OnSceneWasInitialized(int buildIndex, string sceneName)

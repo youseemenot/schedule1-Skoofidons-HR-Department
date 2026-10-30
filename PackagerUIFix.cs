@@ -41,19 +41,24 @@ namespace SkoofidonsHRDepartment
             EnsureHandlerScroll(parent, 75f, 160f);
             // The game's Hint is fixed at x=105, immediately after "Routes".
             // Reserve the right edge for it rather than covering the counter.
+            FitHandlerHeading(ui.FieldLabel, parent, 17.5f, 45f);
+        }
+
+        private static void FitHandlerHeading(TextMeshProUGUI label, Transform parent, float hintInset, float labelInset)
+        {
+            if (label == null || parent == null) return;
             var hint = parent.Find("Hint")?.GetComponent<RectTransform>();
             if (hint != null)
             {
                 hint.anchorMin = hint.anchorMax = new Vector2(1f, 1f);
-                hint.anchoredPosition = new Vector2(-17.5f, -20f);
+                hint.anchoredPosition = new Vector2(-hintInset, -20f);
             }
-            var label = ui.FieldLabel;
             var labelRect = label.rectTransform;
             labelRect.anchorMin = new Vector2(0f, 1f);
             labelRect.anchorMax = new Vector2(1f, 1f);
             labelRect.pivot = new Vector2(0.5f, 0.5f);
-            labelRect.sizeDelta = new Vector2(-45f, 40f);
-            labelRect.anchoredPosition = new Vector2(-22.5f, -20f);
+            labelRect.sizeDelta = new Vector2(-labelInset, 40f);
+            labelRect.anchoredPosition = new Vector2(-labelInset / 2f, -20f);
             label.enableWordWrapping = false;
             label.enableAutoSizing = true;
             label.fontSizeMin = 18f;
@@ -66,7 +71,12 @@ namespace SkoofidonsHRDepartment
         {
             if (panel == null) return;
             if (panel.StationsUI != null)
+            {
                 EnsureHandlerScroll(panel.StationsUI.transform, 50f, 110f);
+                // Leave both the Hint and the native edit/clear control usable
+                // when Assigned contains two- or three-digit counts.
+                FitHandlerHeading(panel.StationsUI.FieldLabel, panel.StationsUI.transform, 57.5f, 80f);
+            }
             EnsureRouteScrollArea(panel.RoutesUI);
         }
 
@@ -152,7 +162,11 @@ namespace SkoofidonsHRDepartment
             scrollRect.scrollSensitivity = 15f; // Чувствительность колесика мыши
         }
 
-        public static void ClearReferences() => RouteCounterController.Clear();
+        public static void ClearReferences()
+        {
+            RouteCounterController.Clear();
+            HandlerStationController.Clear();
+        }
     }
 
     [HarmonyPatch(typeof(PackagerConfigPanel), nameof(PackagerConfigPanel.BindInternal))]
