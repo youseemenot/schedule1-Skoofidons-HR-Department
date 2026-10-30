@@ -5,6 +5,8 @@
 - Replace generated `Component.GetComponentInParent<T>(bool)` calls with the native overload taking an explicit IL2CPP type and a checked cast. Preserve lookup through inactive parents. The generic wrapper throws VerificationException in the installed interop build, interrupting scene UI initialization and Handler station layout updates.
 - Add a compile-only JIT regression check for called parent-lookup wrappers. Reproduces the supplied log's exception on 1.0.4 without running Unity; 1.0.5 passes all 22 checks. Rendering and assignment behavior are unchanged by this fix.
 
+Validation, 2026-10-30: the user tested 1.0.5 in singleplayer and confirmed assignment of more than ten stations, working scrolling/removal and no log errors. See the recorded test result. This version has not yet been published to GitHub.
+
 ## 1.0.4 — Expanded Handler station-list test candidate, unreleased
 
 - Extend native Handler station rows beyond ten according to actual assignments, using the existing Max Stations preference. Keep native text/icon population and indexed removal.
