@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.0-beta.2 — Unified performance multipliers, unpublished
+
+- Make every performance multiplier use 1 = normal, 7 = seven times faster, 0.5 = half speed. Labels explain that higher movement values mean faster movement and higher action values mean less time.
+- Replace absolute botanist seconds with five multipliers dividing the original contextual wait; preserve harvest quantity and native employee work speed. Retain the disabled-by-default enable flag.
+- Add Handler packing/pressing and Chemist manual station work multipliers through the native work-speed stack. Preserve other modifiers and avoid compounding or applying the Handler multiplier twice. Passive machine recipe timers are unchanged.
+- Add guarded Cleaner hooks for five contextual action coroutines, replacing each eligible new wait rather than mutating shared yield objects.
+- Scale live employee movement from cached original speed and cap; repeated saves are idempotent and 1 restores the original values. Use new preference keys defaulting to 1 instead of reinterpreting saved absolute speeds/seconds.
+- Retain beta.1 adaptive clipboard changes. Release build has zero warnings/errors; 133 offline checks pass. Native gameplay, UI labels and timing acceptance await the user's combined singleplayer test. Public stable release remains 1.0.5; co-op is deferred.
+
 ## 1.1.0-beta.1 — Combined singleplayer test candidate, unpublished
 
 - Add disabled-by-default Custom Action Times for botanist soil/water/additive/seed durations and harvest seconds per unit. Preserve employee work-speed scaling once; ignore invalid settings, unknown/fungal actions and non-botanist owners. Apply only to newly started actions.

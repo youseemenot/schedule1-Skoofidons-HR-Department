@@ -17,7 +17,11 @@ namespace SkoofidonsHRDepartment
             }
         }
 
-        public static void ClearCache() => ActiveEmployees.Clear();
+        public static void ClearCache()
+        {
+            EmployeeSpeedController.RestoreAndClear();
+            ActiveEmployees.Clear();
+        }
 
         public static void ApplyToSpawnedEmployees()
         {
@@ -40,31 +44,28 @@ namespace SkoofidonsHRDepartment
             if (emp == null) return;
 
             string typeName = emp.GetIl2CppType().Name;
+            EmployeeSpeedController.Apply(emp, isPrefab);
 
             // 1. ОБЩИЕ ХАРАКТЕРИСТИКИ (БЕЗОПАСНО)
             if (typeName == "Packager")
             {
                 emp.DailyWage = Config.PackagerWage.Value;
                 emp.SigningFee = Config.PackagerFee.Value;
-                ApplyWalkSpeed(emp, Config.PackagerWalkSpeed.Value);
             }
             else if (typeName == "Chemist")
             {
                 emp.DailyWage = Config.ChemistWage.Value;
                 emp.SigningFee = Config.ChemistFee.Value;
-                ApplyWalkSpeed(emp, Config.ChemistWalkSpeed.Value);
             }
             else if (typeName == "Botanist")
             {
                 emp.DailyWage = Config.BotanistWage.Value;
                 emp.SigningFee = Config.BotanistFee.Value;
-                ApplyWalkSpeed(emp, Config.BotanistWalkSpeed.Value);
             }
             else if (typeName == "Cleaner")
             {
                 emp.DailyWage = Config.CleanerWage.Value;
                 emp.SigningFee = Config.CleanerFee.Value;
-                ApplyWalkSpeed(emp, Config.CleanerWalkSpeed.Value);
             }
 
             if (!isPrefab)
@@ -77,7 +78,6 @@ namespace SkoofidonsHRDepartment
             {
                 var packager = emp.Cast<Packager>();
                 ApplyHandlerLimits(packager);
-                packager.PackagingSpeedMultiplier = Config.PackagerSpeed.Value;
             }
             else if (typeName == "Chemist")
             {
@@ -114,10 +114,5 @@ namespace SkoofidonsHRDepartment
                 configuration.Routes.MaxRoutes = Config.PackagerMaxRoutes.Value;
         }
 
-        private static void ApplyWalkSpeed(Employee emp, float speed)
-        {
-            // Set an absolute base speed; repeated saves must not compound it.
-            emp.Movement?.SpeedController?.SetDefaultSpeed(speed);
-        }
     }
 }

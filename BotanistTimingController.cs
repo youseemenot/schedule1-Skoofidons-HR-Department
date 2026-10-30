@@ -163,37 +163,37 @@ namespace SkoofidonsHRDepartment
                     npc.GetIl2CppType().FullName != "ScheduleOne.Employees.Botanist") return;
                 float originalWait = __instance._waitTime_5__2;
                 float speed = botanist.CurrentWorkSpeed;
-                float setting = ConfiguredSeconds(kind);
-                if (!BotanistTimingPolicy.TryResolveWait(kind, originalWait, speed, setting, true, out float desiredWait))
+                float multiplier = ConfiguredMultiplier(kind);
+                if (!BotanistTimingPolicy.TryResolveWait(kind, originalWait, speed, multiplier, true, out float desiredWait))
                 {
-                    LogSample(kind, "SKIPPED", originalWait, originalWait, speed, setting);
+                    LogSample(kind, "SKIPPED", originalWait, originalWait, speed, multiplier);
                     return;
                 }
                 // Initial 0 -> 1 yield only; later resumes cannot scale the wait again.
-                __instance._waitTime_5__2 = desiredWait;
-                LogSample(kind, "APPLIED", originalWait, desiredWait, speed, setting);
+                if (desiredWait != originalWait) __instance._waitTime_5__2 = desiredWait;
+                LogSample(kind, desiredWait == originalWait ? "UNCHANGED" : "APPLIED", originalWait, desiredWait, speed, multiplier);
             }
             catch (Exception ex) { LogHookError(ex); }
         }
 
-        private static float ConfiguredSeconds(TimingAction kind) => kind switch
+        private static float ConfiguredMultiplier(TimingAction kind) => kind switch
         {
-            TimingAction.Soil => Config.BotanistSoilTime.Value,
-            TimingAction.Water => Config.BotanistWaterTime.Value,
-            TimingAction.Additive => Config.BotanistAdditiveTime.Value,
-            TimingAction.Seed => Config.BotanistSeedTime.Value,
-            TimingAction.Harvest => Config.BotanistHarvestSecondsPerItem.Value,
+            TimingAction.Soil => Config.BotanistSoilSpeed.Value,
+            TimingAction.Water => Config.BotanistWaterSpeed.Value,
+            TimingAction.Additive => Config.BotanistAdditiveSpeed.Value,
+            TimingAction.Seed => Config.BotanistSeedSpeed.Value,
+            TimingAction.Harvest => Config.BotanistHarvestSpeed.Value,
             _ => float.NaN
         };
 
-        private static void LogSample(TimingAction kind, string status, float original, float desired, float speed, float setting)
+        private static void LogSample(TimingAction kind, string status, float original, float desired, float speed, float multiplier)
         {
             Samples.TryGetValue(kind, out int count);
             if (count >= MaximumSamplesPerAction) return;
             Samples[kind] = count + 1;
             MelonLogger.Msg(string.Format(CultureInfo.InvariantCulture,
-                "[HR BOTANIST TIMING {0}] action={1} originalWait={2:0.###} desiredWait={3:0.###} workSpeed={4:0.###} setting={5:0.###}; sample={6}/8",
-                status, kind, original, desired, speed, setting, count + 1));
+                "[HR BOTANIST TIMING {0}] action={1} originalWait={2:0.###} desiredWait={3:0.###} workSpeed={4:0.###} multiplier={5:0.###}; sample={6}/8",
+                status, kind, original, desired, speed, multiplier, count + 1));
         }
 
         private static void LogHookError(Exception ex)

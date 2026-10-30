@@ -2,14 +2,14 @@
 
 A MelonLoader mod for **Schedule I** that configures employee stats and assignment limits through Mod Manager & Phone App.
 
-**Local test candidate: 1.1.0-beta.1.** Includes custom botanist action times (disabled by default) and adaptive clipboard layout for all four professions. Prepared for the user's combined gameplay test; no runtime acceptance is claimed. The public release remains 1.0.5. See [the combined checklist](docs/testing/2026-10-30-combined-candidate.md).
+**Local test candidate: 1.1.0-beta.2.** Adds work rates for Handler, Chemist and Cleaner, five botanist action rates, movement multipliers and adaptive clipboard layout. Every performance multiplier uses 1 = normal and 7 = seven times faster. Prepared for the user's combined gameplay test; runtime acceptance is pending. The public release remains 1.0.5. See [the current checklist](docs/testing/2026-10-30-unified-speed-candidate.md).
 
 **Current version: [1.0.5](https://github.com/youseemenot/schedule1-Skoofidons-HR-Department/releases/tag/v1.0.5), tested in singleplayer.** On 2026-10-30 the user confirmed that more than ten Handler stations can be assigned, scrolling and removal work, and the logs contain no errors. This release includes the used/limit/free route counter, expanded station rows and the parent-lookup compatibility fix. See [the test result](docs/testing/2026-10-30-1.0.5-singleplayer-result.md). Individual stress, multi-selection and save/reload scenarios remain unrecorded.
 
 Supported test environment: **Schedule I 0.4.7f12 (IL2CPP)**, Steam build **25796331**, MelonLoader **0.7.3**, and Phone App **2.2.4**. Version 1.0.1 established this compatibility baseline; 1.0.5 builds on it. [Download releases](https://github.com/youseemenot/schedule1-Skoofidons-HR-Department/releases).
 
 ## Features
-* **Customizable Employee Stats:** Adjust daily wages, signing fees, and absolute base walk speeds for Handlers, Chemists, Botanists, and Cleaners.
+* **Customizable Employee Stats:** Adjust daily wages, signing fees, and movement multipliers for Handlers, Chemists, Botanists, and Cleaners.
 * **Fixer:** Adjust two incremental hiring-commission rates and a cap. Fixer has no wage or movement settings.
 * **Expanded Work Limits:** Override the maximum number of assigned routes, stations, pots, and trash bins.
 * **Mod Manager Integration:** Apply settings after saving from the Phone App or its menu.
@@ -22,24 +22,28 @@ Supported test environment: **Schedule I 0.4.7f12 (IL2CPP)**, Steam build **2579
 * Mod Manager & Phone App **2.2.4** by Prowiler (required).
 * Other game/loader/Phone App combinations need a separate compatibility check.
 
-## Candidate botanist settings
+## Candidate performance settings
 
-In **Botanist Settings**, enable **Custom Action Times**, set the desired values and save. Changes apply to the next action; an action already running keeps its current wait. The experimental timing hook is restricted to the audited game binary; an unsupported binary or conflicting patch leaves timings inactive with a log message.
+All performance values default to **1**. Movement uses original speed × multiplier; action waits use normal wait ÷ multiplier. Thus **7** means seven times faster movement or one seventh of the action wait, and **0.5** means half speed or twice the wait. Titles state `higher = faster` or `higher = less time`. Limits remain counts, and wages/fees remain currency amounts.
 
 | Setting | Default | Meaning |
 | --- | --- | --- |
-| Custom Action Times | Off | Enable action duration overrides |
-| Soil Time / Water Time / Additive Time | 10 seconds each | Base duration before employee work speed |
-| Seed Time | 15 seconds | Base duration before employee work speed |
-| Harvest Seconds Per Item | 1 second | Per harvested unit, preserving quantity and employee work speed |
+| Move speed x — all four professions | 1 | Scale original movement speed and its cap |
+| Packing and pressing x — Handler | 1 | Native work-speed multiplier for packaging and brick presses |
+| Station work x — Chemist | 1 | Manual loading, preparation, stirring and harvesting stages |
+| Cleaning actions x — Cleaner | 1 | Pickup, bagging, grabber emptying and bag disposal waits |
+| Custom action rates — Botanist | Off | Enable the five action multipliers below |
+| Soil filling / Watering / Additives / Planting / Harvesting x | 1 each | Shorten the original contextual wait; preserve harvest quantity and native work-speed effects |
 
-Nonpositive or nonfinite values keep the original action duration. Positive values below 0.1 are clamped to 0.1 base seconds. The old ambiguous HarvestTime key is not migrated. The separate SkoofidonsHRBotanistProbe DLL must be outside Mods when using this candidate's timing hook.
+Save preferences to apply. Botanist changes affect the next action; Cleaner changes affect future yielded waits. Already scheduled waits retain their duration. Passive machine recipe timers are unchanged. Invalid/nonpositive multipliers retain or restore normal behavior. Repeated saves do not compound movement/work rates; native work buffs remain in effect.
+
+New `WalkSpeedMultiplier`, `WorkSpeedMultiplier` and five botanist `*SpeedMultiplier` keys prevent old absolute speeds or seconds from being reinterpreted as factors. Set desired values again after upgrading; the botanist enable flag is retained. Keep a preferences backup for rollback. Contextual timing hooks are restricted to the audited game binary and reject conflicts. Keep the separate SkoofidonsHRBotanistProbe DLL outside Mods.
 
 ## Installation
 1. Close the game and move every previous HR DLL, including `.dll.disabled` backups, **outside `Mods`**. Do not keep both `SkoofidonsHRDepartment.dll` and `SkoofidonsHRDepartment.dll.disabled` there: Phone App uses those names to enable/disable the mod, and an existing destination blocks the rename.
 2. Copy only `SkoofidonsHRDepartment.dll` to `Mods`. Do not distribute or install game/loader reference DLLs from a build directory.
 3. Launch the game. After an update, MelonLoader may first regenerate its IL2CPP assemblies.
-4. Confirm **HR 1.0.5** and **Schedule I 0.4.7f12** in the new `MelonLoader/Latest.log`. For station limits, open **Handler Settings → Max Stations** in Phone App, save and reopen the clipboard. See [the station-list checklist](docs/testing/2026-10-30-handler-station-rows.md) and [the route-counter checklist](docs/testing/2026-10-30-handler-route-counter.md).
+4. Confirm the installed HR version (**1.0.5** stable or **1.1.0-beta.2** local candidate) and **Schedule I 0.4.7f12** in the new `MelonLoader/Latest.log`. For station limits, open **Handler Settings → Max stations** in Phone App, save and reopen the clipboard. See [the station-list checklist](docs/testing/2026-10-30-handler-station-rows.md) and [the route-counter checklist](docs/testing/2026-10-30-handler-route-counter.md).
 
 ## Build from source
 
@@ -64,7 +68,7 @@ dotnet run --project tests/SmokeChecks -c Release -- `
   'S:\SteamLibrary\steamapps\common\Schedule I\MelonLoader\Il2CppAssemblies'
 ```
 
-The stable managed suite has 22 checks. Add `--combined` for 27 checks on this candidate's actual DLL, including timing/lifecycle/layout boundaries. Pure suites under tests/TimingChecks and tests/LayoutChecks cover timing math and geometry budgets. These do not execute Unity or native employee callbacks, rendering, cloning or resource handling. The JIT check catches invalid generated helper IL that member-existence checks miss. Use `--baseline` for the legacy clipboard implementation.
+The stable managed suite has 22 checks. Add `--combined --unified` for 31 checks on this candidate's actual DLL, including timing/lifecycle/layout boundaries. Pure suites cover botanist timing (39), employee rates (12), Cleaner waits (8) and layout budgets (43): 133 checks in total. These do not execute Unity or native employee callbacks, rendering, cloning or resource handling. The JIT check catches invalid generated helper IL that member-existence checks miss. Use `--baseline` for the legacy clipboard implementation.
 
 ## Known limitations
 
@@ -79,4 +83,4 @@ The stable managed suite has 22 checks. Add `--combined` for 27 checks on this c
 
 The [research](docs/superpowers/specs/2026-10-30-unfinished-features-research.md) and [staged plan](docs/superpowers/plans/2026-10-30-unfinished-features.md) cover the route counter (released in 1.0.5), experimental action timing and adaptive layout (this candidate), plus property employee capacities (backlog). Co-op remains deferred.
 
-The separate [Botanist Timing Probe](docs/testing/botanist-duration-probe.md) is an observation-only research module, outside the main HR DLL and public 1.0.5 assets. It observes a contextual action coroutine; direct duration hooks were rejected after finding shared native bodies with graphics methods. Timing overrides remain gated on in-game observations.
+The separate [Botanist Timing Probe](docs/testing/botanist-duration-probe.md) is an observation-only research module, outside the main HR DLL and public 1.0.5 assets. It observes a contextual action coroutine; direct duration hooks were rejected after finding shared native bodies with graphics methods. The user authorized combined candidate testing; runtime acceptance remains pending.

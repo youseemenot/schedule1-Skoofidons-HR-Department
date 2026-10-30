@@ -169,16 +169,16 @@ if (args.Contains("--combined"))
 {
     Check("combined DLL exposes all six botanist timing settings", () => {
         var config = assembly.GetType("SkoofidonsHRDepartment.Config")!;
-        foreach (var name in new[] { "BotanistActionTimingEnabled", "BotanistSoilTime", "BotanistWaterTime", "BotanistAdditiveTime", "BotanistSeedTime", "BotanistHarvestSecondsPerItem" })
+        foreach (var name in new[] { "BotanistActionTimingEnabled", "BotanistSoilSpeed", "BotanistWaterSpeed", "BotanistAdditiveSpeed", "BotanistSeedSpeed", "BotanistHarvestSpeed" })
             Expect(config.GetField(name, BindingFlags.Public | BindingFlags.Static) != null, "Timing preference missing: " + name);
     });
     Check("compiled timing policy scales harvest and employee speed once", () => {
         var type = assembly.GetType("SkoofidonsHRDepartment.BotanistTimingPolicy");
         Expect(type != null, "Timing policy missing from main DLL.");
         var action = Enum.Parse(assembly.GetType("SkoofidonsHRDepartment.TimingAction")!, "Harvest");
-        var input = new object[] { action, 7.5f, 2f, .5f, true, 0f };
+        var input = new object[] { action, 7.5f, 2f, 7f, true, 0f };
         Expect((bool)type!.GetMethod("TryResolveWait")!.Invoke(null, input)!, "Harvest duration was rejected.");
-        Expect(Math.Abs((float)input[5] - 3.75f) < .0001f, "Fifteen items at .5 seconds/item and speed2 must take3.75seconds.");
+        Expect(Math.Abs((float)input[5] - 7.5f / 7f) < .0001f, "The game's7.5second wait at multiplier7 must be divided by7, without another work-speed adjustment.");
     });
     Check("compiled timing hook uses the contextual coroutine wrapper", () => {
         var controller = assembly.GetType("SkoofidonsHRDepartment.BotanistTimingController");
@@ -210,6 +210,54 @@ if (args.Contains("--combined"))
         Expect(end <= 480f, "Last viewport extends beyond its panel.");
         var tiny = Layout(80f);
         Expect((bool)tiny.GetType().GetField("OuterScroll")!.GetValue(tiny)! && (float)tiny.GetType().GetField("ContentHeight")!.GetValue(tiny)! > 80f, "Tiny panel does not expose scrollable content.");
+    });
+}
+if (args.Contains("--unified"))
+{
+    Check("compiled movement multiplier scales speed and cap sevenfold", () => {
+        var policy = assembly.GetType("SkoofidonsHRDepartment.EmployeeSpeedPolicy");
+        Expect(policy != null, "Normalized employee speed policy missing.");
+        var values = new object[] { 1.8f, 7f, 7f, 0f, 0f };
+        Expect((bool)policy!.GetMethod("TryScaleMovement")!.Invoke(null, values)!, "Sevenfold movement rejected.");
+        Expect(Math.Abs((float)values[3] - 12.6f) < .0001f && (float)values[4] == 49f, "Movement remained raw/capped at7 instead of sevenfold.");
+    });
+    Check("compiled movement state never compounds on preference saves", () => {
+        var definition = assembly.GetType("SkoofidonsHRDepartment.EmployeeMovementSpeedState`1");
+        Expect(definition != null, "Movement baseline state missing.");
+        var type = definition!.MakeGenericType(typeof(object));
+        var state = Activator.CreateInstance(type)!;
+        var controller = new object();
+        float speed = 1.8f, cap = 7f;
+        Action<object, float, float> write = (_, s, c) => { speed = s; cap = c; };
+        void Apply(float factor) => type.GetMethod("Apply")!.Invoke(state, new object[] { new IntPtr(1), controller, speed, cap, factor, write });
+        Apply(7f); Apply(7f);
+        Expect(Math.Abs(speed - 12.6f) < .0001f && cap == 49f, "Repeated save multiplied an already modified speed.");
+        Apply(1f);
+        Expect(speed == 1.8f && cap == 7f, "One did not restore native movement values.");
+    });
+    Check("compiled Cleaner policy shortens only Cleaner waits", () => {
+        var type = assembly.GetType("SkoofidonsHRDepartment.CleanerSpeedPolicy");
+        Expect(type != null, "Cleaner action speed policy missing.");
+        var values = new object[] { 14f, 7f, 0f };
+        Expect((bool)type!.GetMethod("TryScaleDuration")!.Invoke(null, values)! && (float)values[2] == 2f, "Larger Cleaner factor does not shorten wait.");
+        Expect(!(bool)type.GetMethod("IsEligibleYield")!.Invoke(null, new object[] { true, "ScheduleOne.Employees.Botanist", true })!, "Cleaner multiplier applies to another profession.");
+    });
+    Check("compiled Cleaner wrappers JIT and lifecycle integration are present", () => {
+        var type = assembly.GetType("SkoofidonsHRDepartment.CleanerActionSpeedController");
+        Expect(type != null, "Cleaner action controller missing.");
+        var callbacks = type!.GetMethods(BindingFlags.Static | BindingFlags.NonPublic).Where(m => m.Name.EndsWith("Postfix")).ToArray();
+        Expect(callbacks.Length == 5, "Cleaner must cover the five audited contextual routines.");
+        foreach (var callback in callbacks) {
+            var routine = callback.GetParameters().Single(p => p.Name == "__instance").ParameterType;
+            System.Runtime.CompilerServices.RuntimeHelpers.PrepareMethod(routine.GetMethod("MoveNext", BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)!.MethodHandle);
+        }
+        var core = assembly.GetType("SkoofidonsHRDepartment.Core")!;
+        Expect(CalledMethods(core.GetMethod("OnInitializeMelon")!).Any(m => m.DeclaringType?.Name == "CleanerActionSpeedController"), "Cleaner initialization missing.");
+        var save = assembly.GetType("SkoofidonsHRDepartment.ModManagerIntegration")!.GetMethod("OnSettingsChanged", BindingFlags.NonPublic | BindingFlags.Static)!;
+        Expect(CalledMethods(save).Any(m => m.DeclaringType?.Name == "CleanerActionSpeedController"), "Cleaner setting save missing.");
+        var apply = assembly.GetType("SkoofidonsHRDepartment.EmployeeController")!.GetMethod("ApplyStats")!;
+        Expect(CalledMethods(apply).Any(m => m.DeclaringType?.Name == "EmployeeSpeedController" && m.Name == "Apply"), "Employee work/movement multiplier wiring missing.");
+        Expect(!CalledMethods(apply).Any(m => m.Name == "set_PackagingSpeedMultiplier"), "Handler multiplier is applied twice through both fields and work stack.");
     });
 }
 Console.WriteLine($"{checks - failures}/{checks} checks passed. These checks do not execute Unity or native employee code.");
