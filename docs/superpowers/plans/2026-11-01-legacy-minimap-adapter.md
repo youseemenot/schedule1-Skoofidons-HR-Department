@@ -47,6 +47,6 @@
 ## Task3 — Review and candidate
 
 - [x] One fresh-context read-only review, fix material issues with focused RED/GREEN.
-- [ ] Record supported original hashes, HR candidate hash, exact offline/native limits and test guide. Prepare HR-only ZIP.
-- [ ] Install only when game closed, backup current pair/config outside Mods. For actual legacy test restore unchanged known legacy DLL byte-for-byte, retain current Minimap beta2 backup. Verify all hashes. No publication.
-- [ ] Follow-up commercial value: user-friendly compatibility is this release's concrete value; the next update should follow actual test feedback/compatibility needs, preserving timely fixes.
+- [x] Record supported original hashes, HR candidate hash, exact offline/native limits and test guide. Prepare HR-only ZIP.
+- [x] Install only when game closed, backup current pair/config outside Mods. For actual legacy test restore unchanged known legacy DLL byte-for-byte, retain current Minimap beta2 backup. Verify all hashes. No publication.
+- [x] Follow-up commercial value: user-friendly compatibility is this release's concrete value; the next update should follow actual test feedback/compatibility needs, preserving timely fixes.
