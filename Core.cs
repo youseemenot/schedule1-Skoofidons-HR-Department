@@ -4,9 +4,9 @@ using Il2CppScheduleOne.DevUtilities;
 using Il2CppScheduleOne.Persistence;
 using UnityEngine.Events;
 
-[assembly: MelonInfo(typeof(SkoofidonsHRDepartment.Core), "Skoofidon's HR Department", "1.2.0", "Skoofidon")]
-[assembly: System.Reflection.AssemblyVersion("1.2.0.0")]
-[assembly: System.Reflection.AssemblyFileVersion("1.2.0.0")]
+[assembly: MelonInfo(typeof(SkoofidonsHRDepartment.Core), "Skoofidon's HR Department", "1.3.0-dev.1", "Skoofidon")]
+[assembly: System.Reflection.AssemblyVersion("1.3.0.0")]
+[assembly: System.Reflection.AssemblyFileVersion("1.3.0.0")]
 [assembly: MelonGame("TVGS", "Schedule I")]
 [assembly: MelonColor(255, 0, 200, 0)]
 
@@ -27,7 +27,7 @@ namespace SkoofidonsHRDepartment
             CleanerActionSpeedController.Initialize();
             MachineTimerController.Initialize();
             ModManagerIntegration.Initialize();
-            LoggerInstance.Msg("HR Department 1.2.0 initialized (Schedule I 0.4.7f12).");
+            LoggerInstance.Msg("HR Department 1.3.0-dev.1 optional settings core initialized; F3 integration pending native input proof (Schedule I 0.4.7f12).");
         }
 
         public override void OnDeinitializeMelon()

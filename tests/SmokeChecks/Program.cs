@@ -6,10 +6,15 @@ using System.Runtime.Loader;
 // Native employee behavior still requires the singleplayer checklist.
 if (args.Length < 3) throw new ArgumentException("Usage: SmokeChecks <mod.dll> <game directory> <interop directory>");
 string[] search = { Path.Combine(args[1], "MelonLoader", "net6"), args[2], Path.Combine(args[1], "Mods") };
+bool withoutPhone = args.Contains("--without-phone");
 AssemblyLoadContext.Default.Resolving += (context, name) => {
+    if (withoutPhone && name.Name!.Contains("Phone", StringComparison.OrdinalIgnoreCase)) return null;
     string file = search.Select(dir => Path.Combine(dir, name.Name + ".dll")).FirstOrDefault(File.Exists);
     return file == null ? null : context.LoadFromAssemblyPath(Path.GetFullPath(file));
 };
+string phonePath = Path.Combine(args[1], "Mods", "ModManager&PhoneApp.dll");
+bool phoneAvailable = !withoutPhone && File.Exists(phonePath);
+if (phoneAvailable) AssemblyLoadContext.Default.LoadFromAssemblyPath(Path.GetFullPath(phonePath));
 var assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(Path.GetFullPath(args[0]));
 var patches = assembly.GetType("SkoofidonsHRDepartment.GamePatches", throwOnError: true)!;
 object Call(string name) {
@@ -190,7 +195,10 @@ if (args.Contains("--combined"))
     Check("compiled lifecycle wires work-rate changes and layout size tracking", () => {
         var core = assembly.GetType("SkoofidonsHRDepartment.Core")!;
         Expect(CalledMethods(core.GetMethod("OnUpdate")!).Any(m => m.DeclaringType?.Name == "ClipboardLayoutController" && m.Name == "RefreshTracked"), "Layout size tracking not wired.");
-        var save = assembly.GetType("SkoofidonsHRDepartment.ModManagerIntegration")!.GetMethod("OnSettingsChanged", BindingFlags.NonPublic | BindingFlags.Static)!;
+        var service = assembly.GetType("SkoofidonsHRDepartment.HrSettingsService")!;
+        var save = service.GetMethod("ApplyFromPreferences")!;
+        var phoneInitialize = assembly.GetType("SkoofidonsHRDepartment.OptionalPhoneIntegration")!.GetMethod("Initialize")!;
+        Expect(CalledMethods(phoneInitialize).Any(m => m.DeclaringType == service && m.Name == "ApplyFromPreferences"), "Optional phone save is not connected to the ordinary settings service.");
         Expect(CalledMethods(save).Any(m => m.DeclaringType?.Name == "EmployeeController" && m.Name == "ApplyToSpawnedEmployees"), "Saved work rates are not applied to live employees.");
         Expect(CalledMethods(core.GetMethod("OnDeinitializeMelon")!).Any(m => m.DeclaringType?.Name == "EmployeeSpeedController" && m.Name == "RestoreAndClear"), "Owned work multiplier cleanup is missing.");
         Expect(!CalledMethods(save).Any(m => m.DeclaringType?.Name == "BotanistTimingController"), "Save still registers old timing hook.");
@@ -222,7 +230,8 @@ if (args.Contains("--unified"))
         Expect(ordered.SequenceEqual(new[] { "Botanist", "Chemist", "Cleaner", "Packager", "Fixer", "Machines" }.Select(s => prefix + s)), "Employee/Fixer/Machine order is wrong.");
         Expect(SortKey("OtherMod_Packager") == "OtherMod_Packager" && SortKey(prefix + "FutureCategory") == prefix + "FutureCategory", "Unknown category key was modified.");
         var integration = assembly.GetType("SkoofidonsHRDepartment.PreferenceCategoryOrderIntegration")!;
-        Expect((int)integration.GetMethod("VerifyManagedBindings")!.Invoke(null, null)! == 3, "All three Phone App category selectors must be covered.");
+        Expect((int)integration.GetMethod("VerifyManagedBindings")!.Invoke(null, null)! == (phoneAvailable ? 3 : 0),
+            "Available phone selectors must be checked; absent phone must have no targets.");
     });
     Check("machine and growth timers expose seven separate rate preferences", () => {
         var config = assembly.GetType("SkoofidonsHRDepartment.Config")!;
@@ -237,7 +246,7 @@ if (args.Contains("--unified"))
         var core = assembly.GetType("SkoofidonsHRDepartment.Core")!;
         Expect(CalledMethods(core.GetMethod("OnInitializeMelon")!).Any(m => m.DeclaringType == controller && m.Name == "Initialize"), "Machine initialization missing.");
         Expect(CalledMethods(core.GetMethod("OnDeinitializeMelon")!).Any(m => m.DeclaringType == controller && m.Name == "Deinitialize"), "Machine cleanup missing.");
-        var save = assembly.GetType("SkoofidonsHRDepartment.ModManagerIntegration")!.GetMethod("OnSettingsChanged", BindingFlags.NonPublic | BindingFlags.Static)!;
+        var save = assembly.GetType("SkoofidonsHRDepartment.HrSettingsService")!.GetMethod("ApplyFromPreferences")!;
         Expect(!CalledMethods(save).Any(m => m.DeclaringType == controller && m.Name == "ClearState"), "Preference save discards rates captured by running operations.");
     });
     Check("all guarded machine targets and injected callbacks resolve and JIT", () => {
@@ -325,7 +334,7 @@ if (args.Contains("--unified"))
         }
         var core = assembly.GetType("SkoofidonsHRDepartment.Core")!;
         Expect(CalledMethods(core.GetMethod("OnInitializeMelon")!).Any(m => m.DeclaringType?.Name == "CleanerActionSpeedController"), "Cleaner initialization missing.");
-        var save = assembly.GetType("SkoofidonsHRDepartment.ModManagerIntegration")!.GetMethod("OnSettingsChanged", BindingFlags.NonPublic | BindingFlags.Static)!;
+        var save = assembly.GetType("SkoofidonsHRDepartment.HrSettingsService")!.GetMethod("ApplyFromPreferences")!;
         Expect(CalledMethods(save).Any(m => m.DeclaringType?.Name == "CleanerActionSpeedController"), "Cleaner setting save missing.");
         var apply = assembly.GetType("SkoofidonsHRDepartment.EmployeeController")!.GetMethod("ApplyStats")!;
         Expect(CalledMethods(apply).Any(m => m.DeclaringType?.Name == "EmployeeSpeedController" && m.Name == "Apply"), "Employee work/movement multiplier wiring missing.");

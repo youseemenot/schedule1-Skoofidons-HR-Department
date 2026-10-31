@@ -31,12 +31,11 @@
     <Reference Include="Assembly-CSharp"><HintPath>$(InteropDirectory)/Assembly-CSharp.dll</HintPath></Reference>
     <Reference Include="Il2CppScheduleOne.Core"><HintPath>$(InteropDirectory)/Il2CppScheduleOne.Core.dll</HintPath></Reference>
 
-    <Reference Include="ModManager&amp;PhoneApp"><HintPath>$(GameDirectory)/Mods/ModManager&amp;PhoneApp.dll</HintPath></Reference>
     <Reference Include="Unity.TextMeshPro"><HintPath>$(InteropDirectory)/Unity.TextMeshPro.dll</HintPath></Reference>
     <Reference Update="@(Reference)"><Private>false</Private></Reference>
   </ItemGroup>
   <Target Name="ValidateGameReferences" BeforeTargets="ResolveAssemblyReferences">
     <Error Condition="'$(GameDirectory)' == ''" Text="Set GameDirectory or SCHEDULE_I_GAME_DIR to the Schedule I installation directory." />
-    <Error Condition="'%(Reference.HintPath)' != '' and !Exists('%(Reference.HintPath)')" Text="Missing game dependency: %(Reference.HintPath). Install MelonLoader and Phone App, then generate current IL2CPP assemblies." />
+    <Error Condition="'%(Reference.HintPath)' != '' and !Exists('%(Reference.HintPath)')" Text="Missing game dependency: %(Reference.HintPath). Install MelonLoader, then generate current IL2CPP assemblies." />
   </Target>
 </Project>

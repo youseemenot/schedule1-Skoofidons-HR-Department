@@ -1,5 +1,7 @@
 # Skoofidon's HR Department
 
+> Development branch: shared F3 work is in progress. The built-in menu is gated on native input proof; published stable remains1.2.0. HR core no longer requires a Phone App assembly reference, but the standalone panel is not enabled yet. See [execution status](docs/testing/2026-10-31-shared-f3-execution.md). Requirements below describe the published stable release.
+
 A MelonLoader mod for **Schedule I** that configures employee stats and assignment limits through Mod Manager & Phone App.
 
 **Current stable version: [1.2.0](https://github.com/youseemenot/schedule1-Skoofidons-HR-Department/releases/tag/v1.2.0).** Adds machine timers, live growth factors and grouped settings. Based on user-tested 1.2.0-beta.2: correct settings order, factors applied to already-growing plants/mushrooms, no progress jumps or errors reported. Stable changes only version metadata and the startup message; release validation compares executable behavior with the tested DLL. See [release notes](docs/releases/1.2.0.md), [test result](docs/testing/2026-10-30-machine-beta2-result.md) and [regression checklist](docs/testing/2026-10-30-machine-timers-beta2.md).

@@ -4,7 +4,6 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using HarmonyLib;
 using MelonLoader;
-using ModManagerPhoneApp;
 using HarmonyController = HarmonyLib.Harmony;
 
 namespace SkoofidonsHRDepartment
@@ -16,17 +15,22 @@ namespace SkoofidonsHRDepartment
             "<PopulateMenuConfigPanel>b__80_1", "<PopulateAllSettings>b__96_0", "<PopulateModSettings>b__97_0"
         };
         private static HarmonyController _harmony;
+        private static Assembly _phoneAssembly;
 
         private static MethodInfo[] Resolve()
         {
-            var type = typeof(ModSettingsEvents).Assembly.GetType("ModManagerPhoneApp.ModSettingsAppCreator+<>c", throwOnError: true);
+            var assembly = _phoneAssembly ?? AppDomain.CurrentDomain.GetAssemblies()
+                .FirstOrDefault(a => a.GetType("ModManagerPhoneApp.ModSettingsEvents", throwOnError: false) != null);
+            if (assembly == null) return Array.Empty<MethodInfo>();
+            var type = assembly.GetType("ModManagerPhoneApp.ModSettingsAppCreator+<>c", throwOnError: true);
             return Selectors.Select(name => type.GetMethod(name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly)
                 ?? throw new MissingMethodException("Phone App category selector changed: " + name)).ToArray();
         }
 
         public static int VerifyManagedBindings()
         {
-            foreach (var method in Resolve())
+            var methods = Resolve();
+            foreach (var method in methods)
             {
                 var parameters = method.GetParameters();
                 var il = method.GetMethodBody()?.GetILAsByteArray();
@@ -38,13 +42,14 @@ namespace SkoofidonsHRDepartment
                     throw new InvalidOperationException("Phone App no longer sorts category identifiers.");
                 RuntimeHelpers.PrepareMethod(method.MethodHandle);
             }
-            return Selectors.Length;
+            return methods.Length;
         }
 
-        public static void Initialize()
+        public static void Initialize(Assembly phoneAssembly)
         {
             try
             {
+                _phoneAssembly = phoneAssembly ?? throw new ArgumentNullException(nameof(phoneAssembly));
                 VerifyManagedBindings();
                 var methods = Resolve();
                 foreach (var method in methods)
@@ -72,6 +77,7 @@ namespace SkoofidonsHRDepartment
             try { _harmony?.UnpatchSelf(); }
             catch (Exception exception) { MelonLogger.Warning("[HR SETTINGS ORDER] Cleanup: " + exception.Message); }
             _harmony = null;
+            _phoneAssembly = null;
         }
     }
 }

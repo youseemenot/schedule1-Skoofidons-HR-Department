@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.3.0-dev.1 — Shared settings groundwork, unpublished
+
+- Add a separate temporary F6 input proof, pure V1 registration/election with independent assembly fixtures, and a source vendor-sync helper. Product F3 integration remains gated on gameplay input verification.
+- Remove the mandatory Phone App reference from HR core; preserve settings application through a normal service and optional guarded reflection adapter. Existing preference keys, employee/machine logic and stable installed DLLs are retained.
+- Record native research,254offline checks and the deferred native gate. This is an internal build, not the complete paired UI candidate.
+
+
 ## 1.2.0 — 2026-10-30
 
 - Promote user-tested1.2.0-beta.2 to stable. Runtime differences are limited to version metadata and the startup label; executable parity is checked before publication.
