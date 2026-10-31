@@ -98,7 +98,7 @@ namespace Skoofidons.SettingsProbe
 
         private void OnExit(ExitAction action)
         {
-            if (state == null || !IsTop() || action.Used) return;
+            if (state == null || !IsTop() || action.Used || action.Type != ExitType.Primary) return;
             action.Use();
             RequestClose("native ExitAction");
         }

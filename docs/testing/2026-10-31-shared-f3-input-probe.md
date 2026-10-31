@@ -8,6 +8,6 @@
 4. Проверить потерю фокуса и повторное открытие; сменить сцену/выйти в главное меню после открытой панели. Никакой невидимой блокировки.
 5. Отдельно отметить замеченные реакции мира в кадре открытия/закрытия. При ошибке закрыть игру, приложить Latest.log. Если сбой удерживает ввод, после перезапуска probe не открывается автоматически.
 
-Лог содержит [F3 INPUT PROBE READY/OPEN/SAMPLE/CLOSING/CLOSED] с первыми четырьмя frame-снимками курсора/canLook/canMove. Компиляция/JIT/60API references прошли; это не является доказательством native input изоляции. Лог + результат сценариев нужны для gate этапа1.
+Лог содержит [F3 INPUT PROBE READY/OPEN/SAMPLE/CLOSING/CLOSED] с первыми четырьмя frame-снимками курсора/canLook/canMove. Компиляция/JIT/61API references прошли; это не является доказательством native input изоляции. Лог + результат сценариев нужны для gate этапа1.
 
-Точная установленная сборка: SHA2560120270710E86801866B09010DF54CFC8DE38A92A055B657C8E546E7ACFABFD1.23managed methods resolve/JIT;60external references,0Harmony hooks,0ошибок API. Native behaviour остаётся непроверенным.
+Точная установленная сборка: SHA2567F98D7ED20ED4F1E647AAA311955D61C6996834258AB21125D0E27CCB2C202A8.23managed methods resolve/JIT;61external references,0Harmony hooks,0ошибок API. Native behaviour остаётся непроверенным.
