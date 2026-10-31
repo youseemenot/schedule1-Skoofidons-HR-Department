@@ -3,8 +3,9 @@ using UnityEngine;
 using Il2CppScheduleOne.DevUtilities;
 using Il2CppScheduleOne.Persistence;
 using UnityEngine.Events;
+using Skoofidons.SharedSettings.V1;
 
-[assembly: MelonInfo(typeof(SkoofidonsHRDepartment.Core), "Skoofidon's HR Department", "1.3.0-dev.1", "Skoofidon")]
+[assembly: MelonInfo(typeof(SkoofidonsHRDepartment.Core), "Skoofidon's HR Department", "1.3.0-beta.1", "Skoofidon")]
 [assembly: System.Reflection.AssemblyVersion("1.3.0.0")]
 [assembly: System.Reflection.AssemblyFileVersion("1.3.0.0")]
 [assembly: MelonGame("TVGS", "Schedule I")]
@@ -27,11 +28,13 @@ namespace SkoofidonsHRDepartment
             CleanerActionSpeedController.Initialize();
             MachineTimerController.Initialize();
             ModManagerIntegration.Initialize();
-            LoggerInstance.Msg("HR Department 1.3.0-dev.1 optional settings core initialized; F3 integration pending native input proof (Schedule I 0.4.7f12).");
+            HrSettingsPanel.Initialize();
+            LoggerInstance.Msg("HR Department 1.3.0-beta.1 initialized. F3: independent shared settings (Schedule I 0.4.7f12).");
         }
 
         public override void OnDeinitializeMelon()
         {
+            SharedMenuRuntime.Shutdown();
             if (Singleton<LoadManager>.Instance != null)
             {
                 Singleton<LoadManager>.Instance.onLoadComplete.RemoveListener(OnLoadCompleteAction);
@@ -43,7 +46,14 @@ namespace SkoofidonsHRDepartment
             PackagerUIFix.ClearReferences();
         }
 
-        public override void OnUpdate() => ClipboardLayoutController.RefreshTracked();
+        public override void OnLateInitializeMelon() => SharedMenuRuntime.LateInitialize();
+        public override void OnGUI() => SharedMenuRuntime.Draw();
+        public override void OnApplicationQuit() => SharedMenuRuntime.Shutdown();
+        public override void OnUpdate()
+        {
+            SharedMenuRuntime.Tick();
+            ClipboardLayoutController.RefreshTracked();
+        }
 
         public override void OnSceneWasInitialized(int buildIndex, string sceneName)
         {
@@ -65,6 +75,7 @@ namespace SkoofidonsHRDepartment
 
         public override void OnSceneWasUnloaded(int buildIndex, string sceneName)
         {
+            SharedMenuRuntime.SceneChanged();
             if (sceneName == "Main")
             {
                 IsGameLoaded = false;

@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework><OutputType>Exe</OutputType><ImplicitUsings>enable</ImplicitUsings>
+    <UseAppHost>false</UseAppHost><CheckEolTargetFramework>false</CheckEolTargetFramework>
+    <DisableTransitiveFrameworkReferenceDownloads>true</DisableTransitiveFrameworkReferenceDownloads>
+    <DefineConstants Condition="Exists('../../SharedSettings/V1/MenuSession.cs')">$(DefineConstants);SESSION_IMPLEMENTED</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../SharedSettings/V1/ProviderManifest.cs" Link="ProviderManifest.cs" />
+    <Compile Include="../../SharedSettings/V1/ReleaseBarrier.cs" Link="ReleaseBarrier.cs" />
+    <Compile Include="../../SharedSettings/V1/MenuSession.cs" Link="MenuSession.cs" Condition="Exists('../../SharedSettings/V1/MenuSession.cs')" />
+  </ItemGroup>
+</Project>

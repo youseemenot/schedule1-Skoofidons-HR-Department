@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <Compile Include="*.cs" />
+    <Compile Include="SharedSettings/V1/*.cs" />
     <Reference Include="MelonLoader"><HintPath>$(LoaderDirectory)/MelonLoader.dll</HintPath></Reference>
     <Reference Include="0Harmony"><HintPath>$(LoaderDirectory)/0Harmony.dll</HintPath></Reference>
     <Reference Include="Il2CppInterop.Runtime"><HintPath>$(LoaderDirectory)/Il2CppInterop.Runtime.dll</HintPath></Reference>
@@ -25,6 +26,9 @@
     <Reference Include="Il2CppFishNet.Runtime"><HintPath>$(InteropDirectory)/Il2CppFishNet.Runtime.dll</HintPath></Reference>
 
     <Reference Include="UnityEngine.CoreModule"><HintPath>$(InteropDirectory)/UnityEngine.CoreModule.dll</HintPath></Reference>
+    <Reference Include="UnityEngine.IMGUIModule"><HintPath>$(InteropDirectory)/UnityEngine.IMGUIModule.dll</HintPath></Reference>
+    <Reference Include="UnityEngine.InputLegacyModule"><HintPath>$(InteropDirectory)/UnityEngine.InputLegacyModule.dll</HintPath></Reference>
+    <Reference Include="UnityEngine.TextRenderingModule"><HintPath>$(InteropDirectory)/UnityEngine.TextRenderingModule.dll</HintPath></Reference>
     <Reference Include="UnityEngine.UI"><HintPath>$(InteropDirectory)/UnityEngine.UI.dll</HintPath></Reference>
     <Reference Include="Unity.InputSystem"><HintPath>$(InteropDirectory)/Unity.InputSystem.dll</HintPath></Reference>
 

@@ -8,7 +8,7 @@ namespace Skoofidons.SharedSettings
 {
     public static class EntryPointV1
     {
-        public const string RuntimeVersion = "1.0.0";
+        public const string RuntimeVersion = "1.1.0";
         private static IDictionary<string, object>? manifest;
         public static void Initialize(string id, string title, Version providerVersion, Action draw, Action opened, Action closed)
         {
@@ -24,5 +24,19 @@ namespace Skoofidons.SharedSettings
 
         public static IDictionary<string, object> GetManifestV1() =>
             manifest ?? throw new InvalidOperationException("Settings provider has not initialized yet.");
+
+        // Optional V1.1 capabilities use only BCL types across independently compiled mods.
+        // Configure once, during provider initialization, before discovery.
+        public static void ConfigurePanel(Action<float, float, string> viewport, Func<string> status,
+            Func<bool>? dirty = null, Func<string?>? apply = null)
+        {
+            var values = new Dictionary<string, object>(GetManifestV1()) {
+                ["minimumHostVersion"] = "1.1.0", ["viewport"] = viewport, ["status"] = status
+            };
+            if (dirty != null) values["dirty"] = dirty;
+            if (apply != null) values["apply"] = apply;
+            ProviderManifest.Parse(values, typeof(EntryPointV1).Assembly);
+            manifest = new ReadOnlyDictionary<string, object>(values);
+        }
     }
 }

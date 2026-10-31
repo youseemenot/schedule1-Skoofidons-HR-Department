@@ -100,6 +100,19 @@ Check("local endpoint exposes callable CLR callbacks after initialization", () =
     ((Action)values["opened"])(); ((Action)values["draw"])(); ((Action)values["closed"])();
     Expect(drawn == 1 && opened == 1 && closed == 1, "Endpoint callbacks were lost");
 });
+Check("V1.1 viewport footer and language use only shared CLR delegates", () => {
+    var endpoint = Assembly.GetExecutingAssembly().GetType("Skoofidons.SharedSettings.EntryPointV1")!;
+    int calls=0;
+    endpoint.GetMethod("ConfigurePanel")!.Invoke(null,new object[]{
+        (Action<float,float,string>)((w,h,locale)=>{Expect(w==800&&h==600&&locale=="ru","Viewport or game language lost");calls++;}),
+        (Func<string>)(()=>"status"),(Func<bool>)(()=>true),(Func<string>)(()=>null!)});
+    var values=(IDictionary<string,object>)endpoint.GetMethod("GetManifestV1")!.Invoke(null,null)!;
+    var p=Parse(values);
+    ((Action<float,float,string>)p.GetType().GetProperty("Viewport")!.GetValue(p)!)(800,600,"ru");
+    Expect(calls==1&&values["minimumHostVersion"].ToString()=="1.1.0","Incapable old host can own the panel");
+    try {values["id"]="changed";throw new Exception("Manifest mutable");}catch(NotSupportedException){}
+    var bad=Manifest();bad["viewport"]=(Action)(()=>{});Reject(bad);
+});
 
 if (args.Length > 0)
 {

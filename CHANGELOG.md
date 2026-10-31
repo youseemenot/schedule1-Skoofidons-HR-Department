@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.3.0-beta.1 — local candidate, 2026-10-31
+
+- Standalone F3 settings for all 31 HR preferences; Phone App is optional.
+- Shared mod sidebar with Minimap 2.3.0-beta.1, native cursor/control ownership and deferred close.
+- RU/EN follows the Steam per-game language; draft validation and explicit Apply preserve existing configuration identifiers.
+- No employee, machine or growth-timer behavior changes. Full paired gameplay check pending.
+
 ## 1.3.0-dev.1 — Shared settings groundwork, unpublished
 
 - Add a separate temporary F6 input proof, pure V1 registration/election with independent assembly fixtures, and a source vendor-sync helper. Product F3 integration remains gated on gameplay input verification.

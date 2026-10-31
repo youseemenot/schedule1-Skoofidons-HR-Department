@@ -1,6 +1,6 @@
 # Skoofidon's HR Department
 
-> Development branch: shared F3 work is in progress. The built-in menu is gated on native input proof; published stable remains1.2.0. HR core no longer requires a Phone App assembly reference, but the standalone panel is not enabled yet. See [execution status](docs/testing/2026-10-31-shared-f3-execution.md). Requirements below describe the published stable release.
+> Development candidate: **1.3.0-beta.1** adds standalone shared **F3** settings, game-language RU/EN and optional Phone App integration. Update Minimap to **2.3.0-beta.1** for one shared window. The native input probe passed the user check; the complete paired menu still needs gameplay acceptance. Published stable remains **1.2.0**; requirements below describe that stable release. See [candidate checks](docs/testing/shared-f3-menu.md).
 
 A MelonLoader mod for **Schedule I** that configures employee stats and assignment limits through Mod Manager & Phone App.
 

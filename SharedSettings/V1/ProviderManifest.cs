@@ -17,6 +17,10 @@ namespace Skoofidons.SharedSettings.V1
         public Action Draw { get; }
         public Action Opened { get; }
         public Action Closed { get; }
+        public Action<float, float, string>? Viewport { get; }
+        public Func<string>? Status { get; }
+        public Func<bool>? Dirty { get; }
+        public Func<string?>? Apply { get; }
 
         private ProviderManifest(IDictionary<string, object> values, Assembly assembly)
         {
@@ -35,6 +39,10 @@ namespace Skoofidons.SharedSettings.V1
             Draw = Read<Action>(values, "draw");
             Opened = Read<Action>(values, "opened");
             Closed = Read<Action>(values, "closed");
+            Viewport = Optional<Action<float, float, string>>(values, "viewport");
+            Status = Optional<Func<string>>(values, "status");
+            Dirty = Optional<Func<bool>>(values, "dirty");
+            Apply = Optional<Func<string?>>(values, "apply");
             Assembly = assembly;
         }
 
@@ -50,6 +58,9 @@ namespace Skoofidons.SharedSettings.V1
                 throw new FormatException("Invalid settings manifest field: " + key);
             return typed;
         }
+
+        private static T? Optional<T>(IDictionary<string, object> values, string key) where T : class =>
+            values.ContainsKey(key) ? Read<T>(values, key) : null;
 
         private static Version ReadVersion(IDictionary<string, object> values, string key)
         {
