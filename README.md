@@ -1,6 +1,6 @@
 # Skoofidon's HR Department
 
-> Development candidate: **1.3.0-beta.2** adds standalone shared **F3** settings, game-language RU/EN and optional Phone App integration. Update Minimap to **2.3.0-beta.2** for one shared window. The native input probe passed the user check; the complete paired menu still needs gameplay acceptance. Published stable remains **1.2.0**; requirements below describe that stable release. See [candidate checks](docs/testing/shared-f3-menu.md).
+> Development candidate: **1.3.0-beta.2** adds standalone shared **F3** settings, game-language RU/EN and optional Phone App integration. Update Minimap to **2.3.0-beta.2** for one shared window. The user reports that the beta.2 functions they exercised work, and their supplied log contains no errors. Complete scenario coverage remains pending; see [the test report](docs/testing/2026-11-01-beta2-user-result.md). Published stable remains **1.2.0**; requirements below describe that stable release. See [candidate checks](docs/testing/shared-f3-menu.md).
 
 A MelonLoader mod for **Schedule I** that configures employee stats and assignment limits through Mod Manager & Phone App.
 
@@ -38,6 +38,8 @@ Machine Timers has seven independent factors, default1: Chemistry / Oven / Mixin
 | Plant and mushroom growth | Next native growth calculation for all growing cultures, including already planted and loaded crops. Past progress is unchanged; no per-crop factor is saved. |
 
 All performance values default to **1**. Movement uses original speed × multiplier; action waits use normal wait ÷ multiplier. Thus **7** means seven times faster movement or one seventh of the action wait, and **0.5** means half speed or twice the wait. Titles state `higher = faster` or `higher = less time`. Limits remain counts, and wages/fees remain currency amounts.
+
+**Use speed multipliers in moderation.** Start at1× and increase gradually. Around **7×** has already provided substantial acceleration in the author's single-player testing; this is an empirical reference and results vary by task and save. Very high values can produce erratic movement, inefficient work or other unexpected results. A larger number does not always improve actual output. Reduce the relevant multiplier if behavior becomes unreliable.
 
 | Setting | Default | Meaning |
 | --- | --- | --- |
