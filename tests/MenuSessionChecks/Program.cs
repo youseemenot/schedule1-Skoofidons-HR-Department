@@ -55,6 +55,27 @@ Check("reopening remembers selected provider",()=>{
     s.Toggle(1);s.Select("b",2);s.RequestClose(3);s.Tick(4,false,true);s.Toggle(5);
     Expect(s.Selected.Id=="b","Reopening reset selected mod");
 });
+Check("shell initialization failure does not disable healthy providers",()=>{
+    var s=new MenuSession(new[]{Provider("a"),Provider("b")},()=>new Lease());s.Toggle(1);
+    var fail=s.GetType().GetMethod("FailShell")??throw new Exception("Shell failures are attributed to active provider");
+    fail.Invoke(s,new object[]{new NotSupportedException("Font unavailable"),2});
+    s.Tick(3,true,true);Expect(s.HasLease,"Shell failure bypassed held-input barrier");
+    s.Tick(4,false,true);s.Toggle(5);Expect(s.Selected.Id=="a"&&s.Visible,"Healthy provider disabled by shell failure");
+});
+Check("native ExitGUI is contained at managed Melon event boundary",()=>{
+    var type=typeof(Program).Assembly.GetType("Skoofidons.SharedSettings.V1.GuiEventBoundary")??throw new Exception("Native ExitGUI leaks into Melon error log");
+    var end=type.GetMethod("End");
+    end.Invoke(null,new object[]{(Action)(()=>throw new ExitGUIException())});
+    try{end.Invoke(null,new object[]{(Action)(()=>throw new InvalidOperationException("Other failure"))});throw new Exception("Unexpected failure swallowed");}
+    catch(TargetInvocationException e)when(e.InnerException is InvalidOperationException){}
+});
+Check("non-draw provider callback failure still isolates that provider",()=>{
+    var s=new MenuSession(new[]{Provider("a"),Provider("b")},()=>new Lease());s.Toggle(1);
+    var method=s.GetType().GetMethod("TryProviderCall")??throw new Exception("Footer and viewport faults are treated as shell failures");
+    var arguments=new object[]{(Func<string>)(()=>throw new Exception("Bad footer")),2,null};
+    Expect(!(bool)method.MakeGenericMethod(typeof(string)).Invoke(s,arguments),"Callback failure ignored");
+    s.Tick(3,false,true);s.Toggle(4);Expect(s.Selected.Id=="b","Broken callback blocks healthy panel");
+});
 Check("ordinary ExitGUI abort is not a provider fault",()=>{
     var s=new MenuSession(new[]{Provider("a",draw:()=>throw new ExitGUIException())},()=>new Lease());s.Toggle(1);
     try{s.Draw(2);throw new Exception("ExitGUI swallowed");}catch(ExitGUIException){}

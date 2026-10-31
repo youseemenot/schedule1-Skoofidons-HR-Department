@@ -9,5 +9,6 @@
     <Compile Include="../../SharedSettings/V1/ProviderManifest.cs" Link="ProviderManifest.cs" />
     <Compile Include="../../SharedSettings/V1/ReleaseBarrier.cs" Link="ReleaseBarrier.cs" />
     <Compile Include="../../SharedSettings/V1/MenuSession.cs" Link="MenuSession.cs" Condition="Exists('../../SharedSettings/V1/MenuSession.cs')" />
+    <Compile Include="../../SharedSettings/V1/GuiEventBoundary.cs" Link="GuiEventBoundary.cs" Condition="Exists('../../SharedSettings/V1/GuiEventBoundary.cs')" />
   </ItemGroup>
 </Project>

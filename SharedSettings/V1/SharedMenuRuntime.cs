@@ -7,6 +7,7 @@ namespace Skoofidons.SharedSettings.V1
 {
     public static class SharedMenuRuntime
     {
+        private static readonly MelonLogger.Instance Logger=new("Skoofidon Settings");
         private static MenuSession session;
         private static System.Collections.Generic.IReadOnlyList<ProviderManifest> providers;
         private static Il2CppSystem.Action<bool> focusChanged;
@@ -16,14 +17,15 @@ namespace Skoofidons.SharedSettings.V1
         public static void LateInitialize()
         {
             if(session!=null)return;
-            providers=ProviderDiscovery.Discover(MelonBase.RegisteredMelons.Select(m=>m.MelonAssembly.Assembly),MelonLogger.Warning);
+            providers=ProviderDiscovery.Discover(MelonBase.RegisteredMelons.Select(m=>m.MelonAssembly.Assembly),Logger.Warning);
             var winner=HostElection.Elect(providers);
             host=winner!=null&&winner.Assembly==typeof(SharedMenuRuntime).Assembly;
             if(!host)return;
             session=new MenuSession(providers,()=>new GameUiInputLease(()=>session.RequestClose(Time.frameCount)));
             focusChanged=(Action<bool>)(focused=>{if(!focused)session.RequestClose(Time.frameCount);});
             Application.focusChanged+=focusChanged;
-            MelonLogger.Msg("[Shared F3] Host="+winner.Id+"; runtime="+EntryPointV1.RuntimeVersion+"; providers="+providers.Count);
+            Logger.Msg("F3 ready; runtime="+EntryPointV1.RuntimeVersion+"; active panels="+string.Join(", ",providers.Select(p=>p.Title))+
+                "; automatic coordinator="+winner.Id+". Any participating mod can provide this menu on its own.");
         }
         public static void Tick()
         {
@@ -38,23 +40,24 @@ namespace Skoofidons.SharedSettings.V1
                 }
                 session.Tick(Time.frameCount,Input.anyKey,Application.isFocused);
                 if(session.Error!=null&&loggedError!=session.Error)
-                {loggedError=session.Error;MelonLogger.Warning("[Shared F3] "+loggedError);}
+                {loggedError=session.Error;Logger.Warning(loggedError);}
             }
             catch(Exception e){session.Abort(Time.frameCount);Log(e);}
         }
         private static void Log(Exception e)
-        {if(loggedError==e.Message)return;loggedError=e.Message;MelonLogger.Warning("[Shared F3] "+e);}
+        {if(loggedError==e.Message)return;loggedError=e.Message;Logger.Warning(e.ToString());}
         public static void Draw()
         {
+            MenuTheme.FlushInputReset();
             if(!host||session==null||!session.Visible)return;
             bool abortEvent=false;
             using(var saved=new GuiStateScope())
             {
                 try {GUI.color=GUI.backgroundColor=GUI.contentColor=Color.white;GUI.enabled=true;abortEvent=!DrawWindow();}
-                catch(Exception e){if(!MenuSession.IsGuiExit(e)){session.FailProvider(e,Time.frameCount);Log(e);}abortEvent=true;}
+                catch(Exception e){if(!MenuSession.IsGuiExit(e)){session.FailShell(e,Time.frameCount);Log(e);}abortEvent=true;}
             }
             // Outside the catch: terminate Unity's GUI event; never draw a footer into damaged groups.
-            if(abortEvent)GUIUtility.ExitGUI();
+            if(abortEvent)GuiEventBoundary.End(GUIUtility.ExitGUI);
         }
         private static bool DrawWindow()
         {
@@ -94,7 +97,8 @@ namespace Skoofidons.SharedSettings.V1
                 var selected=session.Selected;
                 if(selected!=null&&session.Visible)
                 {
-                    using(var state=new GuiStateScope())selected.Viewport?.Invoke(panel.width,panel.height,language);
+                    using(var state=new GuiStateScope())
+                        if(!session.TryProviderCall(()=>{selected.Viewport?.Invoke(panel.width,panel.height,language);return true;},Time.frameCount,out _))return false;
                     GUI.BeginGroup(panel);
                     bool drawn;
                     try{using(var state=new GuiStateScope())drawn=session.Draw(Time.frameCount);}finally{GUI.EndGroup();}
@@ -105,16 +109,22 @@ namespace Skoofidons.SharedSettings.V1
                 bool canApply=selected?.Apply!=null;
                 float closeX=w-(canApply?290:155);
                 string status;
-                using(var state=new GuiStateScope())status=applyError??selected?.Status?.Invoke()??"";
+                using(var state=new GuiStateScope())
+                    if(!session.TryProviderCall(()=>applyError??selected?.Status?.Invoke()??"",Time.frameCount,out status))return false;
                 MenuTheme.Label(new Rect(20,h-69,Math.Max(50,closeX-35),58),status,w<850?13:17,false,applyError==null?MenuTheme.Muted:new Color(1,.5f,.4f,1));
                 if(MenuTheme.Button(new Rect(closeX,h-61,125,43),MenuTheme.T("Закрыть","Close"))) session.RequestClose(Time.frameCount);
                 if(canApply)
                 {
                     bool dirty;
-                    using(var state=new GuiStateScope())dirty=selected.Dirty?.Invoke()??true;
+                    using(var state=new GuiStateScope())
+                        if(!session.TryProviderCall(()=>selected.Dirty?.Invoke()??true,Time.frameCount,out dirty))return false;
                     GUI.enabled=dirty;
                     if(MenuTheme.Button(new Rect(w-151,h-61,133,43),MenuTheme.T("Применить","Apply"),true))
-                    {using(var state=new GuiStateScope())applyError=selected.Apply();GUI.FocusControl(null);}
+                    {
+                        using(var state=new GuiStateScope())
+                            if(!session.TryProviderCall(selected.Apply,Time.frameCount,out applyError))return false;
+                        GUI.FocusControl(null);
+                    }
                     GUI.enabled=true;
                 }
                 return true;

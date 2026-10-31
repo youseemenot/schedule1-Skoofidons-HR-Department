@@ -47,9 +47,27 @@ foreach(var owner in new[]{hr,map})
   var winner=owner.GetType("Skoofidons.SharedSettings.V1.HostElection").GetMethod("Elect").Invoke(null,new object[]{typed});Expect(Id(winner)=="skoofidon.hr","Different host");
   foreach(var p in list){((Action<float,float,string>)p.GetType().GetProperty("Viewport").GetValue(p))(700,500,"ru");((Action)p.GetType().GetProperty("Draw").GetValue(p))();}
  });
- Check(owner.GetName().Name+" works standalone",()=>Expect(Discover(owner,new[]{owner}).Count()==1,"Standalone missing"));
+ Check(owner.GetName().Name+" alone elects itself without the other product DLL",()=>{
+  var list=Discover(owner,new[]{owner}).ToArray();Expect(list.Length==1,"Standalone missing");
+  var typed=Array.CreateInstance(list[0].GetType(),1);typed.SetValue(list[0],0);
+  var winner=owner.GetType("Skoofidons.SharedSettings.V1.HostElection").GetMethod("Elect").Invoke(null,new object[]{typed});
+  Expect((Assembly)winner.GetType().GetProperty("Assembly").GetValue(winner)==owner,"Standalone menu depends on the other mod");
+ });
 }
 Check("callbacks ran in their own independent DLL",()=>Expect(calls.Values.All(v=>v==22),"Callback identity collapsed"));
+Check("HR open and close bind to editing reset without executing Unity",()=>{
+ var type=hr.GetType("Skoofidons.SharedSettings.V1.MenuTheme");
+ var reset=type.GetMethod("ResetInput")??throw new Exception("Editor survives menu close");
+ foreach(var name in new[]{"OnOpened","OnClosed"})
+ {
+  var il=hr.GetType("SkoofidonsHRDepartment.HrSettingsPanel").GetMethod(name).GetMethodBody().GetILAsByteArray();
+  bool found=false;for(int i=0;i<il.Length-4;i++)if(il[i]==0x28&&BitConverter.ToInt32(il,i+1)==reset.MetadataToken){found=true;break;}
+  Expect(found,name+" leaves stale editing state");
+ }
+ var editorType=hr.GetType("Skoofidons.SharedSettings.V1.NumericEditor");var editor=Activator.CreateInstance(editorType);
+ editorType.GetMethod("Reset").Invoke(editor,new object[]{"9"});editorType.GetMethod("Reset").Invoke(editor,new object[]{""});
+ Expect((string)editorType.GetProperty("Text").GetValue(editor)=="","Reset retained edited text");
+});
 if(args.Length>3&&File.Exists(args[3]))
 {
  var third=AssemblyLoadContext.Default.LoadFromAssemblyPath(Path.GetFullPath(args[3]));

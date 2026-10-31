@@ -8,7 +8,7 @@ namespace Skoofidons.SharedSettings
 {
     public static class EntryPointV1
     {
-        public const string RuntimeVersion = "1.1.0";
+        public const string RuntimeVersion = "1.1.1";
         private static IDictionary<string, object>? manifest;
         public static void Initialize(string id, string title, Version providerVersion, Action draw, Action opened, Action closed)
         {

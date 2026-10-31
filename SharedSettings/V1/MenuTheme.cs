@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Skoofidons.SharedSettings.V1
@@ -8,6 +9,24 @@ namespace Skoofidons.SharedSettings.V1
         public static readonly Color Background = new(.065f,.09f,.12f,.99f), Card = new(.09f,.125f,.16f,1),
             Line = new(.18f,.24f,.29f,1), Accent = new(0,.8f,.85f,1), Muted = new(.66f,.76f,.84f,1);
         private static GUIStyle text, bold, button, field, rail, thumb;
+        private static readonly Dictionary<int,GUIStyle> backgrounds=new();
+        private static readonly NumericEditor editor=new();
+        private static string activeField;
+        private static bool inputResetPending;
+        private static int ownedKeyboard,ownedHot;
+        public static void ResetInput()
+        {
+            activeField=null;editor.Reset("");inputResetPending=true;
+        }
+        // Called from each embedded runtime's OnGUI even when it is not coordinator.
+        // Close callbacks can run outside OnGUI, so native GUI globals are released here.
+        public static void FlushInputReset()
+        {
+            if(!inputResetPending)return;
+            if(ownedKeyboard!=0&&GUIUtility.keyboardControl==ownedKeyboard)GUIUtility.keyboardControl=0;
+            if(ownedHot!=0&&GUIUtility.hotControl==ownedHot)GUIUtility.hotControl=0;
+            ownedKeyboard=ownedHot=0;inputResetPending=false;
+        }
         public static string Language { get; private set; } = "en";
         public static float Width { get; private set; }
         public static float Height { get; private set; }
@@ -17,8 +36,8 @@ namespace Skoofidons.SharedSettings.V1
         public static void Ensure()
         {
             if (text != null) return;
-            var font = Font.CreateDynamicFontFromOSFont("Segoe UI", 20);
-            text = new GUIStyle(GUI.skin.label) { font=font,fontSize=20,wordWrap=true,alignment=TextAnchor.MiddleLeft };
+            // Reuse the live game skin. OS-font creation is an unstripping-failure stub here.
+            text = new GUIStyle(GUI.skin.label) { fontSize=20,wordWrap=true,alignment=TextAnchor.MiddleLeft };
             text.normal.textColor=Color.white;
             bold = new GUIStyle(text) { fontStyle=FontStyle.Bold };
             button = new GUIStyle(text) { alignment=TextAnchor.MiddleCenter };
@@ -28,8 +47,32 @@ namespace Skoofidons.SharedSettings.V1
             rail = new GUIStyle { fixedHeight=24 };
             thumb = new GUIStyle { fixedWidth=24,fixedHeight=24 };
         }
-        public static void Box(Rect r, Color color, float radius=7) =>
-            GUI.DrawTexture(r, Texture2D.whiteTexture, ScaleMode.StretchToFill, true, 0, color, 0, radius);
+        public static void Box(Rect r, Color color, float radius=7)
+        {
+            int corner=(int)Math.Max(0,radius);
+            if(!backgrounds.TryGetValue(corner,out var style))
+            {
+                Texture2D texture=Texture2D.whiteTexture;
+                if(corner>0)
+                {
+                    int size=corner*2+2;var pixels=new Color32[size*size];
+                    for(int y=0;y<size;y++)for(int x=0;x<size;x++)
+                    {
+                        float dx=Math.Max(corner-(x+.5f),x+.5f-(size-corner));
+                        float dy=Math.Max(corner-(y+.5f),y+.5f-(size-corner));
+                        float distance=(float)Math.Sqrt(Math.Max(0,dx)*Math.Max(0,dx)+Math.Max(0,dy)*Math.Max(0,dy));
+                        byte alpha=(byte)(Math.Clamp(corner+.5f-distance,0,1)*255);
+                        pixels[y*size+x]=new Color32(255,255,255,alpha);
+                    }
+                    texture=new Texture2D(size,size,TextureFormat.RGBA32,false);
+                    texture.SetPixels32(pixels);texture.Apply(false,true);
+                }
+                style=new GUIStyle {border=new RectOffset(corner,corner,corner,corner)};
+                style.normal.background=texture;backgrounds.Add(corner,style);
+            }
+            var old=GUI.color;
+            try{GUI.color=color;GUI.Box(r,GUIContent.none,style);}finally{GUI.color=old;}
+        }
         public static void Label(Rect r,string value,int size=20,bool strong=false,Color? color=null)
         {
             Ensure(); var style=strong?bold:text; int old=style.fontSize; var oldColor=style.normal.textColor;
@@ -41,12 +84,63 @@ namespace Skoofidons.SharedSettings.V1
             Ensure(); bool hover=r.Contains(Event.current.mousePosition);
             Box(r,primary?Accent:hover?new Color(.2f,.28f,.34f,1):new Color(.14f,.19f,.25f,1));
             button.normal.textColor=primary?Background:Color.white;
-            return GUI.Button(r,value,button);
+            bool clicked=GUI.Button(r,value,button);
+            if(clicked){GUIUtility.keyboardControl=0;activeField=null;ownedKeyboard=0;}
+            return clicked;
         }
         public static string Field(Rect r,string value,string name)
         {
             Ensure(); Box(r,new Color(.055f,.08f,.11f,1));
-            GUI.SetNextControlName(name); return GUI.TextField(r,value,field);
+            int id=GUIUtility.GetControlID(name.GetHashCode(),FocusType.Keyboard,r);
+            var e=Event.current;
+            bool focused=activeField==name&&GUIUtility.keyboardControl==id;
+            if(e.type==EventType.MouseDown&&e.button==0&&r.Contains(e.mousePosition))
+            {
+                if(!focused){activeField=name;editor.Reset(value);}
+                GUIUtility.keyboardControl=id;GUIUtility.hotControl=id;ownedKeyboard=ownedHot=id;
+                editor.Place(CharacterAt(r,editor.Text,e.mousePosition.x),e.shift);e.Use();focused=true;
+            }
+            if(focused&&e.type==EventType.MouseDrag&&GUIUtility.hotControl==id)
+            {editor.Place(CharacterAt(r,editor.Text,e.mousePosition.x),true);e.Use();}
+            if(e.type==EventType.MouseUp&&GUIUtility.hotControl==id){GUIUtility.hotControl=0;ownedHot=0;e.Use();}
+            if(focused&&e.type==EventType.KeyDown)
+            {
+                bool used=true,command=e.control||e.command;
+                if(command&&e.keyCode==KeyCode.A)editor.SelectAll();
+                else if(command&&e.keyCode==KeyCode.C)GUIUtility.systemCopyBuffer=editor.SelectedText;
+                else if(command&&e.keyCode==KeyCode.X){GUIUtility.systemCopyBuffer=editor.SelectedText;editor.Insert("");}
+                else if(command&&e.keyCode==KeyCode.V)editor.Insert(GUIUtility.systemCopyBuffer);
+                else if(e.keyCode==KeyCode.LeftArrow)editor.Move(-1,e.shift);
+                else if(e.keyCode==KeyCode.RightArrow)editor.Move(1,e.shift);
+                else if(e.keyCode==KeyCode.Home)editor.Home(e.shift);
+                else if(e.keyCode==KeyCode.End)editor.End(e.shift);
+                else if(e.keyCode==KeyCode.Backspace)editor.Backspace();
+                else if(e.keyCode==KeyCode.Delete)editor.Delete();
+                else if(e.keyCode==KeyCode.Return||e.keyCode==KeyCode.KeypadEnter||e.keyCode==KeyCode.Tab){GUIUtility.keyboardControl=0;activeField=null;}
+                else if(!command&&!char.IsControl(e.character))editor.Insert(e.character.ToString());
+                else used=false;
+                if(used)e.Use();
+            }
+            string display=focused?editor.Text:value;
+            float left=(r.width-Measure(display))*.5f;
+            GUI.BeginGroup(r);
+            try
+            {
+                if(focused&&editor.Length>0)
+                    Box(new Rect(left+Measure(display.Substring(0,editor.Start)),7,Measure(editor.SelectedText),r.height-14),new Color(0,.45f,.5f,.75f),0);
+                GUI.Label(new Rect(0,0,r.width,r.height),display,field);
+                if(focused&&Time.realtimeSinceStartup%1<.55f)
+                    Box(new Rect(left+Measure(display.Substring(0,editor.Caret)),8,1,r.height-16),Color.white,0);
+            }
+            finally{GUI.EndGroup();}
+            return display;
+        }
+        private static float Measure(string value)=>field.CalcSize(new GUIContent(value)).x-12;
+        private static int CharacterAt(Rect r,string value,float x)
+        {
+            float left=r.x+(r.width-Measure(value))*.5f;
+            for(int i=0;i<value.Length;i++)if(x<left+(Measure(value.Substring(0,i))+Measure(value.Substring(0,i+1)))*.5f)return i;
+            return value.Length;
         }
         public static void Divider(float y,float width) => Box(new Rect(16,y,width-32,1),Line,0);
         public static void Heading(ref float y,float width,string value)

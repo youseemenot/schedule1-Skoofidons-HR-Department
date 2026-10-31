@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.3.0-beta.2 — local candidate, 2026-11-01
+
+- Fix F3 failing before the window appears: reuse the game font, replace unavailable rounded-texture and desktop text-editor calls.
+- Preserve the approved layout with cached backgrounds and managed numeric editing, including selection and clipboard operations.
+- Audit reachable Unity wrapper bodies for unstripping-failure stubs in addition to compilation/JIT checks.
+- Separate shell/provider failures; contain intentional ExitGUI; discard editing state on close.
+- Shared settings has its own log prefix and explains automatic coordination. Each mod can coordinate the menu alone.
+- User gameplay retest pending. See [the investigation](docs/testing/2026-11-01-f3-unstripping.md).
+
+## 1.3.0-beta.2 — local candidate, 2026-11-01
+
+- Fix F3 failing before the window appears: reuse the game font, replace unavailable rounded-texture and desktop text-editor calls.
+- Preserve the approved layout with cached backgrounds and managed numeric editing, including selection and clipboard operations.
+- Audit reachable Unity wrapper bodies for unstripping-failure stubs in addition to compilation/JIT checks.
+- Separate shell/provider failures; contain intentional ExitGUI; discard editing state on close.
+- Shared settings has its own log prefix and explains automatic coordination. Each mod can coordinate the menu alone.
+- User gameplay retest pending. See [the investigation](docs/testing/2026-11-01-f3-unstripping.md).
+
 ## 1.3.0-beta.1 — local candidate, 2026-10-31
 
 - Standalone F3 settings for all 31 HR preferences; Phone App is optional.

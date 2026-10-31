@@ -81,10 +81,20 @@ namespace Skoofidons.SharedSettings.V1
         }
         public static bool IsGuiExit(Exception error)=>error.GetType().Name=="ExitGUIException"||
             error.GetType().Name=="Il2CppException"&&error.Message.Contains("ExitGUIException");
+        public bool TryProviderCall<T>(Func<T> callback,int frame,out T value)
+        {
+            try{value=callback();return true;}
+            catch(Exception e){if(IsGuiExit(e))throw;value=default!;FailProvider(e,frame);return false;}
+        }
         public void FailProvider(Exception e, int frame)
         {
             Error = e.Message;
             if (Selected != null) disabled.Add(Selected.Id);
+            RequestClose(frame);
+        }
+        public void FailShell(Exception e,int frame)
+        {
+            Error=e.Message;
             RequestClose(frame);
         }
         public void Abort(int frame)

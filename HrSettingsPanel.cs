@@ -48,8 +48,8 @@ namespace SkoofidonsHRDepartment
             list.Add(F("Plants",5,"Растения ×","Plants ×",Config.MachinePlantRate,double.Epsilon));
             list.Add(F("Mushrooms",5,"Грибы ×","Mushrooms ×",Config.MachineShroomRate,double.Epsilon));return list;
         }
-        public static void OnOpened(){draft=new HrSettingsDraft(CreateSettings());draft.Read();result=null;scroll=Vector2.zero;}
-        public static void OnClosed(){draft?.Discard();draft=null;result=null;}
+        public static void OnOpened(){MenuTheme.ResetInput();draft=new HrSettingsDraft(CreateSettings());draft.Read();result=null;scroll=Vector2.zero;}
+        public static void OnClosed(){MenuTheme.ResetInput();draft?.Discard();draft=null;result=null;}
         private static string Status()=>result??(draft?.Dirty==true?T("Есть изменения. Закрытие отменит неприменённые правки.","Unsaved changes. Closing discards unapplied edits."):T("Настройки сохранены","Settings saved"));
         private static string Apply()
         {
