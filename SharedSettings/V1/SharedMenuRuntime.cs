@@ -32,6 +32,7 @@ namespace Skoofidons.SharedSettings.V1
             {
                 if(Input.GetKeyDown(KeyCode.F3))
                 {
+                    if(!session.HasLease&&!NativeInputGuard.CanOpen())return;
                     if(!session.HasLease) {language=GameLanguageSource.Read();applyError=null;loggedError=null;}
                     session.Toggle(Time.frameCount);
                 }
@@ -46,12 +47,16 @@ namespace Skoofidons.SharedSettings.V1
         public static void Draw()
         {
             if(!host||session==null||!session.Visible)return;
-            var matrix=GUI.matrix;var color=GUI.color;var background=GUI.backgroundColor;var content=GUI.contentColor;bool enabled=GUI.enabled;
-            try {GUI.color=GUI.backgroundColor=GUI.contentColor=Color.white;GUI.enabled=true;DrawWindow();}
-            catch(Exception e){session.FailProvider(e,Time.frameCount);Log(e);}
-            finally {GUI.matrix=matrix;GUI.color=color;GUI.backgroundColor=background;GUI.contentColor=content;GUI.enabled=enabled;}
+            bool abortEvent=false;
+            using(var saved=new GuiStateScope())
+            {
+                try {GUI.color=GUI.backgroundColor=GUI.contentColor=Color.white;GUI.enabled=true;abortEvent=!DrawWindow();}
+                catch(Exception e){if(!MenuSession.IsGuiExit(e)){session.FailProvider(e,Time.frameCount);Log(e);}abortEvent=true;}
+            }
+            // Outside the catch: terminate Unity's GUI event; never draw a footer into damaged groups.
+            if(abortEvent)GUIUtility.ExitGUI();
         }
-        private static void DrawWindow()
+        private static bool DrawWindow()
         {
             MenuTheme.Ensure();
             float w=Math.Min(1420,Screen.width-24),h=Math.Min(960,Screen.height-24),side=w<850?154:Math.Min(330,w*.27f);
@@ -89,25 +94,30 @@ namespace Skoofidons.SharedSettings.V1
                 var selected=session.Selected;
                 if(selected!=null&&session.Visible)
                 {
-                    selected.Viewport?.Invoke(panel.width,panel.height,language);
+                    using(var state=new GuiStateScope())selected.Viewport?.Invoke(panel.width,panel.height,language);
                     GUI.BeginGroup(panel);
-                    try{session.Draw(Time.frameCount);}finally{GUI.EndGroup();}
+                    bool drawn;
+                    try{using(var state=new GuiStateScope())drawn=session.Draw(Time.frameCount);}finally{GUI.EndGroup();}
+                    if(!drawn)return false;
                 }
                 MenuTheme.Viewport(w,h,language);
                 MenuTheme.Box(new Rect(0,h-80,w,1),MenuTheme.Line,0);
                 bool canApply=selected?.Apply!=null;
                 float closeX=w-(canApply?290:155);
-                string status=applyError??selected?.Status?.Invoke()??"";
+                string status;
+                using(var state=new GuiStateScope())status=applyError??selected?.Status?.Invoke()??"";
                 MenuTheme.Label(new Rect(20,h-69,Math.Max(50,closeX-35),58),status,w<850?13:17,false,applyError==null?MenuTheme.Muted:new Color(1,.5f,.4f,1));
                 if(MenuTheme.Button(new Rect(closeX,h-61,125,43),MenuTheme.T("Закрыть","Close"))) session.RequestClose(Time.frameCount);
                 if(canApply)
                 {
-                    bool dirty=selected.Dirty?.Invoke()??true;
+                    bool dirty;
+                    using(var state=new GuiStateScope())dirty=selected.Dirty?.Invoke()??true;
                     GUI.enabled=dirty;
                     if(MenuTheme.Button(new Rect(w-151,h-61,133,43),MenuTheme.T("Применить","Apply"),true))
-                        try{applyError=selected.Apply();GUI.FocusControl(null);}catch(Exception e){applyError=e.Message;}
+                    {using(var state=new GuiStateScope())applyError=selected.Apply();GUI.FocusControl(null);}
                     GUI.enabled=true;
                 }
+                return true;
             }
             finally{GUI.EndGroup();}
         }

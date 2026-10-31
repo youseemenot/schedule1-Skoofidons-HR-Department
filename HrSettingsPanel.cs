@@ -63,9 +63,11 @@ namespace SkoofidonsHRDepartment
             if(draft==null)return;float w=MenuTheme.Width,h=MenuTheme.Height;
             MenuTheme.Label(new Rect(8,0,w-16,43),"HR Department",30,true);
             MenuTheme.Label(new Rect(8,42,w-16,29),T("Сотрудники и производство","Employees and production"),18,false,MenuTheme.Muted);
+            int previousTab=tab;
             GUI.BeginGroup(new Rect(0,83,w,h-83));float top;
             try{top=MenuTheme.Tabs(new[]{T("Ботаник","Botanist"),T("Химик","Chemist"),T("Уборщик","Cleaner"),T("Грузчик","Handler"),T("Найм","Hiring"),T("Производство","Production")},ref tab,w);}
             finally{GUI.EndGroup();}top+=83;
+            if(tab!=previousTab)scroll=Vector2.zero;
             var items=draft.Settings.Where(s=>s.Tab==tab).ToArray();float contentH=items.Length*76+250;
             scroll=GUI.BeginScrollView(new Rect(0,top,w,Math.Max(40,h-top)),scroll,new Rect(0,0,w-22,contentH));
             try

@@ -45,8 +45,20 @@ Check("failed acquisition calls no provider", () => {
 });
 Check("render failure releases native ownership and isolates provider", () => {
     var lease=new Lease();var s=new MenuSession(new[]{Provider("a",draw:()=>throw new Exception("Bad layout")),Provider("b")},()=>lease);
-    s.Toggle(1);s.Draw(2);s.Tick(3,false,true);Expect(!s.HasLease,"Faulty layout retained ownership");
+    s.Toggle(1);var result=s.GetType().GetMethod("Draw").Invoke(s,new object[]{2});
+    Expect(result is bool ok&&!ok,"Host cannot stop damaged GUI event");
+    s.Tick(3,false,true);Expect(!s.HasLease,"Faulty layout retained ownership");
     s.Toggle(4);Expect(s.Selected.Id=="b","Broken provider was reopened");
+});
+Check("reopening remembers selected provider",()=>{
+    var s=new MenuSession(new[]{Provider("a"),Provider("b")},()=>new Lease());
+    s.Toggle(1);s.Select("b",2);s.RequestClose(3);s.Tick(4,false,true);s.Toggle(5);
+    Expect(s.Selected.Id=="b","Reopening reset selected mod");
+});
+Check("ordinary ExitGUI abort is not a provider fault",()=>{
+    var s=new MenuSession(new[]{Provider("a",draw:()=>throw new ExitGUIException())},()=>new Lease());s.Toggle(1);
+    try{s.Draw(2);throw new Exception("ExitGUI swallowed");}catch(ExitGUIException){}
+    Expect(s.Visible&&!s.Closing,"Normal GUI exit disabled provider");
 });
 Check("closed callback failure cannot suppress lease release", () => {
     var lease=new Lease();var s=new MenuSession(new[]{Provider("a",close:()=>throw new Exception("Save failed"))},()=>lease);
@@ -73,4 +85,5 @@ sealed class Lease : IMenuInputLease
     public bool IsAlive=>Alive; public bool IsTop=>Top;
     public bool TryRelease(out string error){Releases++;if(FailOnce){FailOnce=false;error="Transient";return false;}error=null;return true;}
 }
+sealed class ExitGUIException : Exception {}
 #endif

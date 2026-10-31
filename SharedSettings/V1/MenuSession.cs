@@ -35,7 +35,8 @@ namespace Skoofidons.SharedSettings.V1
             if (lastToggle == frame) return;
             lastToggle = frame;
             if (HasLease) { RequestClose(frame); return; }
-            Selected = providers.FirstOrDefault(p => !disabled.Contains(p.Id));
+            Selected = providers.FirstOrDefault(p => p.Id==Selected?.Id&&!disabled.Contains(p.Id))
+                ??providers.FirstOrDefault(p => !disabled.Contains(p.Id));
             if (Selected == null) return;
             Error = null; visited.Clear(); closedCallbacks = false; emergency = false;
             Closing = false; barrier.Reset();
@@ -72,12 +73,14 @@ namespace Skoofidons.SharedSettings.V1
             if (!focused) RequestClose(frame);
             if (emergency || Closing && barrier.Ready(frame, held, lease.IsTop, focused)) Release();
         }
-        public void Draw(int frame)
+        public bool Draw(int frame)
         {
-            if (!Visible || Selected == null) return;
-            try { Selected.Draw(); }
-            catch (Exception e) { FailProvider(e, frame); }
+            if (!Visible || Selected == null) return true;
+            try { Selected.Draw(); return true; }
+            catch (Exception e) { if(IsGuiExit(e))throw; FailProvider(e, frame); return false; }
         }
+        public static bool IsGuiExit(Exception error)=>error.GetType().Name=="ExitGUIException"||
+            error.GetType().Name=="Il2CppException"&&error.Message.Contains("ExitGUIException");
         public void FailProvider(Exception e, int frame)
         {
             Error = e.Message;

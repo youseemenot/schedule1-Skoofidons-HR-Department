@@ -6,6 +6,7 @@ using System.Runtime.Loader;
 if(args.Length<3){Console.WriteLine("PairedMenuChecks HR.dll Minimap.dll GameDirectory [ThirdProvider.dll]");return 2;}
 var search=new[]{Path.Combine(args[2],"MelonLoader","net6"),Path.Combine(args[2],"MelonLoader","Il2CppAssemblies")};
 int phoneRequests=0,checks=0,failures=0;
+bool withPhone=args.Contains("--with-phone");
 AssemblyLoadContext.Default.Resolving+=(context,name)=>{
  if(name.Name.Contains("Phone")){phoneRequests++;return null;}
  var file=search.Select(p=>Path.Combine(p,name.Name+".dll")).FirstOrDefault(File.Exists);
@@ -49,7 +50,7 @@ foreach(var owner in new[]{hr,map})
  Check(owner.GetName().Name+" works standalone",()=>Expect(Discover(owner,new[]{owner}).Count()==1,"Standalone missing"));
 }
 Check("callbacks ran in their own independent DLL",()=>Expect(calls.Values.All(v=>v==22),"Callback identity collapsed"));
-if(args.Length>3)
+if(args.Length>3&&File.Exists(args[3]))
 {
  var third=AssemblyLoadContext.Default.LoadFromAssemblyPath(Path.GetFullPath(args[3]));
  Check("third provider appears in both unchanged product DLLs",()=>{
@@ -81,4 +82,38 @@ Check("F3 is owned by shared host while F4 diagnostic remains",()=>{
  Expect(!ints.Contains(284)&&ints.Contains(285),"Legacy F3 remains or F4 lost");
 });
 Check("neither product tried to resolve absent Phone App",()=>Expect(phoneRequests==0,"Phone requested"));
+Check("actual loader's swallowed write-error flag is detected",()=>{
+ var loader=AssemblyLoadContext.Default.LoadFromAssemblyPath(Path.Combine(args[2],"MelonLoader","net6","MelonLoader.dll"));
+ var fileType=loader.GetType("MelonLoader.Preferences.IO.File");
+ var file=System.Runtime.Serialization.FormatterServices.GetUninitializedObject(fileType);
+ var flags=BindingFlags.Instance|BindingFlags.NonPublic|BindingFlags.Public;
+ fileType.GetField("ShouldSave",flags).SetValue(file,true);
+ fileType.GetField("FilePath",flags).SetValue(file,"test-preferences.cfg");
+ foreach(var owner in new[]{hr,map})
+ {
+  fileType.GetField("_waserror",flags).SetValue(file,false);
+  var method=owner.GetType("Skoofidons.SharedSettings.V1.PreferencePersistence")?.GetMethod("CheckAndSave")??throw new Exception("Checked persistence adapter missing");
+  Action swallowed=()=>fileType.GetField("_waserror",flags).SetValue(file,true);
+  try{method.Invoke(null,new object[]{swallowed,new object[]{file}});throw new Exception("Swallowed save failure reported as success");}
+  catch(TargetInvocationException e)when(e.InnerException is IOException){}
+  int writes=0;
+  try{method.Invoke(null,new object[]{(Action)(()=>writes++),new object[]{file}});throw new Exception("Latched error ignored");}
+  catch(TargetInvocationException e)when(e.InnerException is IOException){}
+  Expect(writes==0,"Latched loader fallback was reset");
+ }
+});
+if(withPhone) Check("both actual optional adapters bind and detach Phone App 2.2.4 events",()=>{
+ var phone=AssemblyLoadContext.Default.LoadFromAssemblyPath(Path.GetFullPath(Path.Combine(args[2],"Mods","ModManager&PhoneApp.dll")));
+ var type=phone.GetType("ModManagerPhoneApp.ModSettingsEvents");
+ int first=0,second=0;
+ IDisposable Bind(Assembly a,string name,Action action)=>(IDisposable)a.GetType(name).GetMethod("TrySubscribe").Invoke(null,new object[]{type,action,null});
+ using(var a=Bind(hr,"SkoofidonsHRDepartment.OptionalSettingsEvents",()=>first++))
+ using(var b=Bind(map,"MinimapMod.OptionalSettingsEvents",()=>second++))
+ {
+  Expect(a!=null&&b!=null,"Adapter rejected events");
+  foreach(var name in new[]{"OnPhonePreferencesSaved","OnMenuPreferencesSaved"})((Action)type.GetField(name,BindingFlags.NonPublic|BindingFlags.Static).GetValue(null))();
+ }
+ Expect(first==2&&second==2,"Events duplicated or missed");
+ foreach(var name in new[]{"OnPhonePreferencesSaved","OnMenuPreferencesSaved"})Expect(type.GetField(name,BindingFlags.NonPublic|BindingFlags.Static).GetValue(null)==null,"Subscription leaked");
+});
 Console.WriteLine($"{checks-failures}/{checks} actual-pair checks passed");return failures==0?0:1;
