@@ -2,13 +2,14 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using Skoofidons.SharedSettings.V1;
 
 namespace Skoofidons.SharedSettings
 {
     public static class EntryPointV1
     {
-        public const string RuntimeVersion = "1.1.1";
+        public const string RuntimeVersion = "1.2.0";
         private static IDictionary<string, object>? manifest;
         public static void Initialize(string id, string title, Version providerVersion, Action draw, Action opened, Action closed)
         {
@@ -37,6 +38,23 @@ namespace Skoofidons.SharedSettings
             if (apply != null) values["apply"] = apply;
             ProviderManifest.Parse(values, typeof(EntryPointV1).Assembly);
             manifest = new ReadOnlyDictionary<string, object>(values);
+        }
+        public static void SetAdditionalProviders(IEnumerable<IDictionary<string,object>> providers)
+        {
+            var values=new Dictionary<string,object>(GetManifestV1());
+            var owner=ProviderManifest.Parse(values,typeof(EntryPointV1).Assembly);
+            var snapshots=providers.Take(33).Select(p=>(IDictionary<string,object>)new ReadOnlyDictionary<string,object>(new Dictionary<string,object>(p))).ToArray();
+            if(snapshots.Length>32)throw new ArgumentException("Too many additional settings providers.");
+            var ids=new HashSet<string>{owner.Id};
+            foreach(var item in snapshots)
+            {
+                var child=ProviderManifest.Parse(item,typeof(EntryPointV1).Assembly);
+                if(!ids.Add(child.Id)||child.HostVersion!=owner.HostVersion||item.ContainsKey("additionalProviders"))
+                    throw new ArgumentException("Invalid additional settings provider.");
+            }
+            if(snapshots.Length==0)values.Remove("additionalProviders");
+            else values["additionalProviders"]=Array.AsReadOnly(snapshots);
+            manifest=new ReadOnlyDictionary<string,object>(values);
         }
     }
 }

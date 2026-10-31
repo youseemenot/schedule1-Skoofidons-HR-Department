@@ -160,5 +160,23 @@ if (args.Length > 0)
     }
 }
 
+Check("additional legacy panel is discovered under its supplying host assembly",()=>{
+ var endpoint=Assembly.GetExecutingAssembly().GetType("Skoofidons.SharedSettings.EntryPointV1")!;
+ var configure=endpoint.GetMethod("SetAdditionalProviders")??throw new Exception("Additional provider registration missing");
+ var child=Manifest("legacy.minimap",(string)endpoint.GetField("RuntimeVersion")!.GetRawConstantValue()!);
+ configure.Invoke(null,new object[]{new[]{child}});
+ var list=((IEnumerable)Static("ProviderDiscovery","Discover",new[]{Assembly.GetExecutingAssembly()},null)).Cast<object>().ToArray();
+ Expect(list.Length==2&&list.Any(p=>Id(p)=="legacy.minimap"),"Legacy panel absent");
+ Expect(list.All(p=>(Assembly)p.GetType().GetProperty("Assembly")!.GetValue(p)! ==Assembly.GetExecutingAssembly()),"Legacy assembly incorrectly elected as host");
+ child["id"]="mutated";Expect(list.Any(p=>Id(p)=="legacy.minimap"),"Manifest not snapshotted");
+ foreach(var invalid in new[]{Manifest("local.mod"),Manifest("invalid.host","9.0.0")})
+ {
+  try{configure.Invoke(null,new object[]{new[]{invalid}});throw new Exception("Invalid additional provider accepted");}
+  catch(TargetInvocationException e)when(e.InnerException is ArgumentException){}
+ }
+ Expect(((IEnumerable)Static("ProviderDiscovery","Discover",new[]{Assembly.GetExecutingAssembly()},null)).Cast<object>().Count()==2,"Failed registration corrupted previous panels");
+ configure.Invoke(null,new object[]{Array.Empty<IDictionary<string,object>>()});
+ Expect(((IEnumerable)Static("ProviderDiscovery","Discover",new[]{Assembly.GetExecutingAssembly()},null)).Cast<object>().Count()==1,"Adapter cleanup left panel");
+});
 Console.WriteLine($"{checks - failed}/{checks} shared-settings checks passed");
 return failed == 0 ? 0 : 1;

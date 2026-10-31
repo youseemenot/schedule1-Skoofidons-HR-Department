@@ -5,7 +5,7 @@ using Il2CppScheduleOne.Persistence;
 using UnityEngine.Events;
 using Skoofidons.SharedSettings.V1;
 
-[assembly: MelonInfo(typeof(SkoofidonsHRDepartment.Core), "Skoofidon's HR Department", "1.3.0-beta.2", "Skoofidon")]
+[assembly: MelonInfo(typeof(SkoofidonsHRDepartment.Core), "Skoofidon's HR Department", "1.3.0-beta.3", "Skoofidon")]
 [assembly: System.Reflection.AssemblyVersion("1.3.0.0")]
 [assembly: System.Reflection.AssemblyFileVersion("1.3.0.0")]
 [assembly: MelonGame("TVGS", "Schedule I")]
@@ -29,12 +29,12 @@ namespace SkoofidonsHRDepartment
             MachineTimerController.Initialize();
             ModManagerIntegration.Initialize();
             HrSettingsPanel.Initialize();
-            LoggerInstance.Msg("HR Department 1.3.0-beta.2 initialized. F3: independent shared settings (Schedule I 0.4.7f12).");
+            LoggerInstance.Msg("HR Department 1.3.0-beta.3 initialized. F3: independent shared settings (Schedule I 0.4.7f12).");
         }
 
         public override void OnDeinitializeMelon()
         {
-            SharedMenuRuntime.Shutdown();
+            try{SharedMenuRuntime.Shutdown();}finally{LegacyMinimapIntegration.Shutdown();}
             if (Singleton<LoadManager>.Instance != null)
             {
                 Singleton<LoadManager>.Instance.onLoadComplete.RemoveListener(OnLoadCompleteAction);
@@ -46,9 +46,14 @@ namespace SkoofidonsHRDepartment
             PackagerUIFix.ClearReferences();
         }
 
-        public override void OnLateInitializeMelon() => SharedMenuRuntime.LateInitialize();
+        public override void OnLateInitializeMelon()
+        {
+            LegacyMinimapIntegration.Initialize(MelonBase.RegisteredMelons);
+            try{SharedMenuRuntime.LateInitialize();}
+            catch{try{SharedMenuRuntime.Shutdown();}finally{LegacyMinimapIntegration.Shutdown();}throw;}
+        }
         public override void OnGUI() => SharedMenuRuntime.Draw();
-        public override void OnApplicationQuit() => SharedMenuRuntime.Shutdown();
+        public override void OnApplicationQuit(){try{SharedMenuRuntime.Shutdown();}finally{LegacyMinimapIntegration.Shutdown();}}
         public override void OnUpdate()
         {
             SharedMenuRuntime.Tick();

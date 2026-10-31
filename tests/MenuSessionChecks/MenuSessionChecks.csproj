@@ -10,5 +10,6 @@
     <Compile Include="../../SharedSettings/V1/ReleaseBarrier.cs" Link="ReleaseBarrier.cs" />
     <Compile Include="../../SharedSettings/V1/MenuSession.cs" Link="MenuSession.cs" Condition="Exists('../../SharedSettings/V1/MenuSession.cs')" />
     <Compile Include="../../SharedSettings/V1/GuiEventBoundary.cs" Link="GuiEventBoundary.cs" Condition="Exists('../../SharedSettings/V1/GuiEventBoundary.cs')" />
+    <Compile Include="../../SharedSettings/V1/MenuHostLifecycle.cs" Link="MenuHostLifecycle.cs" Condition="Exists('../../SharedSettings/V1/MenuHostLifecycle.cs')" />
   </ItemGroup>
 </Project>

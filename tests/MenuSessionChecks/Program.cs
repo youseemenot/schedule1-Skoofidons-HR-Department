@@ -96,15 +96,34 @@ Check("owner destroyed and focus loss are both recoverable", () => {
     var dead=new Lease();s=new MenuSession(new[]{Provider("a")},()=>dead);s.Toggle(4);dead.Alive=false;s.Tick(5,false,true);
     Expect(!s.HasLease,"Destroyed scene remained in session");
 });
+dynamic HostLifecycle()=>Activator.CreateInstance(typeof(Program).Assembly.GetType("Skoofidons.SharedSettings.V1.MenuHostLifecycle")??throw new Exception("Restartable host lifecycle missing"));
+Check("initialize shutdown initialize creates a live new host",()=>{
+ dynamic host=HostLifecycle();Expect(host.Prepare(1),"Initial preparation failed");
+ var first=new MenuSession(new[]{Provider("a")},()=>new Lease());host.Activate(first);first.Toggle(1);
+ Expect(!host.Prepare(2),"Live initialization was duplicated");
+ host.Stop(3);Expect(!host.IsHost&&host.Session==null,"Stopped host retained dead session");
+ Expect(host.Prepare(4),"Restart preparation skipped");var second=new MenuSession(new[]{Provider("a")},()=>new Lease());host.Activate(second);second.Toggle(4);
+ Expect(host.IsHost&&second.Visible,"Restarted host stays disabled");
+});
+Check("restart retains failed cleanup and refuses to forget ownership",()=>{
+ dynamic host=HostLifecycle();host.Prepare(1);var lease=new Lease{Failures=2};var s=new MenuSession(new[]{Provider("a")},()=>lease);host.Activate(s);s.Toggle(1);
+ host.Stop(2);Expect(!host.IsHost&&ReferenceEquals((object)host.Session,s)&&s.HasLease,"Pending lease discarded");
+ try{host.Prepare(3);throw new Exception("Unfinished cleanup allowed a new host");}catch(InvalidOperationException){}
+ Expect(ReferenceEquals((object)host.Session,s),"Failed restart lost original lease");Expect(host.Prepare(4)&&host.Session==null&&!s.HasLease,"Cleanup did not permit subsequent restart");
+});
+Check("failure after session publication can stop and retry",()=>{
+ dynamic host=HostLifecycle();host.Prepare(1);host.Activate(new MenuSession(new[]{Provider("a")},()=>new Lease()));
+ host.Stop(2);Expect(host.Prepare(3),"Partial bootstrap failure cannot retry");host.Activate(new MenuSession(new[]{Provider("a")},()=>new Lease()));Expect(host.IsHost,"Retry not activated");
+});
 #endif
 Console.WriteLine($"{checks-failures}/{checks} menu-session checks passed");
 return failures==0?0:1;
 #if SESSION_IMPLEMENTED
 sealed class Lease : IMenuInputLease
 {
-    public bool Alive=true,Top=true,FailOnce;public int Releases;
+    public bool Alive=true,Top=true,FailOnce;public int Releases,Failures;
     public bool IsAlive=>Alive; public bool IsTop=>Top;
-    public bool TryRelease(out string error){Releases++;if(FailOnce){FailOnce=false;error="Transient";return false;}error=null;return true;}
+    public bool TryRelease(out string error){Releases++;if(FailOnce||Failures>0){FailOnce=false;Failures=Math.Max(0,Failures-1);error="Transient";return false;}error=null;return true;}
 }
 sealed class ExitGUIException : Exception {}
 #endif

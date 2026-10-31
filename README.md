@@ -1,6 +1,6 @@
 # Skoofidon's HR Department
 
-> Development candidate: **1.3.0-beta.2** adds standalone shared **F3** settings, game-language RU/EN and optional Phone App integration. Update Minimap to **2.3.0-beta.2** for one shared window. The user reports that the beta.2 functions they exercised work, and their supplied log contains no errors. Complete scenario coverage remains pending; see [the test report](docs/testing/2026-11-01-beta2-user-result.md). Published stable remains **1.2.0**; requirements below describe that stable release. See [candidate checks](docs/testing/shared-f3-menu.md).
+> Development candidate: **1.3.0-beta.3** adds an optional compatibility adapter for unchanged Minimap **2.2.8 / 2.2.8-dev.3**, alongside standalone shared F3 and direct support for modern Minimap. Only HR needs updating for the supported old binaries. The beta.3 combination needs an in-game check; published stable remains **1.2.0**. See [supported hashes and test guide](docs/testing/2026-11-01-legacy-minimap.md). Requirements below describe the published stable release.
 
 A MelonLoader mod for **Schedule I** that configures employee stats and assignment limits through Mod Manager & Phone App.
 

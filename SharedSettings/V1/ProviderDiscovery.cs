@@ -26,7 +26,26 @@ namespace Skoofidons.SharedSettings.V1
                         throw new FormatException("Invalid V1 manifest method.");
                     var values = method.Invoke(null, null) as IDictionary<string, object>;
                     if (values == null) throw new FormatException("Settings manifest returned null.");
-                    providers.Add(ProviderManifest.Parse(values, assembly));
+                    var owner=ProviderManifest.Parse(values, assembly);
+                    providers.Add(owner);
+                    if(values.TryGetValue("additionalProviders",out var extras))
+                    {
+                        try
+                        {
+                            if(extras is not IEnumerable<IDictionary<string,object>> items)throw new FormatException("Invalid additional provider collection.");
+                            var children=items.Take(33).ToArray();
+                            if(children.Length>32)throw new FormatException("Too many additional settings providers.");
+                            foreach(var child in children)
+                                try
+                                {
+                                    var parsed=ProviderManifest.Parse(child,assembly);
+                                    if(parsed.HostVersion!=owner.HostVersion||child.ContainsKey("additionalProviders"))throw new FormatException("Invalid supplying host for additional panel.");
+                                    providers.Add(parsed);
+                                }
+                                catch(Exception e){warning?.Invoke("Additional settings provider skipped in "+assembly.GetName().Name+": "+e.Message);}
+                        }
+                        catch(Exception e){warning?.Invoke("Additional settings providers skipped in "+assembly.GetName().Name+": "+e.Message);}
+                    }
                 }
                 catch (Exception error)
                 {

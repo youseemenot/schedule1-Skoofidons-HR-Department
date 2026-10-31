@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.3.0-beta.3 — local candidate, 2026-11-01
+
+- Configure supported unchanged Minimap 2.2.8 / 2.2.8-dev.3 through shared F3 by updating HR alone.
+- Verify exact original hashes and patch only the old F3 read, old settings window and checked preference flush. Map updates and F4 are retained.
+- Reuse all 23 original preferences and the approved four-tab live-slider layout; modern Minimap bypasses the adapter.
+- Runtime1.2.0 advertises compatibility panels through optional BCL additionalProviders metadata under the supplying host.
+- Original DLL bytes remain unchanged. Unknown binaries are not patched. Native gameplay acceptance pending; no stable publication.
+
 ## 1.3.0-beta.2 — local candidate, 2026-11-01
 
 - Fix F3 failing before the window appears: reuse the game font, replace unavailable rounded-texture and desktop text-editor calls.

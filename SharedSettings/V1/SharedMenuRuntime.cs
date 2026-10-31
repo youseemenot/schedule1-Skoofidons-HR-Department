@@ -8,21 +8,21 @@ namespace Skoofidons.SharedSettings.V1
     public static class SharedMenuRuntime
     {
         private static readonly MelonLogger.Instance Logger=new("Skoofidon Settings");
-        private static MenuSession session;
+        private static readonly MenuHostLifecycle lifecycle=new();
+        private static MenuSession session=>lifecycle.Session;
         private static System.Collections.Generic.IReadOnlyList<ProviderManifest> providers;
         private static Il2CppSystem.Action<bool> focusChanged;
         private static Vector2 sidebarScroll;
         private static string language="en", loggedError, applyError;
-        private static bool host;
+        private static bool host=>lifecycle.IsHost;
         public static void LateInitialize()
         {
-            if(session!=null)return;
+            if(!lifecycle.Prepare(Time.frameCount))return;
             providers=ProviderDiscovery.Discover(MelonBase.RegisteredMelons.Select(m=>m.MelonAssembly.Assembly),Logger.Warning);
             var winner=HostElection.Elect(providers);
-            host=winner!=null&&winner.Assembly==typeof(SharedMenuRuntime).Assembly;
-            if(!host)return;
-            session=new MenuSession(providers,()=>new GameUiInputLease(()=>session.RequestClose(Time.frameCount)));
-            focusChanged=(Action<bool>)(focused=>{if(!focused)session.RequestClose(Time.frameCount);});
+            if(winner==null||winner.Assembly!=typeof(SharedMenuRuntime).Assembly)return;
+            lifecycle.Activate(new MenuSession(providers,()=>new GameUiInputLease(()=>session?.RequestClose(Time.frameCount))));
+            focusChanged=(Action<bool>)(focused=>{if(!focused)session?.RequestClose(Time.frameCount);});
             Application.focusChanged+=focusChanged;
             Logger.Msg("F3 ready; runtime="+EntryPointV1.RuntimeVersion+"; active panels="+string.Join(", ",providers.Select(p=>p.Title))+
                 "; automatic coordinator="+winner.Id+". Any participating mod can provide this menu on its own.");
@@ -134,8 +134,13 @@ namespace Skoofidons.SharedSettings.V1
         public static void SceneChanged()=>session?.Tick(Time.frameCount,Input.anyKey,Application.isFocused);
         public static void Shutdown()
         {
-            try{session?.Abort(Time.frameCount);}
-            finally{if(focusChanged!=null)Application.focusChanged-=focusChanged;focusChanged=null;}
+            try{lifecycle.Stop(0);}
+            finally
+            {
+                try{if(focusChanged!=null)Application.focusChanged-=focusChanged;}
+                catch(Exception e){Log(e);}
+                finally{focusChanged=null;}
+            }
         }
     }
 }
