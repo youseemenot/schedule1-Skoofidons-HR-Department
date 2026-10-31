@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <AssemblyName>Fixture.$(FixtureName)</AssemblyName>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <CheckEolTargetFramework>false</CheckEolTargetFramework>
+    <DisableTransitiveFrameworkReferenceDownloads>true</DisableTransitiveFrameworkReferenceDownloads>
+    <FixtureProviderVersion Condition="'$(FixtureProviderVersion)' == ''">1.0.0</FixtureProviderVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <AssemblyMetadata Include="ProviderId" Value="$(FixtureId)" />
+    <AssemblyMetadata Include="HostVersion" Value="$(FixtureHostVersion)" />
+    <AssemblyMetadata Include="ProviderVersion" Value="$(FixtureProviderVersion)" />
+    <Compile Include="../../SharedSettings/V1/ProviderManifest.cs" Link="ProviderManifest.cs" Condition="Exists('../../SharedSettings/V1/ProviderManifest.cs')" />
+    <Compile Include="../../SharedSettings/V1/ProviderDiscovery.cs" Link="ProviderDiscovery.cs" Condition="Exists('../../SharedSettings/V1/ProviderDiscovery.cs')" />
+    <Compile Include="../../SharedSettings/V1/HostElection.cs" Link="HostElection.cs" Condition="Exists('../../SharedSettings/V1/HostElection.cs')" />
+  </ItemGroup>
+</Project>

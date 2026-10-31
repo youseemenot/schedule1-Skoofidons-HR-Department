@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <AssemblyName>SkoofidonsSettingsInputProbe</AssemblyName>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <LangVersion>11</LangVersion>
+    <CheckEolTargetFramework>false</CheckEolTargetFramework>
+    <DisableTransitiveFrameworkReferenceDownloads>true</DisableTransitiveFrameworkReferenceDownloads>
+    <LoaderDirectory>$(GameDirectory)/MelonLoader/net6</LoaderDirectory>
+    <InteropDirectory>$(GameDirectory)/MelonLoader/Il2CppAssemblies</InteropDirectory>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="Checks/**/*.cs" />
+    <Compile Include="../../SharedSettings/V1/ReleaseBarrier.cs" Link="ReleaseBarrier.cs" />
+    <Reference Include="MelonLoader"><HintPath>$(LoaderDirectory)/MelonLoader.dll</HintPath></Reference>
+    <Reference Include="Il2CppInterop.Runtime"><HintPath>$(LoaderDirectory)/Il2CppInterop.Runtime.dll</HintPath></Reference>
+    <Reference Include="Il2Cppmscorlib"><HintPath>$(InteropDirectory)/Il2Cppmscorlib.dll</HintPath></Reference>
+    <Reference Include="Il2CppScheduleOne.Core"><HintPath>$(InteropDirectory)/Il2CppScheduleOne.Core.dll</HintPath></Reference>
+    <Reference Include="Il2CppFishNet.Runtime"><HintPath>$(InteropDirectory)/Il2CppFishNet.Runtime.dll</HintPath></Reference>
+    <Reference Include="Assembly-CSharp"><HintPath>$(InteropDirectory)/Assembly-CSharp.dll</HintPath></Reference>
+    <Reference Include="UnityEngine.CoreModule"><HintPath>$(InteropDirectory)/UnityEngine.CoreModule.dll</HintPath></Reference>
+    <Reference Include="UnityEngine.IMGUIModule"><HintPath>$(InteropDirectory)/UnityEngine.IMGUIModule.dll</HintPath></Reference>
+    <Reference Include="UnityEngine.InputLegacyModule"><HintPath>$(InteropDirectory)/UnityEngine.InputLegacyModule.dll</HintPath></Reference>
+    <Reference Update="@(Reference)"><Private>false</Private></Reference>
+  </ItemGroup>
+</Project>

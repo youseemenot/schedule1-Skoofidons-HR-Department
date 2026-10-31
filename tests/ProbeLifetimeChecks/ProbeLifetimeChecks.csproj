@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseAppHost>false</UseAppHost>
+    <CheckEolTargetFramework>false</CheckEolTargetFramework>
+    <DisableTransitiveFrameworkReferenceDownloads>true</DisableTransitiveFrameworkReferenceDownloads>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../diagnostics/SharedSettingsInputProbe/ProbeCleanupCoordinator.cs" Link="ProbeCleanupCoordinator.cs"
+      Condition="Exists('../../diagnostics/SharedSettingsInputProbe/ProbeCleanupCoordinator.cs')" />
+  </ItemGroup>
+</Project>

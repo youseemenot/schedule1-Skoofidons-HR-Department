@@ -37,7 +37,7 @@
 
 - SharedSettings/V1/EntryPointV1.cs — публичный V1 endpoint, manifest и callback-регистрация своего provider.
 - SharedSettings/V1/ProviderManifest.cs, ProviderDiscovery.cs, HostElection.cs — чистые CLR-валидация, поиск и выбор хозяина.
-- SharedSettings/V1/MenuSession.cs, InputReleaseBarrier.cs — управляемая политика сессии/закрытия без Unity.
+- SharedSettings/V1/MenuSession.cs, ReleaseBarrier.cs — управляемая политика сессии/закрытия без Unity.
 - SharedSettings/V1/SharedMenuRuntime.cs, SharedMenuWindow.cs — bootstrap и IMGUI-оболочка.
 - SharedSettings/V1/GameUiInputLease.cs — единственная граница native UI-состояния и native exit-маршрута.
 - HrSettingsPanel.cs, HrSettingsDraft.cs, HrSettingsService.cs — редактирование/валидация/применение HR.
@@ -85,7 +85,7 @@
 
 ## Task3: Общая оболочка и InputLease
 
-**Files:** create SharedSettings/V1/{MenuSession,InputReleaseBarrier,SharedMenuRuntime,SharedMenuWindow,GameUiInputLease}.cs; extend tests/SharedSettingsChecks и input fixture; update HR csproj Compile Include для SharedSettings/V1/*.cs и Unity IMGUI/InputLegacy/UIModule/TextRendering references.
+**Files:** create SharedSettings/V1/{MenuSession,ReleaseBarrier,SharedMenuRuntime,SharedMenuWindow,GameUiInputLease}.cs; extend tests/SharedSettingsChecks и input fixture; update HR csproj Compile Include для SharedSettings/V1/*.cs и Unity IMGUI/InputLegacy/UIModule/TextRendering references.
 
 **Interfaces:** SharedMenuRuntime.Initialize(); LateInitialize(IEnumerable<Assembly> registeredMelonAssemblies); Tick(); Draw(); RequestClose(); Shutdown(); OnSceneUnload(). MenuSession получает управляемый IInputLease, события собственного/чужого state и снимок ввода; native implementation только GameUiInputLease. Не передавать IInputLease между сборками.
 
