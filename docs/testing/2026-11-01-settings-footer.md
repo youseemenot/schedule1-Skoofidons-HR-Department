@@ -1,5 +1,7 @@
 # HR1.3.0-beta.5 — shared footer
 
+Update2026-11-01: user reported no problems in tested functionality and supplied a log matching the exact candidate, with no errors. See [result and scope](2026-11-01-beta5-user-result.md). The checklist below remains a reference; not every case was individually confirmed. No new build or publication.
+
 Graphical prototype approved in chat on2026-11-01: `artifacts/settings-footer-2026-11-01/design/approved-footer-en.png` in the parent workspace. This build changes action placement/wording, preserving the beta.4 [current-tab reset behavior](2026-11-01-current-tab-defaults.md).
 
 - HR footer: **Close → Reset to defaults → Apply changes**, RU **Закрыть → По умолчанию → Применить изменения**. Current tab only / Только текущая вкладка caption appears over reset. The panel header has no reset action.

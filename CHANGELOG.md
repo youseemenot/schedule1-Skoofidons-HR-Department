@@ -6,7 +6,8 @@
 - Clarify English Apply changes / Reset to defaults and Russian Применить изменения / По умолчанию labels, including the HR reset notice.
 - Reserve space for longer labels; place status above the actions on narrow windows. Minimap retains immediate application and shows Close → Reset to defaults.
 - Runtime1.4.0 adds an optional BCL reset callback, retaining older providers and enforcing a nondecreasing minimum host version when capabilities are combined.
-- Preserve HR draft, Minimap confirmation, native input ownership, original Minimap DLL and saved configuration. Native visual acceptance pending; no stable publication.
+- Preserve HR draft, Minimap confirmation, native input ownership, original Minimap DLL and saved configuration.
+- User reported no problems in the tested functionality. Supplied log confirms the exact beta.5 DLL, old Minimap adapter and settings saves, with0errors and1previously observed Il2CppInterop startup warning; no deprecated notices. Individual manual cases were not separately reported. See [test result](docs/testing/2026-11-01-beta5-user-result.md). No stable publication.
 
 ## 1.3.0-beta.4 — local candidate, 2026-11-01
 
