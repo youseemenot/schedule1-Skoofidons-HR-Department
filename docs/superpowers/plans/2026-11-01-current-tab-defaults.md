@@ -33,7 +33,7 @@
 ## Task3 — Review and candidate
 
 - [x] One read-only fresh-context review, one focused fix pass for material issues, RED/GREEN and full related suites.
-- [ ] Document beta.4 behavior/test scope, HR-only package, current and previous SHA/backups. Install only with game closed; do not replace old Minimap, change user values or publish.
-- [ ] Ask user to test HR reset/cancel/Apply and Minimap cancel/confirm/restart, other tabs preserved, Escape/control ownership; native matrix remains explicit.
+- [x] Document beta.4 behavior/test scope, HR-only package, current and previous SHA/backups. Install only with game closed; do not replace old Minimap, change user values or publish.
+- [x] Ask user to test HR reset/cancel/Apply and Minimap cancel/confirm/restart, other tabs preserved, Escape/control ownership; native matrix remains explicit.
 
 Commercial value: recover from experimental values quickly while preserving unrelated settings; subsequent useful release follows actual feedback/compatibility needs.
