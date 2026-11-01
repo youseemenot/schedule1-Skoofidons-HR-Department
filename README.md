@@ -1,12 +1,14 @@
 # Skoofidon's HR Department
 
-> Prepared release **1.3.1** corrects the Botanist limit defect and extends existing assignment rows to Botanist, Chemist and Cleaner lists. The user [confirmed assignments above eight, scrolling and removal](docs/testing/2026-11-01-1.3.1-user-result.md) in beta.1. See [release notes](docs/releases/1.3.1.md) and the [all-profession audit](docs/testing/2026-11-01-employee-assignment-limits.md). Public GitHub stable remains 1.3.0 until a separate publication action; Nexus materials target the corrected 1.3.1.
+> **Spend less. Earn more.** Configure employee capacity, work speed, production and costs. Phone App and Minimap are optional; Minimap is distributed separately.
 
 A MelonLoader mod for **Schedule I** that configures employee stats, assignment limits, machine timers and crop growth through its own **F3 settings menu**. Mod Manager & Phone App integration is optional.
 
-**Current stable version: [1.3.0](https://github.com/youseemenot/schedule1-Skoofidons-HR-Department/releases/tag/v1.3.0).** Adds standalone RU/EN settings, shared F3 with supported unchanged Minimap DLLs, and current-tab defaults beside Apply changes. Opening settings frees the cursor and blocks gameplay controls; closing restores control through the game's UI system. Based on user-tested **1.3.0-beta.5**; stable changes only its version label and startup message. See [release notes](docs/releases/1.3.0.md), [user test result](docs/testing/2026-11-01-beta5-user-result.md) and [footer checklist](docs/testing/2026-11-01-settings-footer.md).
+**Current stable version: [1.3.1](https://github.com/youseemenot/schedule1-Skoofidons-HR-Department/releases/tag/v1.3.1).** Fixes existing Botanists retaining their old assignment limit and extends scrollable assignment rows to Botanists, Chemists and Cleaners. The user [confirmed assignments above eight, scrolling and removal](docs/testing/2026-11-01-1.3.1-user-result.md) in beta.1; stable changes only its version label and startup message. See [release notes](docs/releases/1.3.1.md) and the [all-profession audit](docs/testing/2026-11-01-employee-assignment-limits.md).
 
-Version [1.2.0](https://github.com/youseemenot/schedule1-Skoofidons-HR-Department/releases/tag/v1.2.0) introduced machine timers and live growth factors; these remain included in1.3.0.
+Version [1.3.0](https://github.com/youseemenot/schedule1-Skoofidons-HR-Department/releases/tag/v1.3.0) added standalone RU/EN settings, shared F3 with supported unchanged Minimap DLLs, and current-tab defaults beside Apply changes. Opening settings frees the cursor and blocks gameplay controls; closing restores control through the game's UI system. See the [user test result](docs/testing/2026-11-01-beta5-user-result.md) and [footer checklist](docs/testing/2026-11-01-settings-footer.md).
+
+Version [1.2.0](https://github.com/youseemenot/schedule1-Skoofidons-HR-Department/releases/tag/v1.2.0) introduced machine timers and live growth factors; these remain included in 1.3.1.
 
 Earlier stable version [1.0.5](https://github.com/youseemenot/schedule1-Skoofidons-HR-Department/releases/tag/v1.0.5) introduced the Handler route counter and more than ten displayed station assignments, with user-tested scrolling/removal. These features remain included in 1.2.0. See [the earlier result](docs/testing/2026-10-30-1.0.5-singleplayer-result.md).
 
