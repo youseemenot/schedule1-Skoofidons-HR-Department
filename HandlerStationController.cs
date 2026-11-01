@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using HarmonyLib;
+using Il2CppInterop.Runtime;
 using Il2CppInterop.Runtime.InteropTypes;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using Il2CppScheduleOne.Management;
+using Il2CppScheduleOne.Management.UI;
 using Il2CppScheduleOne.UI.Management;
 using MelonLoader;
 using UnityEngine;
@@ -27,14 +29,20 @@ namespace SkoofidonsHRDepartment
 
         private static readonly Dictionary<IntPtr, View> Views = new Dictionary<IntPtr, View>();
 
-        private static bool IsHandlerStations(FieldList fields)
+        // Historical class name: all four employee panels now reuse these rows.
+        private static bool IsEmployeeAssignments(FieldList fields)
         {
             if (fields == null || fields.Count == 0) return false;
             for (int i = 0; i < fields.Count; i++)
             {
                 var field = fields[i];
-                var parent = field?.ParentConfig?.TryCast<PackagerConfiguration>();
-                if (parent?.Stations == null || parent.Stations.Pointer != field.Pointer) return false;
+                var parent = field?.ParentConfig;
+                if (parent == null) return false;
+                var assignments = parent.TryCast<PackagerConfiguration>()?.Stations ??
+                    parent.TryCast<BotanistConfiguration>()?.Assigns ??
+                    parent.TryCast<ChemistConfiguration>()?.Stations ??
+                    parent.TryCast<CleanerConfiguration>()?.Bins;
+                if (assignments == null || assignments.Pointer != field.Pointer) return false;
             }
             return true;
         }
@@ -58,7 +66,7 @@ namespace SkoofidonsHRDepartment
             if (ui == null) return;
             if (!Views.TryGetValue(ui.Pointer, out var view))
             {
-                if (!IsHandlerStations(fields)) return;
+                if (!IsEmployeeAssignments(fields)) return;
                 view = Track(ui);
             }
             view.Binding = true;
@@ -89,7 +97,7 @@ namespace SkoofidonsHRDepartment
 
         public static void PrepareEntries(ObjectListFieldUI ui)
         {
-            if (ui == null || !IsHandlerStations(ui.Fields) || ui.Fields.Count != 1) return;
+            if (ui == null || !IsEmployeeAssignments(ui.Fields) || ui.Fields.Count != 1) return;
             var selected = ui.Fields[0].SelectedObjects;
             var entries = ui.Entries;
             if (selected == null || entries == null || selected.Count <= entries.Length) return;
@@ -122,7 +130,7 @@ namespace SkoofidonsHRDepartment
                         if (!view.Binding)
                         {
                             Action delete = () => {
-                                if (ui != null && IsHandlerStations(ui.Fields) && ui.Fields.Count == 1 &&
+                                if (ui != null && IsEmployeeAssignments(ui.Fields) && ui.Fields.Count == 1 &&
                                     index < ui.Fields[0].SelectedObjects.Count)
                                     ui.RemoveEntryClicked(index);
                             };
@@ -141,15 +149,15 @@ namespace SkoofidonsHRDepartment
             {
                 foreach (var entry in new List<RectTransform>(created)) DestroyRow(entry);
                 view.ExpansionFailed = true;
-                MelonLogger.Warning("Handler station row expansion failed; assignments were preserved: " + ex.Message);
+                MelonLogger.Warning("Employee assignment row expansion failed; assignments were preserved: " + ex.Message);
             }
         }
 
         public static void RefreshLayout(ObjectListFieldUI ui, bool resetToTop = false)
         {
-            if (ui == null || !IsHandlerStations(ui.Fields)) return;
-            var panel = PackagerUIFix.FindHandlerPanel(ui);
-            PackagerUIFix.EnsureHandlerPanel(panel);
+            if (ui == null || !IsEmployeeAssignments(ui.Fields)) return;
+            var panel = ui.GetComponentInParent(Il2CppType.Of<ConfigPanel>(), true)?.TryCast<ConfigPanel>();
+            ClipboardLayoutController.Apply(panel);
             if (ui.Fields.Count == 1 && ui.Fields[0].SelectedObjects != null && ui.Entries != null)
             {
                 // Native Refresh toggles children only. Root activation is also

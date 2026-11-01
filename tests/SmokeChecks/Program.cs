@@ -99,6 +99,36 @@ if (!args.Contains("--baseline"))
         Expect(calls.Any(m => m.Name == "get_Stations" && m.DeclaringType?.Name == "PackagerConfiguration"), "Live Handler Stations field is not accessed.");
         Expect(calls.Any(m => m.Name == "set_MaxItems" && m.DeclaringType?.Name == "ObjectListField"), "Live station limit is not updated.");
     });
+    Check("all four employee limits reach their own live native assignment field", () => {
+        var controller=assembly.GetType("SkoofidonsHRDepartment.EmployeeController")!;
+        var applyCalls=CalledMethods(controller.GetMethod("ApplyStats")!).ToArray();
+        foreach(var (name,config,field) in new[]{("Botanist","BotanistConfiguration","Assigns"),("Chemist","ChemistConfiguration","Stations"),("Cleaner","CleanerConfiguration","Bins"),("Handler","PackagerConfiguration","Stations")})
+        {
+            var method=controller.GetMethod("Apply"+name+"Limits");
+            Expect(method!=null,name+" has no audited limit adapter");
+            Expect(applyCalls.Any(m=>m.Name==method!.Name&&m.DeclaringType==controller),name+" adapter not used on application");
+            var calls=CalledMethods(method!).ToArray();
+            Expect(calls.Any(m=>m.DeclaringType?.Name==config&&m.Name=="get_"+field),name+" does not access its live assignment field");
+            Expect(calls.Any(m=>m.DeclaringType?.Name=="ObjectListField"&&m.Name=="set_MaxItems"),name+" live selection limit not updated");
+        }
+    });
+    Check("Botanist updates both employee limit and existing configuration selector", () => {
+        var method=assembly.GetType("SkoofidonsHRDepartment.EmployeeController")!.GetMethod("ApplyBotanistLimits");
+        Expect(method!=null,"Botanist still only updates the employee field");
+        var calls=CalledMethods(method!).ToArray();
+        Expect(calls.Any(m=>m.DeclaringType?.Name=="Botanist"&&m.Name=="set_MaxAssignedPots"),"Future Botanist configurations have stale limit");
+        Expect(calls.Any(m=>m.DeclaringType?.Name=="BotanistConfiguration"&&m.Name=="get_Assigns"),"Existing Botanist selector has stale limit");
+    });
+    Check("assignment row adapter recognizes exact lists of all four professions", () => {
+        var controller=assembly.GetType("SkoofidonsHRDepartment.HandlerStationController")!;
+        var method=controller.GetMethod("IsEmployeeAssignments",BindingFlags.NonPublic|BindingFlags.Static);
+        Expect(method!=null,"Expandable assignment lists remain Handler-only");
+        var calls=CalledMethods(method!).ToArray();
+        foreach(var (config,field) in new[]{("BotanistConfiguration","Assigns"),("ChemistConfiguration","Stations"),("CleanerConfiguration","Bins"),("PackagerConfiguration","Stations")})
+            Expect(calls.Any(m=>m.DeclaringType?.Name==config&&m.Name=="get_"+field),config+" list cannot grow its native rows");
+        foreach(var consumer in new[]{"BeforeBind","PrepareEntries","RefreshLayout"})
+            Expect(CalledMethods(controller.GetMethod(consumer)!).Any(m=>m.Name==method!.Name),consumer+" ignores shared assignment eligibility");
+    });
     int[] ExpandRows(int[] rows, int assigned, Func<int, int, int> create, Action<int> destroy)
     {
         var type = assembly.GetType("SkoofidonsHRDepartment.StationRowExpansion");
@@ -115,6 +145,12 @@ if (!args.Contains("--baseline"))
         Expect(rows.SequenceEqual(Enumerable.Range(100, 15)), "Station rows were truncated or reordered.");
         Expect(indexes.SequenceEqual(Enumerable.Range(10, 5)), "New rows do not match their actual station indexes.");
         Expect(original.SequenceEqual(Enumerable.Range(100, 10)), "Original array was mutated.");
+    });
+    Check("eleven Botanist assignments retain eight native rows and removal indexes",()=>{
+        var original=Enumerable.Range(100,8).ToArray();var indexes=new List<int>();
+        var expanded=ExpandRows(original,11,(template,index)=>{Expect(template==100,"Wrong native template");indexes.Add(index);return 100+index;},_=>throw new Exception("Original row destroyed"));
+        Expect(expanded.SequenceEqual(Enumerable.Range(100,11))&&indexes.SequenceEqual(new[]{8,9,10}),"Ninth through eleventh assignment missing or wrong index");
+        Expect(ReferenceEquals(expanded,ExpandRows(expanded,4,(_,_)=>throw new Exception("Unexpected clone"),_=>throw new Exception("Assignment deleted"))),"Lowering occupancy discarded rows");
     });
     Check("lower station occupancy never discards expanded rows", () => {
         var rows = Enumerable.Range(0, 15).ToArray();

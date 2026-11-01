@@ -81,24 +81,40 @@ namespace SkoofidonsHRDepartment
             }
             else if (typeName == "Chemist")
             {
-                var chemist = emp.Cast<Chemist>();
-                if (chemist.configuration != null && chemist.configuration.Stations != null)
-                    chemist.configuration.Stations.MaxItems = Config.ChemistMaxStations.Value;
+                ApplyChemistLimits(emp.Cast<Chemist>());
             }
             else if (typeName == "Botanist")
             {
-                var botanist = emp.Cast<Botanist>();
-                // Это поле не статическое, менять можно!
-                botanist.MaxAssignedPots = Config.BotanistMaxStations.Value;
-
-                // Action timings are game constants, not writable employee settings.
+                ApplyBotanistLimits(emp.Cast<Botanist>());
             }
             else if (typeName == "Cleaner")
             {
-                var cleaner = emp.Cast<Cleaner>();
-                if (cleaner.configuration != null && cleaner.configuration.Bins != null)
-                    cleaner.configuration.Bins.MaxItems = Config.CleanerMaxBins.Value;
+                ApplyCleanerLimits(emp.Cast<Cleaner>());
             }
+        }
+
+        public static void ApplyBotanistLimits(Botanist botanist)
+        {
+            botanist.MaxAssignedPots = Config.BotanistMaxStations.Value;
+            // The game copies MaxAssignedPots into Assigns only at construction.
+            // Existing employees must also update the selector used by the clipboard.
+            var configuration = botanist.configuration;
+            if (configuration?.Assigns != null)
+                configuration.Assigns.MaxItems = Config.BotanistMaxStations.Value;
+        }
+
+        public static void ApplyChemistLimits(Chemist chemist)
+        {
+            var configuration = chemist.configuration;
+            if (configuration?.Stations != null)
+                configuration.Stations.MaxItems = Config.ChemistMaxStations.Value;
+        }
+
+        public static void ApplyCleanerLimits(Cleaner cleaner)
+        {
+            var configuration = cleaner.configuration;
+            if (configuration?.Bins != null)
+                configuration.Bins.MaxItems = Config.CleanerMaxBins.Value;
         }
 
         public static void ApplyHandlerLimits(Packager packager)

@@ -1,5 +1,7 @@
 # Skoofidon's HR Department
 
+> Local test candidate **1.3.1-beta.1** corrects a confirmed Botanist limit defect in1.3.0: changing Maximum plants updated the employee but left an existing assignment selector at8. It now updates both. The existing row expansion/scrolling mechanism also supports single selected Botanist, Chemist and Cleaner lists beyond their native row count, alongside Handler. Offline checks pass; native acceptance is pending. See the [all-profession assignment audit](docs/testing/2026-11-01-employee-assignment-limits.md). Public stable remains1.3.0; Nexus preparation is held for verification.
+
 A MelonLoader mod for **Schedule I** that configures employee stats, assignment limits, machine timers and crop growth through its own **F3 settings menu**. Mod Manager & Phone App integration is optional.
 
 **Current stable version: [1.3.0](https://github.com/youseemenot/schedule1-Skoofidons-HR-Department/releases/tag/v1.3.0).** Adds standalone RU/EN settings, shared F3 with supported unchanged Minimap DLLs, and current-tab defaults beside Apply changes. Opening settings frees the cursor and blocks gameplay controls; closing restores control through the game's UI system. Based on user-tested **1.3.0-beta.5**; stable changes only its version label and startup message. See [release notes](docs/releases/1.3.0.md), [user test result](docs/testing/2026-11-01-beta5-user-result.md) and [footer checklist](docs/testing/2026-11-01-settings-footer.md).

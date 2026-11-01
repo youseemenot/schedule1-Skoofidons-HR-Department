@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.3.1-beta.1 — local test candidate, 2026-11-01
+
+- Fix existing Botanists retaining the old assignment cap after Maximum plants is applied: update configuration.Assigns.MaxItems alongside the employee's MaxAssignedPots.
+- Audit all four employee limit paths; Chemist Stations, Cleaner Bins and Handler Stations already receive their configured live limits.
+- Reuse the existing single-employee list expansion/visibility/removal mechanism for Botanist, Chemist and Cleaner assignment fields as well as Handler. Rows grow with actual assignments and are retained when occupancy/limits decrease.
+- Preserve settings keys/defaults, assigned objects, employee work/movement, machine timers and shared F3. No new settings or clipboard design. Native testing pending; not published.
+
 ## 1.3.0 — stable, 2026-11-01
 
 - Configure HR through its own F3 menu without requiring Phone App or Minimap. Game-selected Russian/English labels, free cursor and gameplay input blocking use the game's UI ownership system.
