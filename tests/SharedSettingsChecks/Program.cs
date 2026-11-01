@@ -178,5 +178,11 @@ Check("additional legacy panel is discovered under its supplying host assembly",
  configure.Invoke(null,new object[]{Array.Empty<IDictionary<string,object>>()});
  Expect(((IEnumerable)Static("ProviderDiscovery","Discover",new[]{Assembly.GetExecutingAssembly()},null)).Cast<object>().Count()==1,"Adapter cleanup left panel");
 });
+Check("modal capabilities are optional complete CLR delegates",()=>{
+ var values=Manifest();values["hasModal"]=(Func<bool>)(()=>true);values["drawModal"]=(Action<float,float>)((w,h)=>{});values["cancelModal"]=(Action)(()=>{});
+ var parsed=Parse(values);Expect(parsed.GetType().GetProperty("HasModal")!=null,"Modal boundary missing");
+ var incomplete=new Dictionary<string,object>(values);incomplete.Remove("cancelModal");Reject(incomplete);
+ var wrong=new Dictionary<string,object>(values);wrong["drawModal"]=(Action)(()=>{});Reject(wrong);
+});
 Console.WriteLine($"{checks - failed}/{checks} shared-settings checks passed");
 return failed == 0 ? 0 : 1;

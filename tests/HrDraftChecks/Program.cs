@@ -28,6 +28,21 @@ Check("successful apply saves once refreshes once and rebases",()=>{
 Check("closing discards draft and reopen reads latest preferences",()=>{
  double a=1;var d=new HrSettingsDraft(new[]{Setting("a",()=>a,v=>a=v)});d.Read();d.Text["a"]="9";d.Discard();a=3;d.Read();Expect(!d.Dirty&&d.Text["a"]=="3","Closed draft persisted");
 });
+NumericSetting DefaultSetting(string id,int tab,Func<double> get,Action<double> set,double defaultValue)
+{
+ var ctor=typeof(NumericSetting).GetConstructors().FirstOrDefault(c=>c.GetParameters().Length==9)??throw new Exception("Default metadata missing");
+ return (NumericSetting)ctor.Invoke(new object[]{id,tab,"ru","en",get,set,false,0d,defaultValue});
+}
+Check("reset replaces only selected tab draft and never applies preferences",()=>{
+ double a=22,b=9;var d=new HrSettingsDraft(new[]{DefaultSetting("a",0,()=>a,v=>a=v,1),DefaultSetting("b",1,()=>b,v=>b=v,2)});d.Read();d.Text["b"]="-";
+ var reset=typeof(HrSettingsDraft).GetMethod("ResetTab")??throw new Exception("Current-tab reset missing");reset.Invoke(d,new object[]{0});
+ Expect(d.Text["a"]=="1"&&d.Text["b"]=="-"&&a==22&&b==9&&d.Dirty,"Reset changed another tab or active settings");
+});
+Check("reset draft can be discarded or applied once with actual default",()=>{
+ double a=22;var d=new HrSettingsDraft(new[]{DefaultSetting("a",0,()=>a,v=>a=v,1)});d.Read();var reset=typeof(HrSettingsDraft).GetMethod("ResetTab")??throw new Exception("Current-tab reset missing");reset.Invoke(d,new object[]{0});
+ d.Discard();d.Read();Expect(d.Text["a"]=="22"&&a==22,"Closing applied defaults");reset.Invoke(d,new object[]{0});int saves=0,refresh=0;
+ Expect(d.TryApply(()=>saves++,()=>refresh++,out _)&&a==1&&saves==1&&refresh==1&&!d.Dirty,"Apply failed or ran more than once");
+});
 #else
 throw new Exception("HR draft implementation missing");
 #endif

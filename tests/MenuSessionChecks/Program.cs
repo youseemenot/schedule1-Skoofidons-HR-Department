@@ -19,6 +19,21 @@ ProviderManifest Provider(string id, Action open = null, Action close = null, Ac
     ["contract"]=ProviderManifest.Contract,["id"]=id,["title"]=id,["providerVersion"]="1.0.0",["hostVersion"]="1.0.0",["minimumHostVersion"]="1.0.0",
     ["opened"]=open ?? (()=>{}),["closed"]=close ?? (()=>{}),["draw"]=draw ?? (()=>{})
 },typeof(Program).Assembly);
+ProviderManifest ModalProvider(string id,Func<bool> hasModal,Action cancel,Action closed=null)=>ProviderManifest.Parse(new Dictionary<string,object>{
+ ["contract"]=ProviderManifest.Contract,["id"]=id,["title"]=id,["providerVersion"]="1.0.0",["hostVersion"]="1.3.0",["minimumHostVersion"]="1.3.0",
+ ["opened"]=(Action)(()=>{}),["closed"]=closed??(()=>{}),["draw"]=(Action)(()=>{}),
+ ["hasModal"]=hasModal,["drawModal"]=(Action<float,float>)((w,h)=>{}),["cancelModal"]=cancel
+},typeof(Program).Assembly);
+Check("Escape cancels confirmation first and retains native lease",()=>{
+ bool pending=true;var lease=new Lease();var s=new MenuSession(new[]{ModalProvider("a",()=>pending,()=>pending=false)},()=>lease);s.Toggle(1);
+ var exit=typeof(MenuSession).GetMethod("RequestExit")??throw new Exception("Escape closes F3 instead of confirmation");exit.Invoke(s,new object[]{2});
+ Expect(!pending&&s.Visible&&!s.Closing&&lease.Releases==0,"Modal cancel released gameplay");
+ exit.Invoke(s,new object[]{3});s.Tick(4,false,true);Expect(!s.HasLease&&lease.Releases==1,"Second Escape cannot close F3");
+});
+Check("F3 closure cancels pending modal without applying it",()=>{
+ bool pending=true;var s=new MenuSession(new[]{ModalProvider("a",()=>pending,()=>pending=false)},()=>new Lease());s.Toggle(1);s.Toggle(2);s.Tick(3,false,true);
+ Expect(!pending&&!s.HasLease,"Closing retained a stale confirmation");
+});
 Check("one physical toggle cannot open and close in the same frame", () => {
     var lease=new Lease();var s=new MenuSession(new[]{Provider("a")},()=>lease);
     s.Toggle(1);s.Toggle(1);Expect(s.Visible && !s.Closing,"Same-frame duplicate closed the menu");

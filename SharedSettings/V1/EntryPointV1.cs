@@ -9,7 +9,7 @@ namespace Skoofidons.SharedSettings
 {
     public static class EntryPointV1
     {
-        public const string RuntimeVersion = "1.2.0";
+        public const string RuntimeVersion = "1.3.0";
         private static IDictionary<string, object>? manifest;
         public static void Initialize(string id, string title, Version providerVersion, Action draw, Action opened, Action closed)
         {
@@ -54,6 +54,14 @@ namespace Skoofidons.SharedSettings
             }
             if(snapshots.Length==0)values.Remove("additionalProviders");
             else values["additionalProviders"]=Array.AsReadOnly(snapshots);
+            manifest=new ReadOnlyDictionary<string,object>(values);
+        }
+        public static void ConfigureModal(Func<bool> hasModal,Action<float,float> drawModal,Action cancelModal)
+        {
+            var values=new Dictionary<string,object>(GetManifestV1()){
+                ["minimumHostVersion"]="1.3.0",["hasModal"]=hasModal,["drawModal"]=drawModal,["cancelModal"]=cancelModal
+            };
+            ProviderManifest.Parse(values,typeof(EntryPointV1).Assembly);
             manifest=new ReadOnlyDictionary<string,object>(values);
         }
     }

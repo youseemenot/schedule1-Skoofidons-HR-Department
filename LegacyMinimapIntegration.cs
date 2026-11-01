@@ -30,9 +30,10 @@ namespace SkoofidonsHRDepartment
                 var panel=new LegacyMinimapPanel(binding);
                 var manifest=new Dictionary<string,object>{
                     ["contract"]=ProviderManifest.Contract,["id"]="skoofidon.minimap",["title"]="Minimap",
-                    ["providerVersion"]="2.2.8",["hostVersion"]=EntryPointV1.RuntimeVersion,["minimumHostVersion"]="1.2.0",
+                    ["providerVersion"]="2.2.8",["hostVersion"]=EntryPointV1.RuntimeVersion,["minimumHostVersion"]="1.3.0",
                     ["draw"]=(Action)panel.Draw,["opened"]=(Action)panel.Opened,["closed"]=(Action)panel.Closed,
-                    ["viewport"]=(Action<float,float,string>)MenuTheme.Viewport,["status"]=(Func<string>)panel.Status
+                    ["viewport"]=(Action<float,float,string>)MenuTheme.Viewport,["status"]=(Func<string>)panel.Status,
+                    ["hasModal"]=(Func<bool>)panel.HasModal,["drawModal"]=(Action<float,float>)panel.DrawModal,["cancelModal"]=(Action)panel.CancelModal
                 };
                 EntryPointV1.SetAdditionalProviders(new[]{manifest});registered=true;activeBinding=binding;
                 Logger.Msg("Legacy Minimap "+binding.Version+" connected to shared F3; original DLL unchanged, F4 and map updates retained.");

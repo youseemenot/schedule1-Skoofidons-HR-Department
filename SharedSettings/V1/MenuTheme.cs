@@ -91,6 +91,7 @@ namespace Skoofidons.SharedSettings.V1
         public static string Field(Rect r,string value,string name)
         {
             Ensure(); Box(r,new Color(.055f,.08f,.11f,1));
+            if(!GUI.enabled){GUI.Label(r,value,field);return value;}
             int id=GUIUtility.GetControlID(name.GetHashCode(),FocusType.Keyboard,r);
             var e=Event.current;
             bool focused=activeField==name&&GUIUtility.keyboardControl==id;
@@ -145,6 +146,15 @@ namespace Skoofidons.SharedSettings.V1
         public static void Divider(float y,float width) => Box(new Rect(16,y,width-32,1),Line,0);
         public static void Heading(ref float y,float width,string value)
         { Label(new Rect(20,y,width-40,38),value,22,true); y+=43; Divider(y,width); y+=12; }
+        public static float DefaultsHeader(string title,string subtitle,Action reset)
+        {
+            float w=Width;bool small=w<650;float buttonWidth=small?172:205;
+            Label(new Rect(8,0,w-buttonWidth-32,43),title,small?24:30,true);
+            Label(new Rect(8,42,w-buttonWidth-32,29),subtitle,small?14:18,false,Muted);
+            if(Button(new Rect(w-buttonWidth-8,4,buttonWidth,43),T("По умолчанию","Defaults")))reset();
+            Label(new Rect(w-buttonWidth-8,48,buttonWidth,28),T("Только текущая вкладка","Current tab only"),small?12:14,false,Muted);
+            return 83;
+        }
         public static bool Toggle(ref float y,float width,string label,bool value)
         {
             Ensure(); var r=new Rect(width-82,y+11,64,34);

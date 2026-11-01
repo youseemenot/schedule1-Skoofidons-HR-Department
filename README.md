@@ -1,6 +1,6 @@
 # Skoofidon's HR Department
 
-> Development candidate: **1.3.0-beta.3** adds an optional compatibility adapter for unchanged Minimap **2.2.8 / 2.2.8-dev.3**, alongside standalone shared F3 and direct support for modern Minimap. Only HR needs updating for the supported old binaries. The beta.3 combination needs an in-game check; published stable remains **1.2.0**. See [supported hashes and test guide](docs/testing/2026-11-01-legacy-minimap.md). Requirements below describe the published stable release.
+> Development candidate: **1.3.0-beta.4** adds current-tab defaults for HR and the unchanged legacy Minimap adapter. HR reset uses a draft and Apply; legacy Minimap asks confirmation before live application. Supported old Minimap DLLs remain unchanged. See [reset checks](docs/testing/2026-11-01-current-tab-defaults.md) and [adapter compatibility](docs/testing/2026-11-01-legacy-minimap.md). Gameplay acceptance for beta.4 is pending; stable remains **1.2.0** and requirements below describe that release.
 
 A MelonLoader mod for **Schedule I** that configures employee stats and assignment limits through Mod Manager & Phone App.
 

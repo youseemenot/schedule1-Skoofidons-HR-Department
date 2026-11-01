@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.3.0-beta.4 — local candidate, 2026-11-01
+
+- Restore defaults for only the current HR or legacy Minimap tab, using original preference DefaultValue metadata.
+- HR resets remain a draft until Apply. Legacy Minimap confirms first, applies immediately and preserves0.5-second save debounce.
+- The shared host blocks background controls during confirmation; Escape cancels it before closing F3.
+- Preserve unrelated tabs, original Minimap DLL bytes, existing timing/assignment semantics and compatibility with older V1 providers.
+- Native beta.4 acceptance pending. No stable publication.
+
 ## 1.3.0-beta.3 — local candidate, 2026-11-01
 
 - Configure supported unchanged Minimap 2.2.8 / 2.2.8-dev.3 through shared F3 by updating HR alone.

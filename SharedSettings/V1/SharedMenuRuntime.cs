@@ -21,7 +21,7 @@ namespace Skoofidons.SharedSettings.V1
             providers=ProviderDiscovery.Discover(MelonBase.RegisteredMelons.Select(m=>m.MelonAssembly.Assembly),Logger.Warning);
             var winner=HostElection.Elect(providers);
             if(winner==null||winner.Assembly!=typeof(SharedMenuRuntime).Assembly)return;
-            lifecycle.Activate(new MenuSession(providers,()=>new GameUiInputLease(()=>session?.RequestClose(Time.frameCount))));
+            lifecycle.Activate(new MenuSession(providers,()=>new GameUiInputLease(()=>session?.RequestExit(Time.frameCount))));
             focusChanged=(Action<bool>)(focused=>{if(!focused)session?.RequestClose(Time.frameCount);});
             Application.focusChanged+=focusChanged;
             Logger.Msg("F3 ready; runtime="+EntryPointV1.RuntimeVersion+"; active panels="+string.Join(", ",providers.Select(p=>p.Title))+
@@ -69,6 +69,13 @@ namespace Skoofidons.SharedSettings.V1
             GUI.BeginGroup(window);
             try
             {
+                var selected=session.Selected;
+                bool modal=false;
+                if(selected?.HasModal!=null)
+                    using(var state=new GuiStateScope())
+                        if(!session.TryProviderCall(selected.HasModal,Time.frameCount,out modal))return false;
+                bool backgroundEnabled=!modal;
+                GUI.enabled=backgroundEnabled;
                 MenuTheme.Viewport(w,h,language);
                 MenuTheme.Label(new Rect(22,12,w-90,48),MenuTheme.T("Настройки модов","Mod settings"),w<850?24:30,true);
                 if(MenuTheme.Button(new Rect(w-58,16,40,40),"×"))session.RequestClose(Time.frameCount);
@@ -94,7 +101,7 @@ namespace Skoofidons.SharedSettings.V1
                 }
                 finally{GUI.EndScrollView();}
                 var panel=new Rect(side+20,90,w-side-40,bodyH-15);
-                var selected=session.Selected;
+                selected=session.Selected;
                 if(selected!=null&&session.Visible)
                 {
                     using(var state=new GuiStateScope())
@@ -118,14 +125,23 @@ namespace Skoofidons.SharedSettings.V1
                     bool dirty;
                     using(var state=new GuiStateScope())
                         if(!session.TryProviderCall(()=>selected.Dirty?.Invoke()??true,Time.frameCount,out dirty))return false;
-                    GUI.enabled=dirty;
+                    GUI.enabled=backgroundEnabled&&dirty;
                     if(MenuTheme.Button(new Rect(w-151,h-61,133,43),MenuTheme.T("Применить","Apply"),true))
                     {
                         using(var state=new GuiStateScope())
                             if(!session.TryProviderCall(selected.Apply,Time.frameCount,out applyError))return false;
                         GUI.FocusControl(null);
                     }
-                    GUI.enabled=true;
+                    GUI.enabled=backgroundEnabled;
+                }
+                GUI.enabled=true;
+                if(selected?.HasModal!=null&&session.Visible)
+                {
+                    using(var state=new GuiStateScope())
+                        if(!session.TryProviderCall(selected.HasModal,Time.frameCount,out modal))return false;
+                    if(modal)
+                        using(var state=new GuiStateScope())
+                            if(!session.TryProviderCall(()=>{selected.DrawModal!(w,h);return true;},Time.frameCount,out _))return false;
                 }
                 return true;
             }

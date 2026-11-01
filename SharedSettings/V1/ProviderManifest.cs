@@ -21,6 +21,9 @@ namespace Skoofidons.SharedSettings.V1
         public Func<string>? Status { get; }
         public Func<bool>? Dirty { get; }
         public Func<string?>? Apply { get; }
+        public Func<bool>? HasModal {get;}
+        public Action<float,float>? DrawModal {get;}
+        public Action? CancelModal {get;}
 
         private ProviderManifest(IDictionary<string, object> values, Assembly assembly)
         {
@@ -43,6 +46,11 @@ namespace Skoofidons.SharedSettings.V1
             Status = Optional<Func<string>>(values, "status");
             Dirty = Optional<Func<bool>>(values, "dirty");
             Apply = Optional<Func<string?>>(values, "apply");
+            HasModal=Optional<Func<bool>>(values,"hasModal");
+            DrawModal=Optional<Action<float,float>>(values,"drawModal");
+            CancelModal=Optional<Action>(values,"cancelModal");
+            if((HasModal!=null||DrawModal!=null||CancelModal!=null)&&(HasModal==null||DrawModal==null||CancelModal==null))
+                throw new FormatException("Incomplete modal callbacks.");
             Assembly = assembly;
         }
 

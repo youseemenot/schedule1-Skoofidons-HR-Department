@@ -20,6 +20,7 @@ namespace SkoofidonsHRDepartment
         private static readonly string[] BoolKeys={"minimapEnabled","timeBarEnabled","showOrdersEnabled","showDealersEnabled","showCustomersEnabled","showDeadDropsEnabled","showPropertiesEnabled","showVehiclesEnabled","coopRadarEnabled","policeRadarEnabled","useNavMode"};
         private static readonly string[] FloatKeys={"windowSizeMultiplier","mapZoom","mapOpacity","mapOffsetX","mapOffsetY","timeOffsetX","timeOffsetY","timeScale","arrowSize","arrowR","arrowG","arrowB"};
         private readonly Dictionary<string,FieldInfo> fields=new();
+        private readonly Dictionary<string,FieldInfo> preferences=new();
         private readonly FieldInfo category,pending,due,visible;
         private readonly MethodInfo refresh,save;
         public object Instance {get;}
@@ -41,6 +42,8 @@ namespace SkoofidonsHRDepartment
             }
             foreach(var key in BoolKeys)fields.Add(key,Field(key,typeof(bool)));
             foreach(var key in FloatKeys)fields.Add(key,Field(key,typeof(float)));
+            foreach(var setting in MinimapTabSchema.Settings)
+                preferences.Add(setting.Key,Field(setting.PreferenceField,typeof(MelonPreferences_Entry<>).MakeGenericType(fields[setting.Key].FieldType),BindingFlags.Public|BindingFlags.Static));
             category=Field("prefCategory",typeof(MelonPreferences_Category),BindingFlags.Public|BindingFlags.Static);
             pending=Field("settingsSavePending",typeof(bool));due=Field("settingsSaveDueAt",typeof(float));visible=Field("guiVisible",typeof(bool));
             MethodInfo Method(string name,bool isPublic=false)
@@ -76,6 +79,39 @@ namespace SkoofidonsHRDepartment
         }
         public void Set<T>(string key,T value){SetCached(key,value);Invoke(save);}
         public void Refresh()=>Invoke(refresh);
+        public bool ResetTab(int tab,float now)
+        {
+            var selected=MinimapTabSchema.ForTab(tab);
+            var changes=selected.Select(s=>{
+                var entry=(MelonPreferences_Entry)preferences[s.Key].GetValue(null);
+                if(entry==null)throw new InvalidOperationException("Minimap preference is not initialized: "+s.Key);
+                object value=entry is MelonPreferences_Entry<bool> b?b.DefaultValue:((MelonPreferences_Entry<float>)entry).DefaultValue;
+                if(value is float number&&!float.IsFinite(number))throw new InvalidOperationException("Invalid Minimap default: "+s.Key);
+                return (Setting:s,Entry:entry,Default:value,Previous:entry.BoxedValue);
+            }).ToArray();
+            bool preferenceChanged=changes.Any(c=>!Equals(c.Previous,c.Default));
+            bool cacheChanged=changes.Any(c=>!Equals(fields[c.Setting.Key].GetValue(Instance),c.Default));
+            if(!preferenceChanged&&!cacheChanged)return false;
+            var previousCache=fields.ToDictionary(p=>p.Key,p=>p.Value.GetValue(Instance));
+            var wasPending=pending.GetValue(Instance);var oldDue=due.GetValue(Instance);
+            try
+            {
+                foreach(var change in changes)if(!Equals(change.Previous,change.Default))change.Entry.BoxedValue=change.Default;
+                Invoke(refresh);
+                if(preferenceChanged){pending.SetValue(Instance,true);due.SetValue(Instance,now+.5f);}
+                return true;
+            }
+            catch(Exception error)
+            {
+                var recovery=new List<string>();
+                foreach(var change in changes)
+                    try{change.Entry.BoxedValue=change.Previous;}catch(Exception e){recovery.Add(e.Message);}
+                try{Invoke(refresh);}catch(Exception e){recovery.Add(e.Message);}
+                foreach(var item in previousCache)fields[item.Key].SetValue(Instance,item.Value);
+                pending.SetValue(Instance,wasPending);due.SetValue(Instance,oldDue);
+                throw new InvalidOperationException(error.Message+(recovery.Count==0?"":"; rollback: "+string.Join("; ",recovery)),error);
+            }
+        }
         public void HideOldWindow()=>visible.SetValue(Instance,false);
         private void Invoke(MethodInfo method)
         {

@@ -11,18 +11,21 @@ namespace SkoofidonsHRDepartment
         private Vector2 settingsScroll;
         private static string T(string ru,string en)=>MenuTheme.T(ru,en);
         private readonly LegacyMinimapBinding binding;
+        private readonly ResetConfirmation confirmation=new();
         public LegacyMinimapPanel(LegacyMinimapBinding binding){this.binding=binding;}
-        public void Opened(){binding.Refresh();settingsScroll=Vector2.zero;}
-        public void Closed()=>binding.Flush(Time.realtimeSinceStartup,MelonLoader.MelonLogger.Warning);
+        public void Opened(){confirmation.Cancel();binding.Refresh();settingsScroll=Vector2.zero;}
+        public void Closed(){confirmation.Cancel();binding.Flush(Time.realtimeSinceStartup,MelonLoader.MelonLogger.Warning);}
+        public bool HasModal()=>confirmation.Pending;
+        public void CancelModal()=>confirmation.Cancel();
+        private static string[] TabNames()=>new[]{T("Общее","General"),T("Маркеры","Markers"),T("Положение","Position"),T("Стрелка","Arrow")};
         public string Status()=>binding.SaveError==null?T("Изменения применяются сразу","Changes apply immediately"):T("Не удалось сохранить: ","Could not save: ")+binding.SaveError;
         public void Draw()
         {
             float w=MenuTheme.Width,h=MenuTheme.Height;
-            MenuTheme.Label(new Rect(8,0,w-16,43),"Minimap",30,true);
-            MenuTheme.Label(new Rect(8,42,w-16,29),T("Карта и маркеры","Map and markers"),18,false,MenuTheme.Muted);
+            MenuTheme.DefaultsHeader("Minimap",T("Карта и маркеры","Map and markers"),()=>confirmation.Request(settingsTab));
             float top;int previousTab=settingsTab;
             GUI.BeginGroup(new Rect(0,83,w,h-83));
-            try{top=MenuTheme.Tabs(new[]{T("Общее","General"),T("Маркеры","Markers"),T("Положение","Position"),T("Стрелка","Arrow")},ref settingsTab,w);}
+            try{top=MenuTheme.Tabs(TabNames(),ref settingsTab,w);}
             finally{GUI.EndGroup();}
             top+=83;
             if(settingsTab!=previousTab)settingsScroll=Vector2.zero;
@@ -79,6 +82,28 @@ namespace SkoofidonsHRDepartment
                 }
             }
             finally{GUI.EndScrollView();}
+        }
+        public void DrawModal(float width,float height)
+        {
+            if(!confirmation.Pending)return;
+            MenuTheme.Box(new Rect(0,0,width,height),new Color(0,0,0,.6f),0);
+            float w=Math.Min(620,width-32),h=confirmation.Error==null?310:370;
+            var box=new Rect((width-w)*.5f,(height-h)*.5f,w,h);
+            MenuTheme.Box(box,MenuTheme.Line);MenuTheme.Box(new Rect(box.x+1,box.y+1,w-2,h-2),MenuTheme.Card);
+            GUI.BeginGroup(box);
+            try
+            {
+                string name=TabNames()[confirmation.Tab];
+                MenuTheme.Label(new Rect(24,16,w-48,64),T("Сбросить вкладку «"+name+"»?","Reset the "+name+" tab?"),24,true);
+                MenuTheme.Label(new Rect(24,87,w-48,64),T("Стандартные значения будут восстановлены только на этой вкладке.","Default values will be restored only on this tab."),19);
+                MenuTheme.Label(new Rect(24,157,w-48,48),T("Остальные настройки Minimap сохранятся.","Other Minimap settings will be kept."),18,false,MenuTheme.Muted);
+                if(confirmation.Error!=null)MenuTheme.Label(new Rect(24,209,w-48,55),T("Не удалось сбросить: ","Could not reset: ")+confirmation.Error,15,false,new Color(1,.5f,.4f,1));
+                MenuTheme.Divider(h-82,w);
+                if(MenuTheme.Button(new Rect(w-310,h-62,132,43),T("Отмена","Cancel"))){confirmation.Cancel();return;}
+                if(MenuTheme.Button(new Rect(w-162,h-62,138,43),T("Сбросить","Reset"),true))
+                    confirmation.Confirm(tab=>binding.ResetTab(tab,Time.realtimeSinceStartup));
+            }
+            finally{GUI.EndGroup();}
         }
         private void Toggle(ref float y,float w,string label,string key)
         {bool value=binding.Get<bool>(key);bool next=MenuTheme.Toggle(ref y,w,label,value);if(next!=value)binding.Set(key,next);}

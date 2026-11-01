@@ -47,6 +47,25 @@ Check("failed flush keeps pending data and bounds repeated error logging",()=>{
  type.GetMethod("Flush").Invoke(b,new object[]{60f,(Action<string>)(_=>warnings++)});
  Expect(fixture.Pending&&fixture.Due==65&&warnings==1,"Save failure spammed log or prevented retries");
 });
+Check("each tab resets original entry defaults only and queues one native application",()=>{
+ var type=Required("LegacyMinimapBinding");var reset=type.GetMethod("ResetTab")??throw new Exception("Minimap current-tab reset missing");
+ for(int tab=0;tab<4;tab++)
+ {
+  var fixture=new SettingsFixture();fixture.InitializePreferences();var before=fixture.PreferenceValues();int refreshes=fixture.Refreshes;
+  var b=Activator.CreateInstance(type,BindingFlags.Instance|BindingFlags.NonPublic,null,new object[]{fixture,"fixture"},null);
+  reset.Invoke(b,new object[]{tab,10f});
+  foreach(var row in SettingsFixture.Rows)
+   Expect(Equals(fixture.PreferenceValues()[row.Pref],row.Tab==tab?row.Default:before[row.Pref]),"Cross-tab preference reset: "+row.Pref);
+  Expect(fixture.Refreshes==refreshes+1&&fixture.Pending&&fixture.Due==10.5f,"Missing/burst apply or changed debounce");
+ }
+});
+Check("failed reset restores original values and original pending state",()=>{
+ var type=Required("LegacyMinimapBinding");var reset=type.GetMethod("ResetTab")??throw new Exception("Minimap current-tab reset missing");
+ var fixture=new SettingsFixture();fixture.InitializePreferences();var before=fixture.PreferenceValues();fixture.FailRefreshOnce=true;
+ var b=Activator.CreateInstance(type,BindingFlags.Instance|BindingFlags.NonPublic,null,new object[]{fixture,"fixture"},null);
+ try{reset.Invoke(b,new object[]{0,10f});throw new Exception("Failed application ignored");}catch(TargetInvocationException e)when(e.InnerException is InvalidOperationException){}
+ Expect(before.All(p=>Equals(fixture.PreferenceValues()[p.Key],p.Value))&&!fixture.Pending&&fixture.Due==0,"Failed reset committed data or pending state");
+});
 Check("transpiler removes only F3 read preserving F4 and instruction identity",()=>{
  var input=typeof(FakeInput).GetMethod("GetKeyDown");var label=default(Label);
  var source=new[]{new CodeInstruction(OpCodes.Ldc_I4,284),new CodeInstruction(OpCodes.Call,input),new CodeInstruction(OpCodes.Pop),new CodeInstruction(OpCodes.Ldc_I4,285),new CodeInstruction(OpCodes.Call,input),new CodeInstruction(OpCodes.Pop),new CodeInstruction(OpCodes.Ret)};
@@ -126,6 +145,28 @@ public abstract class AbstractFixture { public abstract void OnGUI(); }
 public sealed class SettingsFixture
 {
  public static MelonLoader.MelonPreferences_Category prefCategory;
+ public static MelonLoader.MelonPreferences_Entry<bool> prefEnabled,prefTime,prefNavMode,prefOrders,prefDealers,prefCustomers,prefDeadDrops,prefProperties,prefVehicles,prefCoop,prefPolice;
+ public static MelonLoader.MelonPreferences_Entry<float> prefWindowSize,prefZoom,prefOpacity,prefMapOffsetX,prefMapOffsetY,prefTimeOffsetX,prefTimeOffsetY,prefTimeScale,prefArrowSize,prefArrowR,prefArrowG,prefArrowB;
+ public static readonly (string Key,string Pref,int Tab,object Default)[] Rows={
+  ("minimapEnabled","prefEnabled",0,true),("timeBarEnabled","prefTime",0,true),("useNavMode","prefNavMode",0,false),
+  ("windowSizeMultiplier","prefWindowSize",0,1f),("mapZoom","prefZoom",0,1f),("mapOpacity","prefOpacity",0,1f),
+  ("showOrdersEnabled","prefOrders",1,true),("showDealersEnabled","prefDealers",1,true),("showCustomersEnabled","prefCustomers",1,true),("showDeadDropsEnabled","prefDeadDrops",1,true),
+  ("showPropertiesEnabled","prefProperties",1,true),("showVehiclesEnabled","prefVehicles",1,true),("coopRadarEnabled","prefCoop",1,true),("policeRadarEnabled","prefPolice",1,true),
+  ("mapOffsetX","prefMapOffsetX",2,0f),("mapOffsetY","prefMapOffsetY",2,0f),("timeOffsetX","prefTimeOffsetX",2,0f),("timeOffsetY","prefTimeOffsetY",2,0f),("timeScale","prefTimeScale",2,1f),
+  ("arrowSize","prefArrowSize",3,1.4f),("arrowR","prefArrowR",3,0f),("arrowG","prefArrowG",3,.8f),("arrowB","prefArrowB",3,1f)
+ };
+ public void InitializePreferences()
+ {
+  foreach(var row in Rows)
+  {
+   var field=typeof(SettingsFixture).GetField(row.Pref);var entry=(MelonLoader.MelonPreferences_Entry)Activator.CreateInstance(field.FieldType);
+   field.FieldType.GetProperty("DefaultValue").SetValue(entry,row.Default);
+   entry.BoxedValue=row.Default is bool value?!value:row.Pref.Contains("Offset")?123f:.5f;
+   field.SetValue(null,entry);
+  }
+  HandleSettingsUpdate();
+ }
+ public Dictionary<string,object> PreferenceValues()=>Rows.ToDictionary(r=>r.Pref,r=>((MelonLoader.MelonPreferences_Entry)typeof(SettingsFixture).GetField(r.Pref).GetValue(null)).BoxedValue);
  private bool settingsSavePending,guiVisible;private float settingsSaveDueAt;
  private bool minimapEnabled,timeBarEnabled,showOrdersEnabled,showDealersEnabled,showCustomersEnabled,showDeadDropsEnabled,showPropertiesEnabled,showVehiclesEnabled,coopRadarEnabled,policeRadarEnabled;
  private float windowSizeMultiplier,mapZoom,mapOffsetX,mapOffsetY,timeOffsetX,timeOffsetY,timeScale,arrowSize,arrowR,arrowG,arrowB;
@@ -136,5 +177,11 @@ public sealed class SettingsFixture
  public int Ticks,F4,GuiDraws;public bool Open;
  [MethodImpl(MethodImplOptions.NoInlining)] public void OnUpdate(){Ticks++;if(Input.GetKeyDown(KeyCode.F3))Open=!Open;if(FakeInput.GetKeyDown(KeyCode.F4))F4++;}
  [MethodImpl(MethodImplOptions.NoInlining)] public void OnGUI(){GuiDraws++;}
- private void HandleSettingsUpdate(){} private void SaveSettingsFromF3(){Saves++;}private void FlushPendingSettings(){}
+ public int Refreshes;public bool FailRefreshOnce;
+ private void HandleSettingsUpdate()
+ {
+  Refreshes++;if(prefEnabled!=null)foreach(var row in Rows)typeof(SettingsFixture).GetField(row.Key,BindingFlags.Instance|BindingFlags.NonPublic).SetValue(this,((MelonLoader.MelonPreferences_Entry)typeof(SettingsFixture).GetField(row.Pref).GetValue(null)).BoxedValue);
+  if(FailRefreshOnce){FailRefreshOnce=false;throw new InvalidOperationException("Native apply failed");}
+ }
+ private void SaveSettingsFromF3(){Saves++;}private void FlushPendingSettings(){}
 }

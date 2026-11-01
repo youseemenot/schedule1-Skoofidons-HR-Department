@@ -13,6 +13,8 @@ namespace SkoofidonsHRDepartment
         private static int tab;
         private static Vector2 scroll;
         private static string result;
+        private static string resetNotice;
+        private static int resetNoticeTab=-1;
         private static string T(string ru,string en)=>MenuTheme.T(ru,en);
         public static void Initialize()
         {
@@ -21,8 +23,8 @@ namespace SkoofidonsHRDepartment
         }
         public static IEnumerable<NumericSetting> CreateSettings()
         {
-            NumericSetting F(string id,int page,string ru,string en,MelonPreferences_Entry<float> p,double min=0)=>new(id,page,ru,en,()=>p.Value,v=>p.Value=(float)v,false,min);
-            NumericSetting I(string id,int page,string ru,string en,MelonPreferences_Entry<int> p)=>new(id,page,ru,en,()=>p.Value,v=>p.Value=(int)v,true,1);
+            NumericSetting F(string id,int page,string ru,string en,MelonPreferences_Entry<float> p,double min=0)=>new(id,page,ru,en,()=>p.Value,v=>p.Value=(float)v,false,min,p.DefaultValue);
+            NumericSetting I(string id,int page,string ru,string en,MelonPreferences_Entry<int> p)=>new(id,page,ru,en,()=>p.Value,v=>p.Value=(int)v,true,1,p.DefaultValue);
             var list=new List<NumericSetting>();
             void Employee(int page,string prefix,MelonPreferences_Entry<int> stations,MelonPreferences_Entry<float> move,MelonPreferences_Entry<float> work,MelonPreferences_Entry<float> wage,MelonPreferences_Entry<float> fee,string ru,string en)
             {
@@ -48,27 +50,26 @@ namespace SkoofidonsHRDepartment
             list.Add(F("Plants",5,"Растения ×","Plants ×",Config.MachinePlantRate,double.Epsilon));
             list.Add(F("Mushrooms",5,"Грибы ×","Mushrooms ×",Config.MachineShroomRate,double.Epsilon));return list;
         }
-        public static void OnOpened(){MenuTheme.ResetInput();draft=new HrSettingsDraft(CreateSettings());draft.Read();result=null;scroll=Vector2.zero;}
-        public static void OnClosed(){MenuTheme.ResetInput();draft?.Discard();draft=null;result=null;}
+        public static void OnOpened(){MenuTheme.ResetInput();draft=new HrSettingsDraft(CreateSettings());draft.Read();result=null;resetNotice=null;scroll=Vector2.zero;}
+        public static void OnClosed(){MenuTheme.ResetInput();draft?.Discard();draft=null;result=null;resetNotice=null;}
         private static string Status()=>result??(draft?.Dirty==true?T("Есть изменения. Закрытие отменит неприменённые правки.","Unsaved changes. Closing discards unapplied edits."):T("Настройки сохранены","Settings saved"));
         private static string Apply()
         {
             if(draft==null)return null;
             if(!draft.TryValidate(out var invalid)){var s=draft.Settings.First(x=>x.Id==invalid);tab=s.Tab;return T("Проверьте значение: ","Check value: ")+(MenuTheme.Language=="ru"?s.Ru:s.En);}
             if(!HrSettingsService.TryApply(draft,out var error))return T("Не удалось применить: ","Could not apply: ")+error;
-            result=T("Настройки сохранены и применены","Settings saved and applied");return null;
+            result=T("Настройки сохранены и применены","Settings saved and applied");resetNotice=null;return null;
         }
         public static void Draw()
         {
             if(draft==null)return;float w=MenuTheme.Width,h=MenuTheme.Height;
-            MenuTheme.Label(new Rect(8,0,w-16,43),"HR Department",30,true);
-            MenuTheme.Label(new Rect(8,42,w-16,29),T("Сотрудники и производство","Employees and production"),18,false,MenuTheme.Muted);
+            MenuTheme.DefaultsHeader("HR Department",T("Сотрудники и производство","Employees and production"),ResetCurrentTab);
             int previousTab=tab;
             GUI.BeginGroup(new Rect(0,83,w,h-83));float top;
             try{top=MenuTheme.Tabs(new[]{T("Ботаник","Botanist"),T("Химик","Chemist"),T("Уборщик","Cleaner"),T("Грузчик","Handler"),T("Найм","Hiring"),T("Производство","Production")},ref tab,w);}
             finally{GUI.EndGroup();}top+=83;
             if(tab!=previousTab)scroll=Vector2.zero;
-            var items=draft.Settings.Where(s=>s.Tab==tab).ToArray();float contentH=items.Length*76+250;
+            var items=draft.Settings.Where(s=>s.Tab==tab).ToArray();float contentH=items.Length*76+330;
             scroll=GUI.BeginScrollView(new Rect(0,top,w,Math.Max(40,h-top)),scroll,new Rect(0,0,w-22,contentH));
             try
             {
@@ -83,12 +84,24 @@ namespace SkoofidonsHRDepartment
                     string value=draft.Text[s.Id];if(MenuTheme.Button(new Rect(controls,y+13,36,38),"−"))value=Step(s,value,-1);
                     value=MenuTheme.Field(new Rect(controls+42,y+13,compact?105:145,38),value,"hr."+s.Id);
                     if(MenuTheme.Button(new Rect(controls+(compact?153:193),y+13,36,38),"+"))value=Step(s,value,1);
-                    if(value!=draft.Text[s.Id]){draft.Text[s.Id]=value;result=null;}
+                    if(value!=draft.Text[s.Id]){draft.Text[s.Id]=value;result=null;resetNotice=null;}
                     if(!s.TryParse(value,out _))MenuTheme.Label(new Rect(controls,y+52,190,18),T("Некорректное число","Invalid number"),12,false,new Color(1,.5f,.4f,1));
                     y+=76;MenuTheme.Divider(y,cw);
                 }
+                if(resetNotice!=null&&resetNoticeTab==tab)MenuTheme.Label(new Rect(20,y+14,cw-40,70),resetNotice,16,false,MenuTheme.Accent);
             }
             finally{GUI.EndScrollView();}
+        }
+        private static void ResetCurrentTab()
+        {
+            try
+            {
+                draft.ResetTab(tab);MenuTheme.ResetInput();
+                result=null;resetNoticeTab=tab;
+                resetNotice=draft.Dirty?T("Для этой вкладки восстановлены стандартные значения. Нажмите «Применить», чтобы сохранить.","This tab's defaults are restored. Click Apply to save."):
+                    T("Настройки этой вкладки соответствуют стандартным значениям.","This tab already uses its default values.");
+            }
+            catch(Exception e){result=T("Не удалось восстановить значения: ","Could not restore defaults: ")+e.Message;resetNotice=null;}
         }
         private static string Step(NumericSetting s,string text,int direction)
         {

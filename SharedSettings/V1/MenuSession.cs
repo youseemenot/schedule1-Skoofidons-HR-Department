@@ -66,6 +66,16 @@ namespace Skoofidons.SharedSettings.V1
             if (lease == null || Closing) return;
             Closing = true; barrier.Begin(frame);
         }
+        public void RequestExit(int frame)
+        {
+            if(!Visible)return;
+            if(Selected?.HasModal!=null)
+            {
+                if(!TryProviderCall(Selected.HasModal,frame,out bool modal))return;
+                if(modal){TryProviderCall(()=>{Selected.CancelModal!();return true;},frame,out _);return;}
+            }
+            RequestClose(frame);
+        }
         public void Tick(int frame, bool held, bool focused)
         {
             if (lease == null) return;
@@ -108,7 +118,10 @@ namespace Skoofidons.SharedSettings.V1
             {
                 closedCallbacks = true;
                 foreach (var p in providers.Where(p => visited.Contains(p.Id)))
+                {
+                    try{p.CancelModal?.Invoke();}catch(Exception e){Error=e.Message;}
                     try { p.Closed(); } catch (Exception e) { Error = e.Message; }
+                }
             }
             try
             {
