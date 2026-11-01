@@ -1,6 +1,6 @@
 # Skoofidon's HR Department
 
-> Local test candidate **1.3.1-beta.1** corrects a confirmed Botanist limit defect in1.3.0: changing Maximum plants updated the employee but left an existing assignment selector at8. It now updates both. The existing row expansion/scrolling mechanism also supports single selected Botanist, Chemist and Cleaner lists beyond their native row count, alongside Handler. Offline checks pass; native acceptance is pending. See the [all-profession assignment audit](docs/testing/2026-11-01-employee-assignment-limits.md). Public stable remains1.3.0; Nexus preparation is held for verification.
+> Prepared release **1.3.1** corrects the Botanist limit defect and extends existing assignment rows to Botanist, Chemist and Cleaner lists. The user [confirmed assignments above eight, scrolling and removal](docs/testing/2026-11-01-1.3.1-user-result.md) in beta.1. See [release notes](docs/releases/1.3.1.md) and the [all-profession audit](docs/testing/2026-11-01-employee-assignment-limits.md). Public GitHub stable remains 1.3.0 until a separate publication action; Nexus materials target the corrected 1.3.1.
 
 A MelonLoader mod for **Schedule I** that configures employee stats, assignment limits, machine timers and crop growth through its own **F3 settings menu**. Mod Manager & Phone App integration is optional.
 

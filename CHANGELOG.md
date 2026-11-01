@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.3.1 — prepared for publication, 2026-11-01
+
+- Fix Botanist's existing assignment selector retaining 8 after applying a higher Maximum plants value.
+- Extend existing assignment-row expansion to single selected Botanists, Chemists and Cleaners, retaining scrolling, indexed removal and assignments above a lowered limit.
+- User confirmed assignments above eight, scrolling and removal in beta.1. Stable promotion changes only version/startup text; prepared binary is compared with that tested DLL.
+- Existing shared F3 and Minimap/Phone App compatibility remain. Publication status is tracked separately; see [release notes](docs/releases/1.3.1.md).
+
 ## 1.3.1-beta.1 — local test candidate, 2026-11-01
 
 - Fix existing Botanists retaining the old assignment cap after Maximum plants is applied: update configuration.Assigns.MaxItems alongside the employee's MaxAssignedPots.
