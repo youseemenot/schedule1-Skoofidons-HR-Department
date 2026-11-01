@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.0 — stable, 2026-11-01
+
+- Configure HR through its own F3 menu without requiring Phone App or Minimap. Game-selected Russian/English labels, free cursor and gameplay input blocking use the game's UI ownership system.
+- Shared menu discovery allows compatible mods to participate without rebuilding existing participants or requiring a separate shared-menu DLL.
+- Connect supported original Minimap2.2.8/2.2.8-dev.3 through the HR adapter without modifying its DLL; retain sliders, map updates, F4 and delayed preference saving.
+- Restore defaults for only the current tab: HR keeps a draft until Apply changes; adapted Minimap asks confirmation before applying immediately. Close → Reset to defaults → Apply changes are grouped in the footer.
+- Keep Phone App integration optional and preserve stored settings, employee/machine behavior, route counts and scrollable assignments.
+- Promote user-tested beta.5; stable code changes are limited to MelonInfo version and the startup message. Metadata/IL parity and release checks are documented in [release validation](docs/testing/2026-11-01-1.3.0-release.md). The supplied beta.5 log has no errors or deprecated notices and one previously observed Il2CppInterop startup warning. Singleplayer scope; co-op synchronization remains deferred.
+
 ## 1.3.0-beta.5 — local candidate, 2026-11-01
 
 - Move current-tab reset from the panel header beside Apply changes in the common footer: Close → Reset to defaults → Apply changes.

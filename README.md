@@ -1,10 +1,10 @@
 # Skoofidon's HR Department
 
-> Development candidate: **1.3.0-beta.5** groups **Close → Reset to defaults → Apply changes** in the shared footer, with longer RU/EN labels and room for status on narrow windows. Reset affects only the current tab: HR keeps a draft until Apply changes; legacy Minimap confirms before live application. Supported old Minimap DLLs remain unchanged. The user reported no problems in the tested functionality; the [supplied log](docs/testing/2026-11-01-beta5-user-result.md) confirms the exact candidate, adapter initialization and saves with no errors. See [footer checks](docs/testing/2026-11-01-settings-footer.md), [reset behavior](docs/testing/2026-11-01-current-tab-defaults.md) and [adapter compatibility](docs/testing/2026-11-01-legacy-minimap.md). Stable remains **1.2.0** and requirements below describe that release.
+A MelonLoader mod for **Schedule I** that configures employee stats, assignment limits, machine timers and crop growth through its own **F3 settings menu**. Mod Manager & Phone App integration is optional.
 
-A MelonLoader mod for **Schedule I** that configures employee stats and assignment limits through Mod Manager & Phone App.
+**Current stable version: [1.3.0](https://github.com/youseemenot/schedule1-Skoofidons-HR-Department/releases/tag/v1.3.0).** Adds standalone RU/EN settings, shared F3 with supported unchanged Minimap DLLs, and current-tab defaults beside Apply changes. Opening settings frees the cursor and blocks gameplay controls; closing restores control through the game's UI system. Based on user-tested **1.3.0-beta.5**; stable changes only its version label and startup message. See [release notes](docs/releases/1.3.0.md), [user test result](docs/testing/2026-11-01-beta5-user-result.md) and [footer checklist](docs/testing/2026-11-01-settings-footer.md).
 
-**Current stable version: [1.2.0](https://github.com/youseemenot/schedule1-Skoofidons-HR-Department/releases/tag/v1.2.0).** Adds machine timers, live growth factors and grouped settings. Based on user-tested 1.2.0-beta.2: correct settings order, factors applied to already-growing plants/mushrooms, no progress jumps or errors reported. Stable changes only version metadata and the startup message; release validation compares executable behavior with the tested DLL. See [release notes](docs/releases/1.2.0.md), [test result](docs/testing/2026-10-30-machine-beta2-result.md) and [regression checklist](docs/testing/2026-10-30-machine-timers-beta2.md).
+Version [1.2.0](https://github.com/youseemenot/schedule1-Skoofidons-HR-Department/releases/tag/v1.2.0) introduced machine timers and live growth factors; these remain included in1.3.0.
 
 Earlier stable version [1.0.5](https://github.com/youseemenot/schedule1-Skoofidons-HR-Department/releases/tag/v1.0.5) introduced the Handler route counter and more than ten displayed station assignments, with user-tested scrolling/removal. These features remain included in 1.2.0. See [the earlier result](docs/testing/2026-10-30-1.0.5-singleplayer-result.md).
 
@@ -17,7 +17,10 @@ Supported test environment: **Schedule I 0.4.7f12 (IL2CPP)**, Steam build **2579
 * **Settings order:** Botanist → Chemist → Cleaner → Handler → Fixer → Machine Timers, preserving identifiers and stored values.
 * **Fixer:** Adjust two incremental hiring-commission rates and a cap. Fixer has no wage or movement settings.
 * **Expanded Work Limits:** Override the maximum number of assigned routes, stations, pots, and trash bins.
-* **Mod Manager Integration:** Apply settings after saving from the Phone App or its menu.
+* **Standalone F3 settings:** HR settings work without Phone App, Minimap or a separate shared-menu DLL. Russian/English follows the game's selected language. Draft edits are saved with **Apply changes**; closing discards unapplied edits.
+* **Current-tab defaults:** **Reset to defaults** restores the selected HR tab's draft, preserving other tabs. Click **Apply changes** to save.
+* **Shared settings with Minimap:** Supported original Minimap2.2.8/2.2.8-dev.3 DLLs can use the same F3 menu through the HR adapter, without a Minimap update. Minimap keeps live sliders, save debounce and F4 diagnostics; its reset asks confirmation. Unknown Minimap binaries are not patched.
+* **Optional Mod Manager integration:** Save from Phone App or its main menu to apply settings when it is installed.
 * **UI Improvements:** Scrollable assignment areas. Handler routes show used/limit/free counts and grow visual rows only when existing route data needs more rows. Lowering a limit preserves existing routes and blocks new additions while full.
 * **Handler stations:** `Handler Settings → Max Stations` (`MaxStations`, default 3) controls `Assigned (used/limit)` for packaging stations and brick presses. It is independent of `Max Routes`. Existing employee selection fields receive the limit after preferences are saved; reopen the clipboard to refresh its station heading. For a single Handler, the scrollable list grows beyond ten rows to display actual assignments, keeping native row labels/icons and indexed removal. Lowering the limit preserves and displays existing assignments.
 
@@ -25,8 +28,15 @@ Supported test environment: **Schedule I 0.4.7f12 (IL2CPP)**, Steam build **2579
 
 * Schedule I **0.4.7f12, IL2CPP branch**. Mono builds are not supported by this project.
 * MelonLoader **0.7.3** and its .NET 6 runtime.
-* Mod Manager & Phone App **2.2.4** by Prowiler (required).
-* Other game/loader/Phone App combinations need a separate compatibility check.
+* Mod Manager & Phone App **2.2.4** by Prowiler is optional; F3 works without it.
+* Minimap is optional. The legacy adapter supports exact original2.2.8/2.2.8-dev.3 builds; [compatibility details](docs/testing/2026-11-01-legacy-minimap.md). Compatible modern shared-menu providers are discovered automatically; unknown old Minimap builds may retain their own F3 behavior.
+* Other game/loader combinations need a separate compatibility check. Co-op configuration synchronization is not included.
+
+## Settings
+
+In a loaded singleplayer game, press **F3** to open settings. Choose HR Department, then Botanist, Chemist, Cleaner, Handler, Hiring or Production. Use **Apply changes** to save and apply HR edits. **Reset to defaults** affects only the open tab and stays in the draft until applied. Close or Escape exits; unapplied HR edits are discarded.
+
+When supported Minimap is installed, select it in the same sidebar. Its sliders and toggles apply immediately. Reset asks confirmation for the current tab; Escape cancels that confirmation first. F4 remains Minimap's diagnostic key. Language follows the game's selected Russian/English interface. No Phone App or Minimap dependency is needed to configure HR itself.
 
 ## Performance settings
 
@@ -49,7 +59,7 @@ All performance values default to **1**. Movement uses original speed × multipl
 | Work speed x — Cleaner | 1 | Pickup, bagging, grabber emptying and bag disposal waits |
 | Work speed x — Botanist | 1 | Pot and fungal actions, drying-rack loading and spawn-station work; preserve quantities and native work effects |
 
-Save preferences to apply. Botanist changes affect the next action; Cleaner changes affect future yielded waits. Already scheduled waits retain their duration. Machine timers use the separate settings described above. Invalid/nonpositive multipliers retain or restore normal behavior. Repeated saves do not compound movement/work rates; native work buffs remain in effect.
+Use F3 **Apply changes** (or save in the optional Phone App) to apply HR preferences. Botanist changes affect the next action; Cleaner changes affect future yielded waits. Already scheduled waits retain their duration. Machine timers use the separate settings described above. Invalid/nonpositive multipliers retain or restore normal behavior. Repeated saves do not compound movement/work rates; native work buffs remain in effect.
 
 The keys are `WalkSpeedMultiplier` and `WorkSpeedMultiplier` in each profession's category; all beta.3 values retain their keys. The five earlier botanist action values and enable flag are no longer used, and old absolute speeds/seconds are not reinterpreted as factors. Keep a preferences backup for rollback. Botanist shares the native work-stack integration with Handler/Chemist, with no extra duration hook; only Cleaner needs the audited contextual hooks. Keep the research BotanistProbe DLL outside Mods. Returning work speed to 1 removes the mod's work entry for future actions.
 
@@ -58,7 +68,7 @@ The keys are `WalkSpeedMultiplier` and `WorkSpeedMultiplier` in each profession'
 1. Close the game and move every previous HR DLL, including `.dll.disabled` backups, **outside `Mods`**. Do not keep both `SkoofidonsHRDepartment.dll` and `SkoofidonsHRDepartment.dll.disabled` there: Phone App uses those names to enable/disable the mod, and an existing destination blocks the rename.
 2. Copy only `SkoofidonsHRDepartment.dll` to `Mods`. Do not distribute or install game/loader reference DLLs from a build directory.
 3. Launch the game. After an update, MelonLoader may first regenerate its IL2CPP assemblies.
-4. Confirm **HR 1.2.0**, plus **Schedule I 0.4.7f12** in the new `MelonLoader/Latest.log`. For station limits, open **Handler Settings → Max stations** in Phone App, save and reopen the clipboard. See [the station-list checklist](docs/testing/2026-10-30-handler-station-rows.md) and [the route-counter checklist](docs/testing/2026-10-30-handler-route-counter.md).
+4. Confirm **HR 1.3.0**, plus **Schedule I 0.4.7f12** in the new `MelonLoader/Latest.log`. In a loaded game press **F3**. For station limits, choose **HR Department → Handler → Maximum stations**, click **Apply changes** and reopen the clipboard. Existing saved values are retained. See [the station-list checklist](docs/testing/2026-10-30-handler-station-rows.md) and [the route-counter checklist](docs/testing/2026-10-30-handler-route-counter.md).
 
 ## Build from source
 
@@ -83,23 +93,24 @@ dotnet run --project tests/SmokeChecks -c Release -- `
   'S:\SteamLibrary\steamapps\common\Schedule I\MelonLoader\Il2CppAssemblies'
 ```
 
-Stable 1.2.0 has 176 offline checks: actual DLL38 (`--combined --unified`), machine policy/queue29, save state23, growth context9, employee rates12, Cleaner8, layout43 and Botanist native coverage14. The actual-DLL suite resolves/JIT-compiles all 36 guarded native machine/growth targets and three managed Phone App category selectors. API checking covers 265 external references and 13 automatic Harmony targets. These checks do not execute Unity, real detours, save I/O or rendering; gameplay evidence is recorded separately.
+Release validation covers the actual DLL with and without Phone App, shared providers and frozen older DLLs, menu lifecycle, draft/reset/confirmation, numeric editing, legacy Minimap integration and the previous employee/machine/save/layout suites. The Unity body audit rejects unsupported unstripping stubs; external API checks cover397references and13automatic Harmony targets. Stable metadata/IL is compared with the exact user-tested beta.5, allowing only the version label and initialization message. These checks do not execute Unity or establish exhaustive native input/rendering/gameplay behavior; [user evidence](docs/testing/2026-11-01-beta5-user-result.md) and [release validation](docs/testing/2026-11-01-1.3.0-release.md) are recorded separately.
 
 ## Known limitations
 
 * The [employee process audit](docs/research/2026-10-30-employee-process-coverage.md) distinguishes Work speed from fixed setup/recovery, navigation and machine clocks. Per user instruction, fixed post-transfer, door, press and botanist supply/unload waits remain native. Dryer unload retains its single 0.5s animation wait; drying itself is a machine/world process. Cleaner retains its existing five action hooks. A factor of 7 does not promise a sevenfold reduction of the whole duty cycle.
 
 * Co-op configuration synchronization is not implemented. This release was tested in singleplayer.
-* Employee work factors preserve native quantities and resource operations; game constants/shared GetActionDuration bodies remain untouched. The user reported no problems in the beta.4 test; detailed timing, resource/cancellation measurements remain unrecorded. Stable1.2.0 activates the [separate machine module](future/MachineTimers/README.md).
+* Employee work factors preserve native quantities and resource operations; game constants/shared GetActionDuration bodies remain untouched. Detailed timing/resource/cancellation matrices remain unrecorded. The [machine module](future/MachineTimers/README.md) remains separate from employee work.
 * Five machine factors are captured per new batch, with versioned save metadata for factors/fractional credit. Plant/mushroom growth reads the current preference every native growth callback, including for old saves; no per-crop capture/save/load layer is used. Completion remains limited by native ticks; drying retains its one-quality-step-per-call limit on large skips. User testing confirmed live crop changes and no progress jumps; exhaustive resource/save scenarios remain unrecorded.
 * Clipboard layout uses typed components for all four professions and actual panel geometry. Handler shares space between two lists; very short panels use one outer scroll area. Individual results for resizing, wheel routing, multi-selection and other UI scales/languages remain unrecorded. The word `free` remains English.
 * Extra station rows are added for one selected Handler, not for other professions or multi-selection. Assignment of more than ten stations, scrolling and removal were user-tested. Stress, multi-selection and save/reload scenarios remain separately unrecorded; extreme assignment counts have not been profiled.
 * Fixer preserves the 1.0.0 formula: it uses `LifetimeEmployeesRecruited`, applies the lower rate to loop indices 0–5, then the higher rate, and caps the total. The existing `5+` label does not precisely describe that boundary. Economy behavior has deliberately not been redesigned in this compatibility build.
 * Valid gameplay ranges for arbitrary settings are not yet enforced. Begin with positive, moderate speeds and assignment limits.
+* The shared F3 flow was user-tested with original Minimap2.2.8 and Phone App2.2.4. Offline checks also cover operation without Phone App and supported2.2.8-dev.3. Every resolution, language/input transition and every mod combination has not been separately confirmed in game. Old unsupported Minimap DLLs may still respond to F3 independently.
 
 ## Planned work
 
-The [research](docs/superpowers/specs/2026-10-30-unfinished-features-research.md) and [staged plan](docs/superpowers/plans/2026-10-30-unfinished-features.md) record development history. Employee work rates and adaptive layout are in1.1.0; machine/growth timers are in stable1.2.0. Property capacities and co-op remain deferred.
+The [research](docs/superpowers/specs/2026-10-30-unfinished-features-research.md) and [staged plan](docs/superpowers/plans/2026-10-30-unfinished-features.md) record development history. Employee work rates/adaptive layout are in1.1.0; machine/growth timers in1.2.0; standalone/shared F3 and current-tab defaults in1.3.0. See the [next release priorities](docs/releases/ROADMAP.md). Property capacities and co-op remain deferred.
 
 The separate [Botanist Timing Probe](docs/testing/botanist-duration-probe.md) is a historical observation-only research module, outside the main HR DLL and release assets. It is not needed for 1.1.0; the final Botanist implementation uses native employee work speed instead of a duration hook.
 
