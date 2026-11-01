@@ -17,12 +17,13 @@ namespace SkoofidonsHRDepartment
         public void Closed(){confirmation.Cancel();binding.Flush(Time.realtimeSinceStartup,MelonLoader.MelonLogger.Warning);}
         public bool HasModal()=>confirmation.Pending;
         public void CancelModal()=>confirmation.Cancel();
+        public void ResetCurrentTab()=>confirmation.Request(settingsTab);
         private static string[] TabNames()=>new[]{T("Общее","General"),T("Маркеры","Markers"),T("Положение","Position"),T("Стрелка","Arrow")};
         public string Status()=>binding.SaveError==null?T("Изменения применяются сразу","Changes apply immediately"):T("Не удалось сохранить: ","Could not save: ")+binding.SaveError;
         public void Draw()
         {
             float w=MenuTheme.Width,h=MenuTheme.Height;
-            MenuTheme.DefaultsHeader("Minimap",T("Карта и маркеры","Map and markers"),()=>confirmation.Request(settingsTab));
+            MenuTheme.PanelHeader("Minimap",T("Карта и маркеры","Map and markers"));
             float top;int previousTab=settingsTab;
             GUI.BeginGroup(new Rect(0,83,w,h-83));
             try{top=MenuTheme.Tabs(TabNames(),ref settingsTab,w);}

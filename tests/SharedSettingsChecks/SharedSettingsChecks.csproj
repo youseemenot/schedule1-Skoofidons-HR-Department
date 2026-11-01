@@ -9,6 +9,7 @@
     <DisableTransitiveFrameworkReferenceDownloads>true</DisableTransitiveFrameworkReferenceDownloads>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="../../SharedSettings/V1/MenuFooterLayout.cs" Link="MenuFooterLayout.cs" Condition="Exists('../../SharedSettings/V1/MenuFooterLayout.cs')" />
     <Compile Include="../../SharedSettings/V1/ReleaseBarrier.cs" Link="ReleaseBarrier.cs" Condition="Exists('../../SharedSettings/V1/ReleaseBarrier.cs')" />
     <Compile Include="../../SharedSettings/V1/EntryPointV1.cs" Link="EntryPointV1.cs" Condition="Exists('../../SharedSettings/V1/EntryPointV1.cs')" />
     <Compile Include="../../SharedSettings/V1/ProviderManifest.cs" Link="ProviderManifest.cs" Condition="Exists('../../SharedSettings/V1/ProviderManifest.cs')" />

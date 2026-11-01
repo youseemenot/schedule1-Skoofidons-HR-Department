@@ -79,12 +79,13 @@ namespace Skoofidons.SharedSettings.V1
             style.fontSize=size; style.normal.textColor=color??Color.white;
             GUI.Label(r,value,style); style.fontSize=old; style.normal.textColor=oldColor;
         }
-        public static bool Button(Rect r,string value,bool primary=false)
+        public static bool Button(Rect r,string value,bool primary=false,int fontSize=20)
         {
             Ensure(); bool hover=r.Contains(Event.current.mousePosition);
             Box(r,primary?Accent:hover?new Color(.2f,.28f,.34f,1):new Color(.14f,.19f,.25f,1));
             button.normal.textColor=primary?Background:Color.white;
-            bool clicked=GUI.Button(r,value,button);
+            int oldSize=button.fontSize;bool clicked;
+            try{button.fontSize=fontSize;clicked=GUI.Button(r,value,button);}finally{button.fontSize=oldSize;}
             if(clicked){GUIUtility.keyboardControl=0;activeField=null;ownedKeyboard=0;}
             return clicked;
         }
@@ -146,13 +147,11 @@ namespace Skoofidons.SharedSettings.V1
         public static void Divider(float y,float width) => Box(new Rect(16,y,width-32,1),Line,0);
         public static void Heading(ref float y,float width,string value)
         { Label(new Rect(20,y,width-40,38),value,22,true); y+=43; Divider(y,width); y+=12; }
-        public static float DefaultsHeader(string title,string subtitle,Action reset)
+        public static float PanelHeader(string title,string subtitle)
         {
-            float w=Width;bool small=w<650;float buttonWidth=small?172:205;
-            Label(new Rect(8,0,w-buttonWidth-32,43),title,small?24:30,true);
-            Label(new Rect(8,42,w-buttonWidth-32,29),subtitle,small?14:18,false,Muted);
-            if(Button(new Rect(w-buttonWidth-8,4,buttonWidth,43),T("По умолчанию","Defaults")))reset();
-            Label(new Rect(w-buttonWidth-8,48,buttonWidth,28),T("Только текущая вкладка","Current tab only"),small?12:14,false,Muted);
+            float w=Width;bool small=w<650;
+            Label(new Rect(8,0,w-16,43),title,small?24:30,true);
+            Label(new Rect(8,42,w-16,29),subtitle,small?14:18,false,Muted);
             return 83;
         }
         public static bool Toggle(ref float y,float width,string label,bool value)

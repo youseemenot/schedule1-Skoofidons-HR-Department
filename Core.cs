@@ -5,7 +5,7 @@ using Il2CppScheduleOne.Persistence;
 using UnityEngine.Events;
 using Skoofidons.SharedSettings.V1;
 
-[assembly: MelonInfo(typeof(SkoofidonsHRDepartment.Core), "Skoofidon's HR Department", "1.3.0-beta.4", "Skoofidon")]
+[assembly: MelonInfo(typeof(SkoofidonsHRDepartment.Core), "Skoofidon's HR Department", "1.3.0-beta.5", "Skoofidon")]
 [assembly: System.Reflection.AssemblyVersion("1.3.0.0")]
 [assembly: System.Reflection.AssemblyFileVersion("1.3.0.0")]
 [assembly: MelonGame("TVGS", "Schedule I")]
@@ -29,7 +29,7 @@ namespace SkoofidonsHRDepartment
             MachineTimerController.Initialize();
             ModManagerIntegration.Initialize();
             HrSettingsPanel.Initialize();
-            LoggerInstance.Msg("HR Department 1.3.0-beta.4 initialized. F3: independent shared settings (Schedule I 0.4.7f12).");
+            LoggerInstance.Msg("HR Department 1.3.0-beta.5 initialized. F3: independent shared settings (Schedule I 0.4.7f12).");
         }
 
         public override void OnDeinitializeMelon()

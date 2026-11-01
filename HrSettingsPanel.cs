@@ -20,6 +20,7 @@ namespace SkoofidonsHRDepartment
         {
             EntryPointV1.Initialize("skoofidon.hr","HR Department",new Version(1,3,0),Draw,OnOpened,OnClosed);
             EntryPointV1.ConfigurePanel(MenuTheme.Viewport,Status,()=>draft?.Dirty??false,Apply);
+            EntryPointV1.ConfigureDefaults(ResetCurrentTab);
         }
         public static IEnumerable<NumericSetting> CreateSettings()
         {
@@ -63,7 +64,7 @@ namespace SkoofidonsHRDepartment
         public static void Draw()
         {
             if(draft==null)return;float w=MenuTheme.Width,h=MenuTheme.Height;
-            MenuTheme.DefaultsHeader("HR Department",T("Сотрудники и производство","Employees and production"),ResetCurrentTab);
+            MenuTheme.PanelHeader("HR Department",T("Сотрудники и производство","Employees and production"));
             int previousTab=tab;
             GUI.BeginGroup(new Rect(0,83,w,h-83));float top;
             try{top=MenuTheme.Tabs(new[]{T("Ботаник","Botanist"),T("Химик","Chemist"),T("Уборщик","Cleaner"),T("Грузчик","Handler"),T("Найм","Hiring"),T("Производство","Production")},ref tab,w);}
@@ -98,7 +99,7 @@ namespace SkoofidonsHRDepartment
             {
                 draft.ResetTab(tab);MenuTheme.ResetInput();
                 result=null;resetNoticeTab=tab;
-                resetNotice=draft.Dirty?T("Для этой вкладки восстановлены стандартные значения. Нажмите «Применить», чтобы сохранить.","This tab's defaults are restored. Click Apply to save."):
+                resetNotice=draft.Dirty?T("Для этой вкладки восстановлены стандартные значения. Нажмите «Применить изменения», чтобы сохранить.","This tab's defaults are restored. Click Apply changes to save."):
                     T("Настройки этой вкладки соответствуют стандартным значениям.","This tab already uses its default values.");
             }
             catch(Exception e){result=T("Не удалось восстановить значения: ","Could not restore defaults: ")+e.Message;resetNotice=null;}

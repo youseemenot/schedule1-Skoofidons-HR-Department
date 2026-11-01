@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.3.0-beta.5 — local candidate, 2026-11-01
+
+- Move current-tab reset from the panel header beside Apply changes in the common footer: Close → Reset to defaults → Apply changes.
+- Clarify English Apply changes / Reset to defaults and Russian Применить изменения / По умолчанию labels, including the HR reset notice.
+- Reserve space for longer labels; place status above the actions on narrow windows. Minimap retains immediate application and shows Close → Reset to defaults.
+- Runtime1.4.0 adds an optional BCL reset callback, retaining older providers and enforcing a nondecreasing minimum host version when capabilities are combined.
+- Preserve HR draft, Minimap confirmation, native input ownership, original Minimap DLL and saved configuration. Native visual acceptance pending; no stable publication.
+
 ## 1.3.0-beta.4 — local candidate, 2026-11-01
 
 - Restore defaults for only the current HR or legacy Minimap tab, using original preference DefaultValue metadata.

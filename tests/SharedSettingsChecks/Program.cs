@@ -184,5 +184,43 @@ Check("modal capabilities are optional complete CLR delegates",()=>{
  var incomplete=new Dictionary<string,object>(values);incomplete.Remove("cancelModal");Reject(incomplete);
  var wrong=new Dictionary<string,object>(values);wrong["drawModal"]=(Action)(()=>{});Reject(wrong);
 });
+Check("reset capability remains optional and rejects wrong CLR callbacks",()=>{
+ var old=Parse(Manifest());var property=old.GetType().GetProperty("Reset")??throw new Exception("Reset capability absent");
+ Expect(property.GetValue(old)==null,"Old provider acquired a reset action");
+ int calls=0;var values=Manifest("reset.mod","1.4.0");values["reset"]=(Action)(()=>calls++);
+ var p=Parse(values);((Action)property.GetValue(p)!)();Expect(calls==1,"Reset callback lost");
+ values["reset"]=(Func<bool>)(()=>true);Reject(values);
+});
+Check("configuring reset retains panel callbacks and cannot lower host floor",()=>{
+ var endpoint=Assembly.GetExecutingAssembly().GetType("Skoofidons.SharedSettings.EntryPointV1")!;
+ int resets=0;
+ (endpoint.GetMethod("ConfigureDefaults")??throw new Exception("Reset registration absent")).Invoke(null,new object[]{(Action)(()=>resets++)});
+ endpoint.GetMethod("ConfigurePanel")!.Invoke(null,new object?[]{(Action<float,float,string>)((w,h,l)=>{}),(Func<string>)(()=>"retained"),null,null});
+ endpoint.GetMethod("ConfigureModal")!.Invoke(null,new object[]{(Func<bool>)(()=>false),(Action<float,float>)((w,h)=>{}),(Action)(()=>{})});
+ var values=(IDictionary<string,object>)endpoint.GetMethod("GetManifestV1")!.Invoke(null,null)!;
+ ((Action)values["reset"])();
+ Expect(resets==1&&values.ContainsKey("draw")&&values.ContainsKey("viewport")&&values.ContainsKey("hasModal"),"Other capabilities lost");
+ Expect(Version.Parse((string)values["minimumHostVersion"])>=new Version(1,4,0),"Older host can omit reset");
+});
+Check("footer actions fit without overlapping status across widths and languages",()=>{
+ var type=SharedType("MenuFooterLayout");
+ foreach(float width in new[]{616f,776f,1000f,1420f})foreach(bool ru in new[]{false,true})
+ foreach(bool reset in new[]{false,true})foreach(bool apply in new[]{false,true})
+ {
+  var layout=type.GetMethod("Create")!.Invoke(null,new object[]{width,720f,reset,apply,ru})!;
+  float N(string name)=>(float)type.GetProperty(name)!.GetValue(layout)!;
+  var buttons=new List<(float x,float width)>{(N("CloseX"),N("CloseWidth"))};
+  if(reset)buttons.Add((N("ResetX"),N("ResetWidth")));
+  if(apply)buttons.Add((N("ApplyX"),N("ApplyWidth")));
+  for(int i=0;i<buttons.Count;i++){
+   var b=buttons[i];Expect(b.x>=16&&b.x+b.width<=width-16,"Button outside footer");
+   if(i>0)Expect(buttons[i-1].x+buttons[i-1].width+8<=b.x,"Buttons overlap or order changed");
+   Expect(b.width>=100,"Long labels squeezed into unreadable button");
+  }
+  Expect(N("ButtonsY")+43<=704&&N("ButtonsY")>=720-N("FooterHeight"),"Buttons clipped vertically");
+  Expect(N("StatusWidth")>=50,"Status disappeared");
+  Expect(N("StatusY")+N("StatusHeight")<=N("ButtonsY")-24||20+N("StatusWidth")+8<=N("CloseX"),"Status overlaps actions or scope caption");
+ }
+});
 Console.WriteLine($"{checks - failed}/{checks} shared-settings checks passed");
 return failed == 0 ? 0 : 1;

@@ -1,6 +1,6 @@
 # Skoofidon's HR Department
 
-> Development candidate: **1.3.0-beta.4** adds current-tab defaults for HR and the unchanged legacy Minimap adapter. HR reset uses a draft and Apply; legacy Minimap asks confirmation before live application. Supported old Minimap DLLs remain unchanged. See [reset checks](docs/testing/2026-11-01-current-tab-defaults.md) and [adapter compatibility](docs/testing/2026-11-01-legacy-minimap.md). Gameplay acceptance for beta.4 is pending; stable remains **1.2.0** and requirements below describe that release.
+> Development candidate: **1.3.0-beta.5** groups **Close → Reset to defaults → Apply changes** in the shared footer, with longer RU/EN labels and room for status on narrow windows. Reset affects only the current tab: HR keeps a draft until Apply changes; legacy Minimap confirms before live application. Supported old Minimap DLLs remain unchanged. See [footer checks](docs/testing/2026-11-01-settings-footer.md), [reset behavior](docs/testing/2026-11-01-current-tab-defaults.md) and [adapter compatibility](docs/testing/2026-11-01-legacy-minimap.md). Native visual acceptance is pending; stable remains **1.2.0** and requirements below describe that release.
 
 A MelonLoader mod for **Schedule I** that configures employee stats and assignment limits through Mod Manager & Phone App.
 

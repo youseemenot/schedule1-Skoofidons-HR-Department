@@ -9,7 +9,7 @@ namespace Skoofidons.SharedSettings
 {
     public static class EntryPointV1
     {
-        public const string RuntimeVersion = "1.3.0";
+        public const string RuntimeVersion = "1.4.0";
         private static IDictionary<string, object>? manifest;
         public static void Initialize(string id, string title, Version providerVersion, Action draw, Action opened, Action closed)
         {
@@ -32,8 +32,9 @@ namespace Skoofidons.SharedSettings
             Func<bool>? dirty = null, Func<string?>? apply = null)
         {
             var values = new Dictionary<string, object>(GetManifestV1()) {
-                ["minimumHostVersion"] = "1.1.0", ["viewport"] = viewport, ["status"] = status
+                ["viewport"] = viewport, ["status"] = status
             };
+            RequireHost(values,"1.1.0");
             if (dirty != null) values["dirty"] = dirty;
             if (apply != null) values["apply"] = apply;
             ProviderManifest.Parse(values, typeof(EntryPointV1).Assembly);
@@ -59,10 +60,24 @@ namespace Skoofidons.SharedSettings
         public static void ConfigureModal(Func<bool> hasModal,Action<float,float> drawModal,Action cancelModal)
         {
             var values=new Dictionary<string,object>(GetManifestV1()){
-                ["minimumHostVersion"]="1.3.0",["hasModal"]=hasModal,["drawModal"]=drawModal,["cancelModal"]=cancelModal
+                ["hasModal"]=hasModal,["drawModal"]=drawModal,["cancelModal"]=cancelModal
             };
+            RequireHost(values,"1.3.0");
             ProviderManifest.Parse(values,typeof(EntryPointV1).Assembly);
             manifest=new ReadOnlyDictionary<string,object>(values);
+        }
+        public static void ConfigureDefaults(Action reset)
+        {
+            if(reset==null)throw new ArgumentNullException(nameof(reset));
+            var values=new Dictionary<string,object>(GetManifestV1()){["reset"]=reset};
+            RequireHost(values,"1.4.0");
+            ProviderManifest.Parse(values,typeof(EntryPointV1).Assembly);
+            manifest=new ReadOnlyDictionary<string,object>(values);
+        }
+        private static void RequireHost(Dictionary<string,object> values,string version)
+        {
+            if(Version.Parse((string)values["minimumHostVersion"])<Version.Parse(version))
+                values["minimumHostVersion"]=version;
         }
     }
 }

@@ -70,6 +70,7 @@ namespace Skoofidons.SharedSettings.V1
             try
             {
                 var selected=session.Selected;
+                var footer=MenuFooterLayout.Create(w,h,selected?.Reset!=null,selected?.Apply!=null,language=="ru");
                 bool modal=false;
                 if(selected?.HasModal!=null)
                     using(var state=new GuiStateScope())
@@ -80,8 +81,8 @@ namespace Skoofidons.SharedSettings.V1
                 MenuTheme.Label(new Rect(22,12,w-90,48),MenuTheme.T("Настройки модов","Mod settings"),w<850?24:30,true);
                 if(MenuTheme.Button(new Rect(w-58,16,40,40),"×"))session.RequestClose(Time.frameCount);
                 MenuTheme.Box(new Rect(0,72,w,1),MenuTheme.Line,0);
-                MenuTheme.Box(new Rect(side,73,1,h-153),MenuTheme.Line,0);
-                float bodyH=h-160;
+                MenuTheme.Box(new Rect(side,73,1,h-footer.FooterHeight-73),MenuTheme.Line,0);
+                float bodyH=h-footer.FooterHeight-80;
                 sidebarScroll=GUI.BeginScrollView(new Rect(8,90,side-16,bodyH-20),sidebarScroll,new Rect(0,0,side-34,Math.Max(bodyH-22,providers.Count*88+35)));
                 try
                 {
@@ -112,21 +113,38 @@ namespace Skoofidons.SharedSettings.V1
                     if(!drawn)return false;
                 }
                 MenuTheme.Viewport(w,h,language);
-                MenuTheme.Box(new Rect(0,h-80,w,1),MenuTheme.Line,0);
+                footer=MenuFooterLayout.Create(w,h,selected?.Reset!=null,selected?.Apply!=null,language=="ru");
+                MenuTheme.Box(new Rect(0,h-footer.FooterHeight,w,1),MenuTheme.Line,0);
                 bool canApply=selected?.Apply!=null;
-                float closeX=w-(canApply?290:155);
                 string status;
                 using(var state=new GuiStateScope())
                     if(!session.TryProviderCall(()=>applyError??selected?.Status?.Invoke()??"",Time.frameCount,out status))return false;
-                MenuTheme.Label(new Rect(20,h-69,Math.Max(50,closeX-35),58),status,w<850?13:17,false,applyError==null?MenuTheme.Muted:new Color(1,.5f,.4f,1));
-                if(MenuTheme.Button(new Rect(closeX,h-61,125,43),MenuTheme.T("Закрыть","Close"))) session.RequestClose(Time.frameCount);
+                MenuTheme.Label(new Rect(20,footer.StatusY,footer.StatusWidth,footer.StatusHeight),status,w<1100?13:17,false,applyError==null?MenuTheme.Muted:new Color(1,.5f,.4f,1));
+                if(MenuTheme.Button(new Rect(footer.CloseX,footer.ButtonsY,footer.CloseWidth,43),MenuTheme.T("Закрыть","Close"),false,footer.ButtonFontSize)) session.RequestClose(Time.frameCount);
+                GUI.enabled=backgroundEnabled&&session.Visible;
+                if(selected?.Reset!=null)
+                {
+                    MenuTheme.Label(new Rect(footer.ResetX,footer.ButtonsY-24,footer.ResetWidth,22),MenuTheme.T("Только текущая вкладка","Current tab only"),w<850?12:14,false,MenuTheme.Muted);
+                    if(MenuTheme.Button(new Rect(footer.ResetX,footer.ButtonsY,footer.ResetWidth,43),MenuTheme.T("По умолчанию","Reset to defaults"),false,footer.ButtonFontSize))
+                    {
+                        using(var state=new GuiStateScope())
+                            if(!session.TryProviderCall(()=>{selected.Reset();return true;},Time.frameCount,out _))return false;
+                        applyError=null;
+                        // A reset may open a confirmation: block later controls in this event too.
+                        if(selected.HasModal!=null)
+                            using(var state=new GuiStateScope())
+                                if(!session.TryProviderCall(selected.HasModal,Time.frameCount,out modal))return false;
+                        backgroundEnabled=!modal;
+                        GUI.enabled=backgroundEnabled&&session.Visible;
+                    }
+                }
                 if(canApply)
                 {
                     bool dirty;
                     using(var state=new GuiStateScope())
                         if(!session.TryProviderCall(()=>selected.Dirty?.Invoke()??true,Time.frameCount,out dirty))return false;
-                    GUI.enabled=backgroundEnabled&&dirty;
-                    if(MenuTheme.Button(new Rect(w-151,h-61,133,43),MenuTheme.T("Применить","Apply"),true))
+                    GUI.enabled=backgroundEnabled&&session.Visible&&dirty;
+                    if(MenuTheme.Button(new Rect(footer.ApplyX,footer.ButtonsY,footer.ApplyWidth,43),MenuTheme.T("Применить изменения","Apply changes"),true,footer.ButtonFontSize))
                     {
                         using(var state=new GuiStateScope())
                             if(!session.TryProviderCall(selected.Apply,Time.frameCount,out applyError))return false;

@@ -21,6 +21,7 @@ namespace Skoofidons.SharedSettings.V1
         public Func<string>? Status { get; }
         public Func<bool>? Dirty { get; }
         public Func<string?>? Apply { get; }
+        public Action? Reset { get; }
         public Func<bool>? HasModal {get;}
         public Action<float,float>? DrawModal {get;}
         public Action? CancelModal {get;}
@@ -46,6 +47,7 @@ namespace Skoofidons.SharedSettings.V1
             Status = Optional<Func<string>>(values, "status");
             Dirty = Optional<Func<bool>>(values, "dirty");
             Apply = Optional<Func<string?>>(values, "apply");
+            Reset = Optional<Action>(values, "reset");
             HasModal=Optional<Func<bool>>(values,"hasModal");
             DrawModal=Optional<Action<float,float>>(values,"drawModal");
             CancelModal=Optional<Action>(values,"cancelModal");
