@@ -30,5 +30,5 @@
 - [x] Add and run failing shared contract checks for optional/invalid reset, retained callbacks and host floor. Add meaningful layout invariants at wide/narrow widths for all action combinations.
 - [x] Implement reset capability, host footer, header cleanup and wording; bump candidate metadata.
 - [x] Build with existing Build.ps1; run shared/session/draft/confirmation/numeric/legacy/paired/smoke checks and Unity stub audit. Inspect final diff and obtain independent review.
-- [ ] Document results, package HR DLL + build-info + testing guide, verify game closed, back up and replace only HR DLL; verify Minimap/cfg hashes unchanged.
-- [ ] Record hashes and pending native checks, commit local changes; leave branch unpublished.
+- [x] Document results, package HR DLL + build-info + testing guide, verify game closed, back up and replace only HR DLL; verify Minimap/cfg hashes unchanged.
+- [x] Record hashes and pending native checks, commit local changes; leave branch unpublished.
