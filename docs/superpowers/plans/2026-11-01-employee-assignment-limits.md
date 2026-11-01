@@ -18,4 +18,4 @@
 - [x] Add failing actual-DLL API-boundary checks for live Botanist limit and all four employee adapters/list field recognition. Exercise8→11row allocation and unchanged/lowered occupancy with existing allocator.
 - [x] Correct typed limit propagation and generalize current list adapter; bump local candidate version.
 - [x] Build; run smoke/assignment, shared settings and previous suites/API/Unity-body audits. Independent review before installation.
-- [ ] Update docs with defect/scope/checks. Prepare candidate package and request closed game only once ready, back up and replace HR if possible. Keep Minimap/cfg unchanged; native acceptance pending.
+- [x] Update docs with defect/scope/checks. Prepare candidate package and request closed game only once ready, back up and replace HR if possible. Keep Minimap/cfg unchanged; native acceptance pending.
