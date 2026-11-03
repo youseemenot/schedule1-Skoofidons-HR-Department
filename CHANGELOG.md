@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.3.2 — stable release, 2026-11-03
+
+- Fix F3 settings backgrounds and control graphics disappearing after returning to the main menu and loading another world.
+- Preserve settings and employee/production behavior from1.3.1; share the corrected settings window with optional Minimap2.3.0.
+- The author confirmed repeated-load behavior with both patched mods and Phone App2.2.4. Stable metadata/IL matches the exact tested beta.1, allowing only the version and initialization text. Published on Nexus Mods and GitHub.
+
+## 1.3.2-beta.1 — local test candidate, 2026-11-03
+
+- Correct the shared F3 theme resource lifecycle exposed by repeated world loads in standalone Minimap: retain generated textures, recover destroyed cached backgrounds and refresh stale skin/font references.
+- Shared runtime1.4.1 explicitly releases only owned theme textures at shutdown. Approved layout, preferences, employees/machines/growth behavior and legacy Minimap adapter remain unchanged.
+- Source-linked lifecycle checks reproduce the old resource-loss model and pass with the fix. Native gameplay retest is pending; published stable1.3.1 is unchanged.
+
 ## 1.3.1 — stable, 2026-11-01
 
 - Fix Botanist's existing assignment selector retaining 8 after applying a higher Maximum plants value.

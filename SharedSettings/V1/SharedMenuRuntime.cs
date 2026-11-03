@@ -173,7 +173,11 @@ namespace Skoofidons.SharedSettings.V1
             {
                 try{if(focusChanged!=null)Application.focusChanged-=focusChanged;}
                 catch(Exception e){Log(e);}
-                finally{focusChanged=null;}
+                finally
+                {
+                    focusChanged=null;
+                    MenuTheme.ReleaseResources();
+                }
             }
         }
     }

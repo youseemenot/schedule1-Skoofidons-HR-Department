@@ -1,14 +1,16 @@
 # Skoofidon's HR Department
 
+> **1.3.2: [GitHub release](https://github.com/youseemenot/schedule1-Skoofidons-HR-Department/releases/tag/v1.3.2) · [Nexus Mods](https://www.nexusmods.com/schedule1/mods/3035).** It fixes F3 graphics after world reloads and works with Minimap2.3.0 in the shared window. The author confirmed paired repeated-load behavior.
+
 > **Spend less. Earn more.** Configure employee capacity, work speed, production and costs. Phone App and Minimap are optional; Minimap is distributed separately.
 
 A MelonLoader mod for **Schedule I** that configures employee stats, assignment limits, machine timers and crop growth through its own **F3 settings menu**. Mod Manager & Phone App integration is optional.
 
-**Current stable version: [1.3.1](https://github.com/youseemenot/schedule1-Skoofidons-HR-Department/releases/tag/v1.3.1).** Fixes existing Botanists retaining their old assignment limit and extends scrollable assignment rows to Botanists, Chemists and Cleaners. The user [confirmed assignments above eight, scrolling and removal](docs/testing/2026-11-01-1.3.1-user-result.md) in beta.1; stable changes only its version label and startup message. See [release notes](docs/releases/1.3.1.md) and the [all-profession audit](docs/testing/2026-11-01-employee-assignment-limits.md).
+**Previous GitHub release: [1.3.1](https://github.com/youseemenot/schedule1-Skoofidons-HR-Department/releases/tag/v1.3.1).** Fixes existing Botanists retaining their old assignment limit and extends scrollable assignment rows to Botanists, Chemists and Cleaners. The user [confirmed assignments above eight, scrolling and removal](docs/testing/2026-11-01-1.3.1-user-result.md) in beta.1; stable changes only its version label and startup message. See [release notes](docs/releases/1.3.1.md) and the [all-profession audit](docs/testing/2026-11-01-employee-assignment-limits.md).
 
 Version [1.3.0](https://github.com/youseemenot/schedule1-Skoofidons-HR-Department/releases/tag/v1.3.0) added standalone RU/EN settings, shared F3 with supported unchanged Minimap DLLs, and current-tab defaults beside Apply changes. Opening settings frees the cursor and blocks gameplay controls; closing restores control through the game's UI system. See the [user test result](docs/testing/2026-11-01-beta5-user-result.md) and [footer checklist](docs/testing/2026-11-01-settings-footer.md).
 
-Version [1.2.0](https://github.com/youseemenot/schedule1-Skoofidons-HR-Department/releases/tag/v1.2.0) introduced machine timers and live growth factors; these remain included in 1.3.1.
+Version [1.2.0](https://github.com/youseemenot/schedule1-Skoofidons-HR-Department/releases/tag/v1.2.0) introduced machine timers and live growth factors; these remain included in 1.3.2.
 
 Earlier stable version [1.0.5](https://github.com/youseemenot/schedule1-Skoofidons-HR-Department/releases/tag/v1.0.5) introduced the Handler route counter and more than ten displayed station assignments, with user-tested scrolling/removal. These features remain included in 1.2.0. See [the earlier result](docs/testing/2026-10-30-1.0.5-singleplayer-result.md).
 
@@ -119,3 +121,7 @@ The [research](docs/superpowers/specs/2026-10-30-unfinished-features-research.md
 The separate [Botanist Timing Probe](docs/testing/botanist-duration-probe.md) is a historical observation-only research module, outside the main HR DLL and release assets. It is not needed for 1.1.0; the final Botanist implementation uses native employee work speed instead of a duration hook.
 
 Development decisions follow the [architecture-first project guidance](docs/DEVELOPMENT.md).
+
+## Development disclosure
+
+This mod includes AI-generated code developed and revised with OpenAI Codex, including model 6.1 Sol, under human direction. Development involved substantial iterative implementation, review, debugging, automated checks and human gameplay testing; it was not a single-prompt generation. The human author directs the work and approves releases.

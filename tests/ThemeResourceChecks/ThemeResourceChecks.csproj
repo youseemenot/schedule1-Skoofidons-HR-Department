@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType><TargetFramework>net6.0</TargetFramework><ImplicitUsings>enable</ImplicitUsings>
+    <UseAppHost>false</UseAppHost><CheckEolTargetFramework>false</CheckEolTargetFramework>
+    <DisableTransitiveFrameworkReferenceDownloads>true</DisableTransitiveFrameworkReferenceDownloads>
+    <ThemeSource Condition="'$(ThemeSource)' == ''">../../SharedSettings/V1/MenuTheme.cs</ThemeSource>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(ThemeSource)" Link="MenuTheme.cs" />
+    <Compile Include="../../SharedSettings/V1/NumericEditor.cs" Link="NumericEditor.cs" />
+  </ItemGroup>
+</Project>

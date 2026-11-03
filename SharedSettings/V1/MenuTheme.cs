@@ -9,7 +9,16 @@ namespace Skoofidons.SharedSettings.V1
         public static readonly Color Background = new(.065f,.09f,.12f,.99f), Card = new(.09f,.125f,.16f,1),
             Line = new(.18f,.24f,.29f,1), Accent = new(0,.8f,.85f,1), Muted = new(.66f,.76f,.84f,1);
         private static GUIStyle text, bold, button, field, rail, thumb;
-        private static readonly Dictionary<int,GUIStyle> backgrounds=new();
+        private sealed class BackgroundResource
+        {
+            public GUIStyle Style;
+            // Null for the borrowed built-in white texture; only generated textures are owned.
+            public Texture2D Texture;
+        }
+        private static readonly Dictionary<int,BackgroundResource> backgrounds=new();
+        private static GUISkin sourceSkin;
+        private static Font sourceFont;
+        private static bool hadSourceFont;
         private static readonly NumericEditor editor=new();
         private static string activeField;
         private static bool inputResetPending;
@@ -35,9 +44,12 @@ namespace Skoofidons.SharedSettings.V1
         { Width=width; Height=height; Language=GameLanguageSource.Normalize(language); }
         public static void Ensure()
         {
-            if (text != null) return;
+            var skin=GUI.skin;
+            var font=skin.label.font;
+            if(font==null)font=skin.font;
+            if(text!=null&&sourceSkin==skin&&sourceFont==font&&(!hadSourceFont||sourceFont!=null))return;
             // Reuse the live game skin. OS-font creation is an unstripping-failure stub here.
-            text = new GUIStyle(GUI.skin.label) { fontSize=20,wordWrap=true,alignment=TextAnchor.MiddleLeft };
+            text = new GUIStyle(skin.label) { font=font,fontSize=20,wordWrap=true,alignment=TextAnchor.MiddleLeft };
             text.normal.textColor=Color.white;
             bold = new GUIStyle(text) { fontStyle=FontStyle.Bold };
             button = new GUIStyle(text) { alignment=TextAnchor.MiddleCenter };
@@ -46,14 +58,28 @@ namespace Skoofidons.SharedSettings.V1
             field.normal.textColor=Color.white; field.focused.textColor=Color.white;
             rail = new GUIStyle { fixedHeight=24 };
             thumb = new GUIStyle { fixedWidth=24,fixedHeight=24 };
+            sourceSkin=skin;sourceFont=font;hadSourceFont=font!=null;
+        }
+        // May run outside OnGUI. Do not read GUI globals or native GUIStyle state here.
+        public static void ReleaseResources()
+        {
+            foreach(var resource in backgrounds.Values)
+                if(resource.Texture!=null)UnityEngine.Object.Destroy(resource.Texture);
+            backgrounds.Clear();
+            text=bold=button=field=rail=thumb=null;
+            sourceSkin=null;sourceFont=null;hadSourceFont=false;
         }
         public static void Box(Rect r, Color color, float radius=7)
         {
             int corner=(int)Math.Max(0,radius);
-            if(!backgrounds.TryGetValue(corner,out var style))
+            if(!backgrounds.TryGetValue(corner,out var resource))
             {
-                Texture2D texture=Texture2D.whiteTexture;
-                if(corner>0)
+                resource=new BackgroundResource {Style=new GUIStyle {border=new RectOffset(corner,corner,corner,corner)}};
+                backgrounds.Add(corner,resource);
+            }
+            Texture2D texture=corner>0?resource.Texture:Texture2D.whiteTexture;
+            // Unity's fake-null detects a native texture destroyed while its managed style survives.
+            if(corner>0&&texture==null)
                 {
                     int size=corner*2+2;var pixels=new Color32[size*size];
                     for(int y=0;y<size;y++)for(int x=0;x<size;x++)
@@ -65,11 +91,12 @@ namespace Skoofidons.SharedSettings.V1
                         pixels[y*size+x]=new Color32(255,255,255,alpha);
                     }
                     texture=new Texture2D(size,size,TextureFormat.RGBA32,false);
+                    resource.Texture=texture;
+                    texture.hideFlags=HideFlags.HideAndDontSave;
                     texture.SetPixels32(pixels);texture.Apply(false,true);
                 }
-                style=new GUIStyle {border=new RectOffset(corner,corner,corner,corner)};
-                style.normal.background=texture;backgrounds.Add(corner,style);
-            }
+            var style=resource.Style;
+            if(style.normal.background!=texture)style.normal.background=texture;
             var old=GUI.color;
             try{GUI.color=color;GUI.Box(r,GUIContent.none,style);}finally{GUI.color=old;}
         }
